@@ -38,12 +38,12 @@ $ pnpm install
 
 ```bash
 ENV=develop
-APP_PORT = 86
-DB_HOST = localhost
+APP_PORT = 84
+DB_HOST = 172.20.91.109
 DB_PORT = 1433
 DB_USERNAME = sa
-DB_PASSWORD = [password]
-DB_NAME = BSCB_CB
+DB_PASSWORD = P@ssw0rd
+DB_NAME = KAWASAKI_DB
 ENV_DEVELOP_DIR = ./application-files/
 ```
 
