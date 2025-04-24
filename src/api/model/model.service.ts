@@ -4,6 +4,7 @@ import { CommonService } from 'src/common/common.service';
 import { ModelDto, ModelSearchDto } from './dto/model-search.dto';
 import { MModel } from 'src/entity/model.entity';
 import { Repository } from 'typeorm';
+import { BaseResponse } from 'src/common/base-response';
 
 @Injectable()
 export class ModelService {
@@ -42,21 +43,9 @@ export class ModelService {
         }
     }
 
-    async add(data: ModelDto, req: any): Promise<any> {
+    async add(data: ModelDto, userId: Number): Promise<BaseResponse> {
         try {
-            const model = new MModel();
-            model.modelCd = data.Model_CD;
-            model.productCd = data.Product_CD;
-            model.partNo = data.Part_No;
-            model.partUpper = data.Part_Upper;
-            model.partLower = data.Part_Lower;
-            model.isActive = data.Status;
-            model.updatedBy = `${req.user.userId}`;
-            model.updatedDate = new Date();
-
-            const date = new Date(0, 0, 0, 0, Number(data.Cycle_Time_Min), 0);
-            model.cycleTime = date;
-
+            const model = this.dtoToEntity(data, userId);
             const result = await this.modelRepository.save(model);
             if (result) {
                 return {
@@ -69,7 +58,57 @@ export class ModelService {
             };
         } catch (error) {
             console.log("Error : ", error)
-            throw error;
+            return {
+                status: 2,
+                message: error.message,
+            };
         }
+    }
+
+    async update(
+        id: string,
+        data: ModelDto,
+        userId: number,
+    ): Promise<BaseResponse> {
+        try {
+            const model = this.dtoToEntity(data, userId);
+            var r = await this.modelRepository.update(
+                {
+                    modelCd: id
+                },
+                model,
+            );
+
+            if (r.affected > 0) {
+                return {
+                    status: 0
+                }
+            }
+            return {
+                status: 1,
+                message: 'Unable to update data, Please try again.'
+            };
+        } catch (error) {
+            return {
+                status: 2,
+                message: error.message,
+            };
+        }
+    }
+
+    dtoToEntity(data: ModelDto, userId: Number) {
+        const model = new MModel();
+        model.modelCd = data.Model_CD;
+        model.productCd = data.Product_CD;
+        model.partNo = data.Part_No;
+        model.partUpper = data.Part_Upper;
+        model.partLower = data.Part_Lower;
+        model.isActive = data.Status;
+        model.updatedBy = `${userId}`;
+        model.updatedDate = new Date();
+
+        const date = new Date(0, 0, 0, 0, Number(data.Cycle_Time_Min), 0);
+        model.cycleTime = date;
+        return model;
     }
 }

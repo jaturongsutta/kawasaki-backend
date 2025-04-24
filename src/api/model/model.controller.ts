@@ -5,7 +5,6 @@ import {
   Get,
   Post,
   Put,
-  Delete,
   Request,
 } from '@nestjs/common';
 import { ModelService } from './model.service';
@@ -30,8 +29,16 @@ export class ModelController extends BaseController {
 
   @Post('add')
   async add(@Body() dto: ModelDto, @Request() req: any) {
-    return await this.service.add(dto, req);
+    return await this.service.add(dto, req.user.userId);
   }
 
+  @Put('update/:id')
+  async update(
+    @Param('id') id: string,
+    @Body() dto: ModelDto,
+    @Request() req: any,
+  ) {
+    return await this.service.update(id, dto, req.user.userId);
+  }
 
 }
