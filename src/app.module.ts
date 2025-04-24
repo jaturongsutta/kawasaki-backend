@@ -20,6 +20,7 @@ import { CoConfigReportsModule } from './api/co-config-reports/co-config-reports
 import { LineModule } from './api/line/line.module';
 import { ProductModule } from './api/product/product.module';
 import { MasterIndexModule } from './api/master-index/master-index.module';
+import { ModelModule } from './api/model/model.module';
 
 dotenv.config(); // Load environment variables from .env file
 @Module({
@@ -58,6 +59,7 @@ dotenv.config(); // Load environment variables from .env file
     LineModule,
     ProductModule,
     MasterIndexModule,
+    ModelModule
   ],
   controllers: [AppController],
   providers: [AppService],
