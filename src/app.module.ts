@@ -21,6 +21,7 @@ import { LineModule } from './api/line/line.module';
 import { ProductModule } from './api/product/product.module';
 import { MasterIndexModule } from './api/master-index/master-index.module';
 import { ModelModule } from './api/model/model.module';
+import { MachineModule } from './api/machine/machine.module';
 
 dotenv.config(); // Load environment variables from .env file
 @Module({
@@ -59,9 +60,10 @@ dotenv.config(); // Load environment variables from .env file
     LineModule,
     ProductModule,
     MasterIndexModule,
-    ModelModule
+    ModelModule,
+    MachineModule
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
