@@ -26,8 +26,8 @@ export class MachineService {
     async getById(id: string): Promise<any> {
         try {
             const req = await this.commonService.getConnection();
-            req.input('Machine_No', id);
-            req.input('Process_CD', null);
+            req.input('Machine_No', null);
+            req.input('Process_CD', id);
             req.input('Status', null);
             req.input('Row_No_From', 1);
             req.input('Row_No_To', 1);

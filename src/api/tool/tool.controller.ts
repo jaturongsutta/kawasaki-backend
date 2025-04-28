@@ -22,9 +22,9 @@ export class ToolController extends BaseController {
     return await this.service.search(dto);
   }
 
-  @Get('getByProcess_CD/:cd')
-  async getById(@Param('cd') id: string) {
-    return await this.service.getById(id);
+  @Get('getById/:processCd/:id')
+  async getById(@Param('processCd') processCd: string, @Param('id') id: string) {
+    return await this.service.getById(processCd, id);
   }
 
   @Post('add')

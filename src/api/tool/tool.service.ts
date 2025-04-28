@@ -23,16 +23,20 @@ export class ToolService {
         return await this.commonService.getSearch('sp_m_Search_Tool', req);
     }
 
-    async getById(id: string): Promise<any> {
+    async getById(processCd: string, id: string): Promise<any> {
         try {
             const req = await this.commonService.getConnection();
-            req.input('Tool_CD', null);
-            req.input('Process_CD', id);
+            req.input('Tool_CD', id);
+            req.input('Process_CD', processCd);
             req.input('Status', null);
             req.input('Row_No_From', 1);
             req.input('Row_No_To', 1);
 
-            return await this.commonService.getSearch('sp_m_Search_Tool', req);
+            const result = await this.commonService.getSearch('sp_m_Search_Tool', req);
+            if (result.data.length > 0) {
+                return { data: result.data[0] };
+            }
+            return { data: {} };
         }
         catch (e) {
             throw e;
@@ -72,7 +76,8 @@ export class ToolService {
             const item = this.dtoToEntity(data, userId);
             var r = await this.toolRepository.update(
                 {
-                    toolCd: id
+                    toolCd: id,
+                    processCd: data.Process_CD
                 },
                 item,
             );
