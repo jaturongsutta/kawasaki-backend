@@ -1,15 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
-import { ToolDto, ToolSearchDto } from './dto/tool-search.dto';
+import { ToolDto, ToolHistoryDto, ToolSearchDto } from './dto/tool-search.dto';
 import { Repository } from 'typeorm';
 import { BaseResponse } from 'src/common/base-response';
 import { MTool } from 'src/entity/tool.entity';
+import { MToolHis } from 'src/entity/tool-his.entity';
 
 @Injectable()
 export class ToolService {
     constructor(private commonService: CommonService,
-        @InjectRepository(MTool) private toolRepository: Repository<MTool>
+        @InjectRepository(MTool) private toolRepository: Repository<MTool>,
+        @InjectRepository(MToolHis) private toolHistoryRepository: Repository<MToolHis>
     ) { }
 
     async search(dto: ToolSearchDto) {
@@ -57,6 +59,35 @@ export class ToolService {
             return {
                 status: 1,
                 message: 'Unable to create data, Please try again.',
+            };
+        } catch (error) {
+            console.log("Error : ", error)
+            return {
+                status: 2,
+                message: error.message,
+            };
+        }
+    }
+
+    async createHistory(data: ToolHistoryDto, userId: Number): Promise<BaseResponse> {
+        try {
+            const item = new MTool();
+            item.toolCd = data.Tool_CD;
+            item.processCd = data.Process_CD;
+            item.toolName = data.Tool_Name;
+            item.toolLife = data.Tool_Life;
+            item.actualAmt = data.Actual_Amt;
+            item.createdBy = `${userId}`;
+            item.createdDate = new Date();
+            const result = await this.toolHistoryRepository.save(item);
+            if (result) {
+                return {
+                    status: 0,
+                };
+            }
+            return {
+                status: 1,
+                message: 'Unable to save tool history, Please try again.',
             };
         } catch (error) {
             console.log("Error : ", error)

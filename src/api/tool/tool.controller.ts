@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ToolService } from './tool.service';
 import { BaseController } from 'src/base.controller';
-import { ToolDto, ToolSearchDto } from './dto/tool-search.dto';
+import { ToolDto, ToolHistoryDto, ToolSearchDto } from './dto/tool-search.dto';
 
 @Controller('tool')
 export class ToolController extends BaseController {
@@ -39,6 +39,11 @@ export class ToolController extends BaseController {
     @Request() req: any,
   ) {
     return await this.service.update(id, dto, req.user.userId);
+  }
+
+  @Post('history')
+  async createHistory(@Body() dto: ToolHistoryDto, @Request() req: any) {
+    return await this.service.createHistory(dto, req.user.userId);
   }
 
 }
