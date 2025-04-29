@@ -34,3 +34,19 @@ export class ToolDto {
 
   UpdateDate: Date;
 }
+
+export class ToolHistoryDto {
+  @IsNotEmpty()
+  @MaxLength(20)
+  Tool_CD: string;
+
+  @IsNotEmpty()
+  @MaxLength(20)
+  Process_CD: string;
+
+  Tool_Name: string;
+  Tool_Life: number;
+  Actual_Amt: number;
+  CreateBy: number;
+  CreateDate: Date;
+}

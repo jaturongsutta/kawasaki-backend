@@ -24,6 +24,9 @@ export class MTool {
   @Column("int", { name: "Alarm_Amt", nullable: true })
   alarmAmt: number | null;
 
+  @Column("int", { name: "Actual_Amt", nullable: true })
+  actualAmt: number | null;
+
   @Column("char", { name: "is_Active", nullable: true, length: 1 })
   isActive: string | null;
 
