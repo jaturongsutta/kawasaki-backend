@@ -31,6 +31,7 @@ export class LineController extends BaseController {
 
   @Post('add')
   async add(@Body() dto: LineDto, @Request() req: any) {
+    console.log('dto : ', dto);
     return await this.service.add(dto, req.user.userId);
   }
 

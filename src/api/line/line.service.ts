@@ -1,21 +1,34 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
 import { LineSearchDto } from './dto/line-search.dto';
 import { LineDto } from './dto/line.dto';
 import { BaseResponse } from 'src/common/base-response';
+import { Repository } from 'typeorm';
+import { MLine } from 'src/entity/m-line.entity';
+import { MLineModel } from 'src/entity/m-line-model.entity';
+import { DataSource } from 'typeorm'; // Import DataSource for transactions
 
 @Injectable()
 export class LineService {
-  constructor(private commonService: CommonService) {}
+  constructor(
+    private commonService: CommonService,
+    @InjectRepository(MLine)
+    private lineRepository: Repository<MLine>,
+    @InjectRepository(MLineModel)
+    private lineModel: Repository<MLineModel>,
+    private dataSource: DataSource, // Inject DataSource for transactions
+  ) {}
 
   async search(dto: LineSearchDto) {
     const req = await this.commonService.getConnection();
-    req.input('Line', dto.line);
+    req.input('Line_CD', dto.line_cd);
+    req.input('Line_Name', dto.line_name);
     req.input('Status', dto.status);
     req.input('Row_No_From', dto.searchOptions.rowFrom);
     req.input('Row_No_To', dto.searchOptions.rowTo);
 
-    return await this.commonService.getSearch('sp_search_co_line', req);
+    return await this.commonService.getSearch('sp_m_search_line', req);
   }
 
   async getById(id: number): Promise<LineDto> {
@@ -35,9 +48,7 @@ export class LineService {
       if (Return_CD === 'Success') {
         const data = result.recordset[0];
         console.log(data);
-        dto.lineId = data.Line_Id;
-        dto.lineNo = data.Line;
-        dto.tank = data.Tank;
+
         dto.isActive = data.Status_Id;
       } else {
         dto.result.status = 1;
@@ -52,32 +63,49 @@ export class LineService {
   }
 
   async add(data: LineDto, userId: number): Promise<BaseResponse> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
     try {
-      const req = await this.commonService.getConnection();
-      req.input('Line', data.lineNo);
-      req.input('Tank', data.tank.trim());
-      req.input('Status', data.isActive);
+      // Start a transaction
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+      console.log('data : ', data);
+      data.createdBy = userId;
+      data.updatedBy = userId;
+      data.createdDate = new Date();
+      data.updatedDate = new Date();
+      await this.lineRepository.save(data);
 
-      req.input('Created_By', userId);
-      req.output('Return_CD', '');
-      req.output('Return_Name', '');
+      await queryRunner.manager.save(MLine, data);
 
-      const result = await this.commonService.executeStoreProcedure(
-        'sp_add_co_line',
-        req,
-      );
+      // Save line models
+      for (const model of data.lineModel) {
+        const lineModel = new MLineModel();
+        lineModel.lineCd = data.lineCd;
+        lineModel.modelCd = model.modelCd;
+        lineModel.isActive = model.isActive;
 
-      const { Return_CD, Return_Name } = result.output;
+        // await this.lineModel.save(lineModel);
+        await queryRunner.manager.save(MLineModel, lineModel);
+      }
+
+      // Commit the transaction
+      await queryRunner.commitTransaction();
 
       return {
-        status: Return_CD !== 'Success' ? 1 : 0,
-        message: Return_Name,
+        status: 0, // success
+        message: '',
       };
     } catch (error) {
+      await queryRunner.rollbackTransaction();
+
       return {
         status: 2,
         message: error.message,
       };
+    } finally {
+      // Release the query runner
+      await queryRunner.release();
     }
   }
 
@@ -89,7 +117,6 @@ export class LineService {
     try {
       const req = await this.commonService.getConnection();
       req.input('Line_Id', id);
-      req.input('Tank', data.tank.trim());
       req.input('Status', data.isActive);
 
       req.input('Updated_By', userId);
