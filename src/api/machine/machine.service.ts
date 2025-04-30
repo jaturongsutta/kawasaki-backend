@@ -5,6 +5,7 @@ import { MachineDto, MachineSearchDto } from './dto/machine-search.dto';
 import { Repository } from 'typeorm';
 import { BaseResponse } from 'src/common/base-response';
 import { MMachine } from 'src/entity/machine.entity';
+import { getCurrentDate, toLocalDateTime } from 'src/utils/utils';
 
 @Injectable()
 export class MachineService {
@@ -19,24 +20,36 @@ export class MachineService {
         req.input('Status', dto.status);
         req.input('Row_No_From', dto.searchOptions.rowFrom);
         req.input('Row_No_To', dto.searchOptions.rowTo);
-
         return await this.commonService.getSearch('sp_m_Search_Machine', req);
     }
 
     async getById(id: string): Promise<any> {
         try {
-            const req = await this.commonService.getConnection();
-            req.input('Machine_No', null);
-            req.input('Process_CD', id);
-            req.input('Status', null);
-            req.input('Row_No_From', 1);
-            req.input('Row_No_To', 1);
-
-            const result = await this.commonService.getSearch('sp_m_Search_Machine', req);
-            if (result.data.length > 0) {
-                return { data: result.data[0] };
+            const r = await this.machineRepository
+                .createQueryBuilder('m')
+                .leftJoin('um_User', 'u', 'u.User_ID = m.UPDATED_BY')
+                .select([
+                    'm.Process_CD as processCd',
+                    'm.Machine_No as machineNo',
+                    'm.Machine_Name as machineName',
+                    'm.Map_CD as mapCd',
+                    'm.is_Active as isActive',
+                    'u.username as updatedBy',
+                    'm.UPDATED_DATE as updatedDate'
+                ])
+                .where(`m.processCd = '${id}'`)
+                .getRawOne();
+            if (!r) {
+                return {
+                    status: 2,
+                    message: 'Machine not found'
+                }
             }
-            return { data: {} };
+            r.updatedDate = toLocalDateTime(r.updatedDate);
+            return {
+                status: 0,
+                data: r
+            };
         }
         catch (e) {
             throw e;
@@ -45,10 +58,9 @@ export class MachineService {
 
     async add(data: MachineDto, userId: Number): Promise<BaseResponse> {
         try {
-            const item = this.dtoToEntity(data, userId);
-            item.createdBy = `${userId}`;
-            item.createdDate = new Date();
-            const result = await this.machineRepository.save(item);
+            data.createdBy = data.updatedBy = `${userId}`;
+            data.createdDate = data.updatedDate = getCurrentDate();
+            const result = await this.machineRepository.save(data);
             if (result) {
                 return {
                     status: 0,
@@ -73,12 +85,13 @@ export class MachineService {
         userId: number,
     ): Promise<BaseResponse> {
         try {
-            const item = this.dtoToEntity(data, userId);
+            data.updatedBy = `${userId}`;
+            data.updatedDate = getCurrentDate();
             var r = await this.machineRepository.update(
                 {
-                    machineNo: id
+                    processCd: id
                 },
-                item,
+                data,
             );
 
             if (r.affected > 0) {
@@ -96,17 +109,5 @@ export class MachineService {
                 message: error.message,
             };
         }
-    }
-
-    dtoToEntity(data: MachineDto, userId: Number) {
-        const item = new MMachine();
-        item.machineNo = data.Machine_No;
-        item.processCd = data.Process_CD;
-        item.machineName = data.Machine_Name;
-        item.mapCd = data.Map_CD;
-        item.isActive = data.Status;
-        item.updatedBy = `${userId}`;
-        item.updatedDate = new Date();
-        return item;
     }
 }

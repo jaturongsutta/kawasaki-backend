@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { BaseResponse } from 'src/common/base-response';
 import { MTool } from 'src/entity/tool.entity';
 import { MToolHis } from 'src/entity/tool-his.entity';
+import { getCurrentDate, toLocalDateTime } from 'src/utils/utils';
 
 @Injectable()
 export class ToolService {
@@ -27,30 +28,49 @@ export class ToolService {
 
     async getById(processCd: string, id: string): Promise<any> {
         try {
-            const req = await this.commonService.getConnection();
-            req.input('Tool_CD', id);
-            req.input('Process_CD', processCd);
-            req.input('Status', null);
-            req.input('Row_No_From', 1);
-            req.input('Row_No_To', 1);
-
-            const result = await this.commonService.getSearch('sp_m_Search_Tool', req);
-            if (result.data.length > 0) {
-                return { data: result.data[0] };
+            const r = await this.toolRepository
+                .createQueryBuilder('t')
+                .leftJoin('um_User', 'u', 'u.User_ID = t.UPDATED_BY')
+                .select([
+                    't.Tool_CD as toolCd',
+                    't.Process_CD as processCd',
+                    't.Tool_Name as toolName',
+                    't.Tool_Life as toolLife',
+                    't.Warning_Amt as warningAmt',
+                    't.Alert_Amt as alertAmt',
+                    't.Alarm_Amt as alarmAmt',
+                    't.Actual_Amt as actualAmt',
+                    't.Map_CD as mapCd',
+                    't.is_Active as isActive',
+                    'u.username as updatedBy',
+                    't.UPDATED_DATE as updatedDate'
+                ])
+                .where(`t.processCd = '${processCd}'`)
+                .andWhere(`t.toolCd = '${id}'`)
+                .getRawOne();
+            if (!r) {
+                return {
+                    status: 2,
+                    message: 'Tool not found'
+                }
             }
-            return { data: {} };
+            r.updatedDate = toLocalDateTime(r.updatedDate);
+            return {
+                status: 0,
+                data: r
+            };
         }
-        catch (e) {
-            throw e;
+        catch (error) {
+            console.log("Error : ", error)
+            throw error;
         }
     }
 
     async add(data: ToolDto, userId: Number): Promise<BaseResponse> {
         try {
-            const item = this.dtoToEntity(data, userId);
-            item.createdBy = `${userId}`;
-            item.createdDate = new Date();
-            const result = await this.toolRepository.save(item);
+            data.createdBy = data.updatedBy = `${userId}`;
+            data.createdDate = data.updatedDate = getCurrentDate();
+            const result = await this.toolRepository.save(data);
             if (result) {
                 return {
                     status: 0,
@@ -71,16 +91,18 @@ export class ToolService {
 
     async createHistory(data: ToolHistoryDto, userId: Number): Promise<BaseResponse> {
         try {
-            const item = new MTool();
-            item.toolCd = data.Tool_CD;
-            item.processCd = data.Process_CD;
-            item.toolName = data.Tool_Name;
-            item.toolLife = data.Tool_Life;
-            item.actualAmt = data.Actual_Amt;
-            item.createdBy = `${userId}`;
-            item.createdDate = new Date();
-            const result = await this.toolHistoryRepository.save(item);
-            if (result) {
+            const tool = await this.toolRepository.findOneBy({ processCd: data.Process_CD, toolCd: data.Tool_CD });
+            if (!tool) {
+                return {
+                    status: 2,
+                    message: 'Tool not found'
+                }
+            }
+
+            tool.createdBy = `${userId}`;
+            tool.createdDate = getCurrentDate();
+            const result = await this.toolHistoryRepository.insert(tool);
+            if (result.identifiers.length > 0) {
                 return {
                     status: 0,
                 };
@@ -104,13 +126,14 @@ export class ToolService {
         userId: number,
     ): Promise<BaseResponse> {
         try {
-            const item = this.dtoToEntity(data, userId);
+            data.updatedBy = `${userId}`;
+            data.updatedDate = getCurrentDate();
             var r = await this.toolRepository.update(
                 {
                     toolCd: id,
-                    processCd: data.Process_CD
+                    processCd: data.processCd
                 },
-                item,
+                data,
             );
 
             if (r.affected > 0) {
@@ -128,21 +151,5 @@ export class ToolService {
                 message: error.message,
             };
         }
-    }
-
-    dtoToEntity(data: ToolDto, userId: Number) {
-        const item = new MTool();
-        item.toolCd = data.Tool_CD;
-        item.processCd = data.Process_CD;
-        item.toolName = data.Tool_Name;
-        item.toolLife = data.Tool_Life;
-        item.warningAmt = data.Warning_Amt;
-        item.alertAmt = data.Alert_Amt;
-        item.alarmAmt = data.Alarm_Amt;
-        item.mapCd = data.Map_CD;
-        item.isActive = data.Status;
-        item.updatedBy = `${userId}`;
-        item.updatedDate = new Date();
-        return item;
     }
 }
