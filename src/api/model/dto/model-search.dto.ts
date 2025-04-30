@@ -9,28 +9,27 @@ export class ModelSearchDto extends BaseSearch {
 
 export class ModelDto {
   @IsNotEmpty()
-  @MaxLength(20)
-  Model_CD: string;
+  modelCd: string;
 
-  @MaxLength(20)
-  Product_CD: string;
+  productCd: string | null;
 
-  @MaxLength(20)
-  Part_No: string;
+  partNo: string | null;
 
-  @MaxLength(20)
-  Part_Upper: string;
+  partUpper: string | null;
 
-  @MaxLength(20)
-  Part_Lower: string;
+  partLower: string | null;
 
-  @MaxLength(20)
-  Cycle_Time_Min: string;
+  cycleTime: Date | null;
 
-  @MaxLength(1)
-  Status: string;
+  cycleTimeMins: string | null;
 
-  UpdateBy: number;
+  isActive: string | null;
 
-  UpdateDate: Date;
+  createdDate: Date | null;
+
+  createdBy: string | null;
+
+  updatedDate: Date | null;
+
+  updatedBy: string | null;
 }

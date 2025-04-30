@@ -9,22 +9,22 @@ export class MachineSearchDto extends BaseSearch {
 
 export class MachineDto {
   @IsNotEmpty()
-  @MaxLength(20)
-  Machine_No: string;
+  processCd: string;
 
-  @MaxLength(20)
-  Process_CD: string;
+  @IsNotEmpty()
+  machineNo: string | null;
 
-  @MaxLength(20)
-  Map_CD: string;
+  machineName: string | null;
 
-  @MaxLength(255)
-  Machine_Name: string;
+  isActive: string | null;
 
-  @MaxLength(1)
-  Status: string;
+  mapCd: string | null;
 
-  UpdateBy: number;
+  createdDate: Date | null;
 
-  UpdateDate: Date;
+  createdBy: string | null;
+
+  updatedDate: Date | null;
+
+  updatedBy: string | null;
 }

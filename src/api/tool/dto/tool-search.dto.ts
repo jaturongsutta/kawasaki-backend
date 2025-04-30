@@ -9,30 +9,34 @@ export class ToolSearchDto extends BaseSearch {
 
 export class ToolDto {
   @IsNotEmpty()
-  @MaxLength(20)
-  Tool_CD: string;
+  processCd: string;
 
-  @MaxLength(20)
-  Process_CD: string;
+  @IsNotEmpty()
+  toolCd: string;
 
-  Tool_Name: string;
-  Tool_Life: number;
-  Warning_Amt: number;
-  Alert_Amt: number;
-  Alarm_Amt: number;
+  toolName: string | null;
 
-  @MaxLength(20)
-  Map_CD: string;
+  toolLife: number | null;
 
-  @MaxLength(255)
-  Machine_Name: string;
+  warningAmt: number | null;
 
-  @MaxLength(1)
-  Status: string;
+  alertAmt: number | null;
 
-  UpdateBy: number;
+  alarmAmt: number | null;
 
-  UpdateDate: Date;
+  actualAmt: number | null;
+
+  isActive: string | null;
+
+  mapCd: string | null;
+
+  createdDate: Date | null;
+
+  createdBy: string | null;
+
+  updatedDate: Date | null;
+
+  updatedBy: string | null;
 }
 
 export class ToolHistoryDto {
