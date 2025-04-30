@@ -63,4 +63,36 @@ export class DropdownListController extends BaseController {
       "Is_Active = 'Y'",
     );
   }
+
+  @Get('model')
+  getModel(@Request() req: any) {
+    return this.service.getDropdownList(
+      'M_Model',
+      'Model_CD',
+      'Product_CD',
+      "Is_Active = 'Y'",
+    );
+  }
+
+  @Get('model*')
+  getModel_() {
+    return this.service.getDropdownList(
+      'M_Model',
+      'Model_CD',
+      'Product_CD',
+      "Is_Active = 'Y'",
+      '',
+      ['Part_No partNo', 'is_Active isActive'],
+    );
+  }
+
+  @Get('machine')
+  getMachine() {
+    return this.service.getDropdownList(
+      'M_Machine',
+      'Process_CD',
+      'Machine_No',
+      "Is_Active = 'Y'",
+    );
+  }
 }
