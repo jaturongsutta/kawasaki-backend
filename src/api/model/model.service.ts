@@ -5,6 +5,7 @@ import { ModelDto, ModelSearchDto } from './dto/model-search.dto';
 import { MModel } from 'src/entity/model.entity';
 import { Repository } from 'typeorm';
 import { BaseResponse } from 'src/common/base-response';
+import { getCurrentDate, toLocalDateTime } from 'src/utils/utils';
 
 @Injectable()
 export class ModelService {
@@ -19,34 +20,55 @@ export class ModelService {
         req.input('Status', dto.status);
         req.input('Row_No_From', dto.searchOptions.rowFrom);
         req.input('Row_No_To', dto.searchOptions.rowTo);
-
         return await this.commonService.getSearch('sp_m_Search_Model', req);
     }
 
     async getById(id: string): Promise<any> {
         try {
-            const req = await this.commonService.getConnection();
-            req.input('Model_CD', id);
-            req.input('Product_CD', null);
-            req.input('Status', null);
-            req.input('Row_No_From', 1);
-            req.input('Row_No_To', 1);
-
-            const result = await this.commonService.getSearch('sp_m_Search_Model', req);
-            if (result.data.length > 0) {
-                return { data: result.data[0] };
+            const r = await this.modelRepository
+                .createQueryBuilder('m')
+                .leftJoin('um_User', 'u', 'u.User_ID = m.UPDATED_BY')
+                .select([
+                    'm.Model_CD as modelCd',
+                    'm.Product_CD as productCd',
+                    'm.Part_No as partNo',
+                    'm.Part_Upper as partUpper',
+                    'm.Part_Lower as partLower',
+                    "CAST(m.Cycle_Time AS varchar) AS cycleTime",
+                    'm.is_Active as isActive',
+                    'u.username as updatedBy',
+                    'm.UPDATED_DATE as updatedDate'
+                ])
+                .where('m.modelCd = :id', { id })
+                .getRawOne();
+            if (!r) {
+                return {
+                    status: 2,
+                    message: 'Model not found'
+                }
             }
-            return { data: {} };
+            const [h, m, s] = r.cycleTime.split(':').map(Number);
+            const cycleTimeMins = h * 60 + m + s / 60;
+            const result = { ...r, ...{ cycleTimeMins: cycleTimeMins } };
+            result.updatedDate = toLocalDateTime(result.updatedDate);
+            return {
+                status: 0,
+                data: result
+            };
         }
-        catch (e) {
-            throw e;
+        catch (error) {
+            console.log("Error : ", error)
+            throw error;
         }
     }
 
     async add(data: ModelDto, userId: Number): Promise<BaseResponse> {
         try {
-            const model = this.dtoToEntity(data, userId);
-            const result = await this.modelRepository.save(model);
+            data.createdBy = data.updatedBy = `${userId}`;
+            data.createdDate = data.updatedDate = getCurrentDate();
+            data.cycleTime = this.minuteToTime(data.cycleTimeMins);
+            delete data.cycleTimeMins;
+            const result = await this.modelRepository.save(data);
             if (result) {
                 return {
                     status: 0,
@@ -71,12 +93,15 @@ export class ModelService {
         userId: number,
     ): Promise<BaseResponse> {
         try {
-            const model = this.dtoToEntity(data, userId);
+            data.updatedBy = `${userId}`;
+            data.updatedDate = getCurrentDate();
+            data.cycleTime = this.minuteToTime(data.cycleTimeMins);
+            delete data.cycleTimeMins;
             var r = await this.modelRepository.update(
                 {
                     modelCd: id
                 },
-                model,
+                data,
             );
 
             if (r.affected > 0) {
@@ -89,6 +114,7 @@ export class ModelService {
                 message: 'Unable to update data, Please try again.'
             };
         } catch (error) {
+            console.log("Error : ", error)
             return {
                 status: 2,
                 message: error.message,
@@ -96,19 +122,8 @@ export class ModelService {
         }
     }
 
-    dtoToEntity(data: ModelDto, userId: Number) {
-        const model = new MModel();
-        model.modelCd = data.Model_CD;
-        model.productCd = data.Product_CD;
-        model.partNo = data.Part_No;
-        model.partUpper = data.Part_Upper;
-        model.partLower = data.Part_Lower;
-        model.isActive = data.Status;
-        model.updatedBy = `${userId}`;
-        model.updatedDate = new Date();
-
-        const date = new Date(0, 0, 0, 0, Number(data.Cycle_Time_Min), 0);
-        model.cycleTime = date;
-        return model;
+    minuteToTime(m) {
+        return new Date(0, 0, 0, 0, Number(m), 0);
     }
+
 }
