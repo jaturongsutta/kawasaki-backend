@@ -41,9 +41,9 @@ export class ToolController extends BaseController {
     return await this.service.update(id, dto, req.user.userId);
   }
 
-  @Post('history')
-  async createHistory(@Body() dto: ToolHistoryDto, @Request() req: any) {
-    return await this.service.createHistory(dto, req.user.userId);
+  @Post('reset')
+  async resetTool(@Body() dto: ToolHistoryDto, @Request() req: any) {
+    return await this.service.resetTool(dto, req.user.userId);
   }
 
 }
