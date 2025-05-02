@@ -34,7 +34,8 @@ export class ModelService {
                     'm.Part_No as partNo',
                     'm.Part_Upper as partUpper',
                     'm.Part_Lower as partLower',
-                    "CAST(m.Cycle_Time AS varchar) AS cycleTime",
+                    `RIGHT('0' + CAST(DATEPART(HOUR, m.Cycle_Time) * 60 + DATEPART(MINUTE, m.Cycle_Time) AS VARCHAR), 2) + ':' +
+                    RIGHT('0' + CAST(DATEPART(SECOND, m.Cycle_Time) AS VARCHAR), 2) AS cycleTime`,
                     'm.is_Active as isActive',
                     'u.username as updatedBy',
                     'm.UPDATED_DATE as updatedDate'
@@ -47,13 +48,10 @@ export class ModelService {
                     message: 'Model not found'
                 }
             }
-            const [h, m, s] = r.cycleTime.split(':').map(Number);
-            const cycleTimeMins = h * 60 + m + s / 60;
-            const result = { ...r, ...{ cycleTimeMins: cycleTimeMins } };
-            result.updatedDate = toLocalDateTime(result.updatedDate);
+            r.updatedDate = toLocalDateTime(r.updatedDate);
             return {
                 status: 0,
-                data: result
+                data: r
             };
         }
         catch (error) {
@@ -66,8 +64,7 @@ export class ModelService {
         try {
             data.createdBy = data.updatedBy = `${userId}`;
             data.createdDate = data.updatedDate = getCurrentDate();
-            data.cycleTime = this.minuteToTime(data.cycleTimeMins);
-            delete data.cycleTimeMins;
+            data.cycleTime = this.minuteToTime(data.cycleTime);
             const result = await this.modelRepository.save(data);
             if (result) {
                 return {
@@ -95,8 +92,7 @@ export class ModelService {
         try {
             data.updatedBy = `${userId}`;
             data.updatedDate = getCurrentDate();
-            data.cycleTime = this.minuteToTime(data.cycleTimeMins);
-            delete data.cycleTimeMins;
+            data.cycleTime = this.minuteToTime(data.cycleTime);
             var r = await this.modelRepository.update(
                 {
                     modelCd: id
@@ -123,7 +119,11 @@ export class ModelService {
     }
 
     minuteToTime(m) {
-        return new Date(0, 0, 0, 0, Number(m), 0);
+        if (m) {
+            const [hh, mm, ss] = m.split(':').map(Number);
+            return new Date(0, 0, 0, hh, mm, ss);
+        }
+        return null;
     }
 
 }

@@ -89,7 +89,7 @@ export class ToolService {
         }
     }
 
-    async createHistory(data: ToolHistoryDto, userId: Number): Promise<BaseResponse> {
+    async resetTool(data: ToolHistoryDto, userId: Number): Promise<BaseResponse> {
         try {
             const tool = await this.toolRepository.findOneBy({ processCd: data.Process_CD, toolCd: data.Tool_CD });
             if (!tool) {
@@ -103,13 +103,27 @@ export class ToolService {
             tool.createdDate = getCurrentDate();
             const result = await this.toolHistoryRepository.insert(tool);
             if (result.identifiers.length > 0) {
-                return {
-                    status: 0,
-                };
+                var r = await this.toolRepository.update(
+                    {
+                        toolCd: data.Tool_CD,
+                        processCd: data.Process_CD
+                    },
+                    {
+                        actualAmt: null,
+                        updatedBy: `${userId}`,
+                        updatedDate: getCurrentDate()
+                    },
+                );
+
+                if (r.affected > 0) {
+                    return {
+                        status: 0
+                    }
+                }
             }
             return {
                 status: 1,
-                message: 'Unable to save tool history, Please try again.',
+                message: 'Unable to Reset, Please try again.',
             };
         } catch (error) {
             console.log("Error : ", error)
