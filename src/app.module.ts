@@ -23,6 +23,7 @@ import { MasterIndexModule } from './api/master-index/master-index.module';
 import { ModelModule } from './api/model/model.module';
 import { MachineModule } from './api/machine/machine.module';
 import { ToolModule } from './api/tool/tool.module';
+import { NGModule } from './api/ng/ng.module';
 
 dotenv.config(); // Load environment variables from .env file
 @Module({
@@ -63,7 +64,8 @@ dotenv.config(); // Load environment variables from .env file
     MasterIndexModule,
     ModelModule,
     MachineModule,
-    ToolModule
+    ToolModule,
+    NGModule
   ],
   controllers: [AppController],
   providers: [AppService],
