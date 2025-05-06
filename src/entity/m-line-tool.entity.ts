@@ -23,12 +23,12 @@ export class MLineTool {
   @Column('datetime', { name: 'CREATED_DATE', nullable: true })
   createdDate: Date | null;
 
-  @Column('nvarchar', { name: 'CREATED_BY', nullable: true, length: 10 })
-  createdBy: string | null;
+  @Column('int', { name: 'CREATED_BY', nullable: true })
+  createdBy: number | null;
 
   @Column('datetime', { name: 'UPDATED_DATE', nullable: true })
   updatedDate: Date | null;
 
-  @Column('nvarchar', { name: 'UPDATED_BY', nullable: true, length: 10 })
-  updatedBy: string | null;
+  @Column('int', { name: 'UPDATED_BY', nullable: true })
+  updatedBy: number | null;
 }

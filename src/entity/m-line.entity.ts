@@ -1,4 +1,4 @@
-import { Column, Entity, Index } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 @Index('PK_M_Line', ['lineCd'], { unique: true })
 @Entity('M_Line', { schema: 'dbo' })

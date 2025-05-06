@@ -7,10 +7,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MLineModel } from 'src/entity/m-line-model.entity';
 import { MLineMachine } from 'src/entity/m-line-machine.entity';
 import { MLineTool } from 'src/entity/m-line-tool.entity';
+import { MTool } from 'src/entity/tool.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([MLine, MLineModel, MLineMachine, MLineTool]),
+    TypeOrmModule.forFeature([
+      MLine,
+      MLineModel,
+      MLineMachine,
+      MLineTool,
+      MTool,
+    ]),
   ],
   providers: [LineService, CommonService],
   controllers: [LineController],

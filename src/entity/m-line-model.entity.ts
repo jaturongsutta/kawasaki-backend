@@ -1,4 +1,5 @@
-import { Column, Entity, Index } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { MModel } from './model.entity';
 
 @Index('PK_M_Line_Model', ['lineCd', 'modelCd'], { unique: true })
 @Entity('M_Line_Model', { schema: 'dbo' })
@@ -23,4 +24,8 @@ export class MLineModel {
 
   @Column('nvarchar', { name: 'UPDATED_BY', nullable: true, length: 10 })
   updatedBy: string | null;
+
+  @ManyToOne(() => MModel)
+  @JoinColumn({ name: 'Model_CD', referencedColumnName: 'modelCd' })
+  model: MModel;
 }

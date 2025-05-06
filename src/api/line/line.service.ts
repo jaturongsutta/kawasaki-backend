@@ -8,6 +8,9 @@ import { Repository } from 'typeorm';
 import { MLine } from 'src/entity/m-line.entity';
 import { MLineModel } from 'src/entity/m-line-model.entity';
 import { DataSource } from 'typeorm'; // Import DataSource for transactions
+import { MLineMachine } from 'src/entity/m-line-machine.entity';
+import { MLineTool } from 'src/entity/m-line-tool.entity';
+import { MTool } from 'src/entity/tool.entity';
 
 @Injectable()
 export class LineService {
@@ -16,7 +19,13 @@ export class LineService {
     @InjectRepository(MLine)
     private lineRepository: Repository<MLine>,
     @InjectRepository(MLineModel)
-    private lineModel: Repository<MLineModel>,
+    private lineModelRepository: Repository<MLineModel>,
+    @InjectRepository(MLineMachine)
+    private lineMachineRepository: Repository<MLineMachine>,
+    @InjectRepository(MLineTool)
+    private lineToolRepository: Repository<MLineTool>,
+    @InjectRepository(MTool)
+    private mToolRepository: Repository<MTool>,
     private dataSource: DataSource, // Inject DataSource for transactions
   ) {}
 
@@ -31,35 +40,184 @@ export class LineService {
     return await this.commonService.getSearch('sp_m_search_line', req);
   }
 
-  async getById(id: number): Promise<LineDto> {
+  async getById(id: string): Promise<LineDto> {
     const dto = new LineDto();
     try {
-      const req = await this.commonService.getConnection();
-      req.input('Line_Id', id);
-      req.output('Return_CD', '');
-      req.output('Return_Name', '');
+      const line = await this.lineRepository.findOne({ where: { lineCd: id } });
 
-      const result = await this.commonService.executeStoreProcedure(
-        'sp_search_co_line_detail',
-        req,
-      );
-
-      const { Return_CD, Return_Name } = result.output;
-      if (Return_CD === 'Success') {
-        const data = result.recordset[0];
-        console.log(data);
-
-        dto.isActive = data.Status_Id;
-      } else {
-        dto.result.status = 1;
-        dto.result.message = Return_Name;
+      if (!line) {
+        throw new Error('Line not found');
       }
+
+      // Map MLine to LineDto
+      dto.lineCd = line.lineCd;
+      dto.lineName = line.lineName;
+      dto.pkCd = line.pkCd;
+      dto.isActive = line.isActive;
+      dto.createdDate = line.createdDate;
+      dto.createdBy = line.createdBy;
+      dto.updatedDate = line.updatedDate;
+      dto.updatedBy = line.updatedBy;
+
+      // Fetch related MLineModel and MModel using a left join
+      const lineModels = await this.lineModelRepository
+        .createQueryBuilder('MLineModel')
+        .leftJoinAndSelect('MLineModel.model', 'model') // Left join with MModel
+        .where('MLineModel.lineCd = :lineCd', { lineCd: id })
+        .select([
+          'MLineModel.lineCd',
+          'MLineModel.modelCd',
+          'MLineModel.isActive',
+          'model.partNo', // Include fields from MModel
+        ])
+        .getMany();
+
+      // Map the result to LineModelDto
+      dto.lineModel = lineModels.map((lineModel) => ({
+        lineCd: lineModel.lineCd,
+        modelCd: lineModel.modelCd,
+        partNo: lineModel.model?.partNo || null, // Handle null for unmatched records
+        isActive: lineModel.isActive,
+        rowState: '', // Default value for rowState
+      }));
+      console.log('dto.lineModel : ', dto.lineModel);
+
+      // Fetch related MLineMachine
+      const lineMachines = await this.lineMachineRepository
+        .createQueryBuilder('MLineMachine')
+        .where('MLineMachine.lineCd = :lineCd', { lineCd: id })
+        .select([
+          'MLineMachine.lineCd',
+          'MLineMachine.modelCd',
+          'MLineMachine.processCd',
+          'MLineMachine.wt',
+          'MLineMachine.ht',
+          'MLineMachine.mt',
+          'MLineMachine.isActive',
+        ])
+        .getMany();
+      console.log('lineMachines : ', lineMachines);
+      // Map the result to LineMachineDto
+      dto.lineMachine = lineMachines.map((lineMachine) => ({
+        lineCd: lineMachine.lineCd,
+        modelCd: lineMachine.modelCd,
+        processCd: lineMachine.processCd,
+        wt: lineMachine.wt,
+        ht: lineMachine.ht,
+        mt: lineMachine.mt,
+        isActive: lineMachine.isActive,
+        rowState: '', // Default value for rowState
+      }));
+      console.log('dto.lineMachine : ', dto.lineMachine);
+      // Fetch related MLineTool
+      const lineTools = await this.lineToolRepository
+        .createQueryBuilder('MLineTool')
+        .where('MLineTool.lineCd = :lineCd', { lineCd: id })
+        .select([
+          'MLineTool.lineCd',
+          'MLineTool.modelCd',
+          'MLineTool.processCd',
+          'MLineTool.toolCd',
+          'MLineTool.isActive',
+        ])
+        .getMany();
+      console.log('lineTools : ', lineTools);
+      // Map the result to LineToolDto
+      dto.lineTool = lineTools.map((lineTool) => ({
+        lineCd: lineTool.lineCd,
+        modelCd: lineTool.modelCd,
+        processCd: lineTool.processCd,
+        toolCd: lineTool.toolCd,
+        isActive: lineTool.isActive,
+        rowState: '', // Default value for rowState
+      }));
+      console.log('dto.lineTool : ', dto.lineTool);
+
+      return dto;
     } catch (error) {
       dto.result.status = 2;
       dto.result.message = error.message;
+      console.error('Error fetching line by ID:', error);
     }
 
     return dto;
+  }
+
+  async getProcessByModel(lineCd: string, modelCd: string): Promise<any> {
+    try {
+      console.log('modelCd : ', modelCd);
+      const lineMachine = await this.lineMachineRepository.find({
+        where: { lineCd: lineCd, modelCd: modelCd },
+      });
+      console.log('lineMachine : ', lineMachine);
+
+      return lineMachine;
+    } catch (error) {
+      console.error('Error fetching process by model:', error);
+      throw error;
+    }
+  }
+
+  async getTool(
+    lineCd: string,
+    modelCd: string,
+    processCd: string,
+  ): Promise<any> {
+    try {
+      console.log('lineCd : ', lineCd);
+      console.log('modelCd : ', modelCd);
+      console.log('processCd : ', processCd);
+      // const lineTool = await this.lineToolRepository.find({
+      //   where: { lineCd: lineCd, modelCd: modelCd, processCd: processCd },
+      // });
+
+      // // Fetch related MLineModel and MModel using a left join
+      // const lineModels = await this.lineModelRepository
+      //   .createQueryBuilder('MLineModel')
+      //   .leftJoinAndSelect('MLineModel.model', 'model') // Left join with MModel
+      //   .where('MLineModel.lineCd = :lineCd', { lineCd: id })
+      //   .select([
+      //     'MLineModel.lineCd',
+      //     'MLineModel.modelCd',
+      //     'MLineModel.isActive',
+      //     'model.partNo', // Include fields from MModel
+      //   ])
+      //   .getMany();
+
+      const lineTool = await this.mToolRepository
+        .createQueryBuilder('tool')
+        .leftJoinAndSelect(
+          'M_Line_Tool',
+          'lineTool',
+          'tool.processCd = lineTool.processCd AND tool.toolCd = lineTool.toolCd',
+        ) // Left outer join
+        .where('tool.processCd = :processCd', { processCd }) // Filter by processCd
+        .select([
+          'tool.processCd',
+
+          'lineTool.lineCd', // Fields from M_Line_Tool
+          'lineTool.isActive as lineToolIsActive',
+        ])
+        .getRawMany(); // Use getRawMany to retrieve raw results
+
+      console.log('lineTool : ', lineTool);
+
+      return lineTool;
+    } catch (error) {
+      console.error('Error fetching process by model:', error);
+      throw error;
+    }
+  }
+
+  // get mtool all data
+  async getToolAll(): Promise<any> {
+    try {
+      const tools = await this.mToolRepository.find();
+      return tools;
+    } catch (error) {
+      console.error('Error fetching all tools:', error);
+      throw error;
+    }
   }
 
   async add(data: LineDto, userId: number): Promise<BaseResponse> {
@@ -110,35 +268,136 @@ export class LineService {
   }
 
   async update(
-    id: number,
+    id: string,
     data: LineDto,
     userId: number,
   ): Promise<BaseResponse> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    console.log('update line data : ', data);
     try {
-      const req = await this.commonService.getConnection();
-      req.input('Line_Id', id);
-      req.input('Status', data.isActive);
+      // Start a transaction
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
 
-      req.input('Updated_By', userId);
-      req.output('Return_CD', '');
-      req.output('Return_Name', '');
+      const line = await this.lineRepository.findOneBy({ lineCd: id });
+      if (!line) {
+        throw new Error('Line not found');
+      }
+      data.updatedBy = userId;
+      data.updatedDate = new Date();
 
-      const result = await this.commonService.executeStoreProcedure(
-        'sp_update_co_line',
-        req,
-      );
+      await queryRunner.manager.save(MLine, data);
 
-      const { Return_CD, Return_Name } = result.output;
+      // Save line models
+      for (const model of data.lineModel) {
+        if (model.rowState === 'DELETE') {
+          await queryRunner.manager.delete(MLineModel, {
+            lineCd: data.lineCd,
+            modelCd: model.modelCd,
+          });
+        } else if (model.rowState === 'NEW') {
+          const newLineModel = new MLineModel();
+          newLineModel.lineCd = data.lineCd;
+          newLineModel.modelCd = model.modelCd;
+          newLineModel.isActive = model.isActive;
+
+          await queryRunner.manager.save(MLineModel, newLineModel);
+        }
+      }
+
+      // save line machine
+      for (const machine of data.lineMachine) {
+        if (machine.rowState === 'DELETE') {
+          await queryRunner.manager.delete(MLineMachine, {
+            lineCd: data.lineCd,
+            modelCd: machine.modelCd,
+          });
+        } else if (machine.rowState === 'NEW') {
+          const newLineMachine = new MLineMachine();
+          newLineMachine.lineCd = data.lineCd;
+          newLineMachine.modelCd = machine.modelCd;
+          newLineMachine.processCd = machine.processCd;
+          newLineMachine.wt = machine.wt;
+          newLineMachine.ht = machine.ht;
+          newLineMachine.mt = machine.mt;
+          newLineMachine.isActive = machine.isActive;
+          newLineMachine.createdBy = userId;
+          newLineMachine.updatedBy = userId;
+          newLineMachine.createdDate = new Date();
+          newLineMachine.updatedDate = new Date();
+          await queryRunner.manager.save(MLineMachine, newLineMachine);
+        } else if (machine.rowState === 'UPDATE') {
+          const existingLineMachine = await this.lineMachineRepository.findOne({
+            where: { lineCd: data.lineCd, modelCd: machine.modelCd },
+          });
+          if (existingLineMachine) {
+            existingLineMachine.wt = machine.wt;
+            existingLineMachine.ht = machine.ht;
+            existingLineMachine.mt = machine.mt;
+            existingLineMachine.updatedBy = userId;
+            existingLineMachine.updatedDate = new Date();
+            await queryRunner.manager.save(MLineMachine, existingLineMachine);
+          }
+        }
+      }
+
+      // save line tool
+      for (const tool of data.lineTool) {
+        if (tool.rowState === 'DELETE') {
+          await queryRunner.manager.delete(MLineTool, {
+            lineCd: data.lineCd,
+            modelCd: tool.modelCd,
+            processCd: tool.processCd,
+            toolCd: tool.toolCd,
+          });
+        } else if (tool.rowState === 'NEW') {
+          const newLineTool = new MLineTool();
+          newLineTool.lineCd = data.lineCd;
+          newLineTool.modelCd = tool.modelCd;
+          newLineTool.processCd = tool.processCd;
+          newLineTool.toolCd = tool.toolCd;
+          newLineTool.isActive = tool.isActive;
+          newLineTool.createdBy = userId;
+          newLineTool.updatedBy = userId;
+          newLineTool.createdDate = new Date();
+          newLineTool.updatedDate = new Date();
+          await queryRunner.manager.save(MLineTool, newLineTool);
+        } else if (tool.rowState === 'UPDATE') {
+          const existingLineTool = await this.lineToolRepository.findOne({
+            where: {
+              lineCd: data.lineCd,
+              modelCd: tool.modelCd,
+              processCd: tool.processCd,
+              toolCd: tool.toolCd,
+            },
+          });
+          if (existingLineTool) {
+            existingLineTool.isActive = tool.isActive;
+            existingLineTool.updatedBy = userId;
+            existingLineTool.updatedDate = new Date();
+            await queryRunner.manager.save(MLineTool, existingLineTool);
+          }
+        }
+      }
+
+      // Commit the transaction
+      await queryRunner.commitTransaction();
 
       return {
-        status: Return_CD !== 'Success' ? 1 : 0,
-        message: Return_Name,
+        status: 0, // success
+        message: '',
       };
     } catch (error) {
+      console.error('Error updating line:', error);
+      // Rollback the transaction in case of error
+      await queryRunner.rollbackTransaction();
       return {
         status: 2,
         message: error.message,
       };
+    } finally {
+      // Release the query runner
+      await queryRunner.release();
     }
   }
 
