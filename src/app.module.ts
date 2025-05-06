@@ -63,9 +63,9 @@ dotenv.config(); // Load environment variables from .env file
     MasterIndexModule,
     ModelModule,
     MachineModule,
-    ToolModule
+    ToolModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

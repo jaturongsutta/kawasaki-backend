@@ -66,6 +66,14 @@ export class DropdownListService {
     whereCondition: string,
     orderby: string,
   ): Promise<any[]>;
+  async getDropdownList(
+    tableName: string,
+    colValue: string,
+    colText: string,
+    whereCondition: string,
+    orderby: string,
+    columns?: Array<string>,
+  ): Promise<any[]>;
 
   // Implementation that matches all the above signatures
   async getDropdownList(
@@ -74,9 +82,19 @@ export class DropdownListService {
     colText: string,
     whereCondition?: string,
     orderby?: string,
+    columns?: Array<string>,
   ): Promise<any[]> {
     let data = [];
-    let sql = `SELECT ${colValue} as col_value, ${colText} as col_text FROM ${tableName}`;
+
+    let c = '';
+    if (columns && columns.length > 0) {
+      c = columns.join(',');
+      if (c.length > 0) {
+        c = ',' + c;
+      }
+    }
+
+    let sql = `SELECT ${colValue} as col_value, ${colText} as col_text ${c}  FROM ${tableName}`;
 
     if (whereCondition) {
       sql += ' WHERE 1 = 1 AND ' + whereCondition;
@@ -87,11 +105,11 @@ export class DropdownListService {
     }
 
     let result = await this.predefineRepository.query(sql);
-
     for (let i = 0; i < result.length; i++) {
       data.push({
         value: `${result[i]['col_value']}`,
         title: `${result[i]['col_text']}`,
+        ...result[i],
       });
     }
 
