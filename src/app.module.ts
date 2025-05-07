@@ -24,6 +24,7 @@ import { ModelModule } from './api/model/model.module';
 import { MachineModule } from './api/machine/machine.module';
 import { ToolModule } from './api/tool/tool.module';
 import { NGModule } from './api/ng/ng.module';
+import { PlanModule } from './api/plan/plan.module';
 
 dotenv.config(); // Load environment variables from .env file
 @Module({
@@ -66,6 +67,7 @@ dotenv.config(); // Load environment variables from .env file
     MachineModule,
     ToolModule,
     NGModule
+    PlanModule,
   ],
   controllers: [AppController],
   providers: [AppService],
