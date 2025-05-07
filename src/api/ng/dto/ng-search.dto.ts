@@ -8,6 +8,7 @@ export class NGSearchDto extends BaseSearch {
   status: string | null;
   dateFrom: Date | null;
   dateTo: Date | null;
+  planDate: Date | null;
 }
 
 export class NGDto {

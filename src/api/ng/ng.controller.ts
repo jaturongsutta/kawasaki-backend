@@ -22,6 +22,11 @@ export class NGController extends BaseController {
     return await this.service.search(dto);
   }
 
+  @Post('searchPlan')
+  async searchPlan(@Body() dto: NGSearchDto) {
+    return await this.service.searchPlan(dto);
+  }
+
   @Get('statusList')
   async getStatus() {
     return await this.service.getStatus();
@@ -32,9 +37,9 @@ export class NGController extends BaseController {
     return await this.service.getReason();
   }
 
-  @Get('lineList')
-  async getLine() {
-    return await this.service.getLine();
+  @Get('lineList/:filterActive')
+  async getLine(@Param('filterActive') filterActive: string) {
+    return await this.service.getLine(filterActive);
   }
 
   @Get('lineModelList/:lineCd')

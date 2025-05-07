@@ -32,6 +32,13 @@ export class NGService {
         return await this.commonService.getSearch('sp_NG_Search', req);
     }
 
+    async searchPlan(dto: NGSearchDto) {
+        const req = await this.commonService.getConnection();
+        req.input('Line_CD', dto.lineCd);
+        req.input('Plan_Date', dto.planDate);
+        return await this.commonService.getSearch('sp_NG_Search_Plan', req);
+    }
+
     async getStatus(): Promise<any> {
         try {
             const r = await this.predefineRepository
@@ -59,14 +66,19 @@ export class NGService {
         }
     }
 
-    async getLine(): Promise<any> {
+    async getLine(filterActive: string): Promise<any> {
         try {
-            const r = await this.lineRepository
+            const x = await this.lineRepository
                 .createQueryBuilder('x')
                 .select([
                     'x.Line_CD as lineCd',
                 ])
-                .getRawMany();
+
+            if (filterActive.toUpperCase() === 'Y') {
+                x.where(`x.is_Active = 'Y'`);
+            }
+
+            const r = await x.getRawMany();
             if (!r) {
                 return {
                     status: 2,
