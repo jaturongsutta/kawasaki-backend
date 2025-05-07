@@ -7,8 +7,8 @@ import { Repository } from 'typeorm';
 import { BaseResponse } from 'src/common/base-response';
 import { getCurrentDate, toLocalDateTime } from 'src/utils/utils';
 import { Predefine } from 'src/entity/predefine.entity';
-import { MLineModel } from 'src/entity/line-model.entity';
-import { MLine } from 'src/entity/line.entity';
+import { MLineModel } from 'src/entity/m-line-model.entity';
+import { MLine } from 'src/entity/m-line.entity';
 
 @Injectable()
 export class NGService {

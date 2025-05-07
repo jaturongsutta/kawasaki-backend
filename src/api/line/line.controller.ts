@@ -25,18 +25,42 @@ export class LineController extends BaseController {
   }
 
   @Get('getById/:id')
-  async getById(@Param('id') id: number) {
+  async getById(@Param('id') id: string) {
     return await this.service.getById(id);
+  }
+
+  @Get('getProcessByModel/:lineCd/:modelCd')
+  async getProcessByModel(
+    @Param('lineCd') lineCd,
+    @Param('modelCd') modelCd: string,
+  ) {
+    return await this.service.getProcessByModel(lineCd, modelCd);
+  }
+
+  @Get('getTool/:lineCd/:modelCd/:processCd')
+  async getTool(
+    @Param('lineCd') lineCd,
+    @Param('modelCd') modelCd: string,
+    @Param('processCd') processCd: string,
+  ) {
+    return await this.service.getTool(lineCd, modelCd, processCd);
+  }
+
+  // get tool all data
+  @Get('getToolAll')
+  async getToolAll() {
+    return await this.service.getToolAll();
   }
 
   @Post('add')
   async add(@Body() dto: LineDto, @Request() req: any) {
+    console.log('dto : ', dto);
     return await this.service.add(dto, req.user.userId);
   }
 
   @Put('update/:id')
   async update(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() dto: LineDto,
     @Request() req: any,
   ) {
