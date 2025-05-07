@@ -96,4 +96,17 @@ export class DropdownListController extends BaseController {
       "Is_Active = 'Y' AND Line_CD = '" + _line + "'  OR '" + _line + "' = ''",
     );
   }
+
+  @Get('line-machine/:line/:model?')
+  getLineMachine(@Param('line') line: string | null, @Param('model') model: string | null) {
+    const _line = line ? line : '';
+    const _model = model ? model : '';
+
+    return this.service.getDropdownList(
+      'M_Line_Machine',
+      'DISTINCT Process_CD',
+      'Process_CD',
+      "Is_Active = 'Y' AND (Line_CD = '" + _line + "'  OR '" + _line + "' = '') AND (Model_CD = '" + _model + "'  OR '" + _model + "' = '')",
+    );
+  }
 }

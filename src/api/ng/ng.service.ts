@@ -2,21 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
 import { NGDto, NGSearchDto } from './dto/ng-search.dto';
-import { MModel } from 'src/entity/model.entity';
 import { Repository } from 'typeorm';
 import { BaseResponse } from 'src/common/base-response';
 import { getCurrentDate, toLocalDateTime } from 'src/utils/utils';
-import { Predefine } from 'src/entity/predefine.entity';
-import { MLineModel } from 'src/entity/m-line-model.entity';
-import { MLine } from 'src/entity/m-line.entity';
+import { NgRecord } from 'src/entity/ng-record.entity';
 
 @Injectable()
 export class NGService {
     constructor(private commonService: CommonService,
-        @InjectRepository(Predefine) private predefineRepository: Repository<Predefine>,
-        @InjectRepository(MLineModel) private lineModelRepository: Repository<MLineModel>,
-        @InjectRepository(MLine) private lineRepository: Repository<MLine>,
-        @InjectRepository(MModel) private modelRepository: Repository<MModel>
+        @InjectRepository(NgRecord) private ngRecordRepository: Repository<NgRecord>
     ) { }
 
     async search(dto: NGSearchDto) {
@@ -39,119 +33,9 @@ export class NGService {
         return await this.commonService.getSearch('sp_NG_Search_Plan', req);
     }
 
-    async getStatus(): Promise<any> {
-        try {
-            const r = await this.predefineRepository
-                .createQueryBuilder('x')
-                .select([
-                    'x.Predefine_CD as statusCd',
-                    'x.Value_EN as statusName',
-                ])
-                .where(`x.Predefine_Group='NG_Status'`)
-                .getRawMany();
-            if (!r) {
-                return {
-                    status: 2,
-                    message: 'Predefine Status not found'
-                }
-            }
-            return {
-                status: 0,
-                data: r
-            };
-        }
-        catch (error) {
-            console.log("Error : ", error)
-            throw error;
-        }
-    }
-
-    async getLine(filterActive: string): Promise<any> {
-        try {
-            const x = await this.lineRepository
-                .createQueryBuilder('x')
-                .select([
-                    'x.Line_CD as lineCd',
-                ])
-
-            if (filterActive.toUpperCase() === 'Y') {
-                x.where(`x.is_Active = 'Y'`);
-            }
-
-            const r = await x.getRawMany();
-            if (!r) {
-                return {
-                    status: 2,
-                    message: 'Line not found'
-                }
-            }
-            return {
-                status: 0,
-                data: r
-            };
-        }
-        catch (error) {
-            console.log("Error : ", error)
-            throw error;
-        }
-    }
-
-    async getReason(): Promise<any> {
-        try {
-            const r = await this.predefineRepository
-                .createQueryBuilder('x')
-                .select([
-                    'x.Predefine_CD as reasonCd',
-                    'x.Value_EN as reasonName',
-                ])
-                .where(`x.Predefine_Group='NG_Reason'`)
-                .getRawMany();
-            if (!r) {
-                return {
-                    status: 2,
-                    message: 'Predefine Reason not found'
-                }
-            }
-            return {
-                status: 0,
-                data: r
-            };
-        }
-        catch (error) {
-            console.log("Error : ", error)
-            throw error;
-        }
-    }
-
-    async getModelWithLineCd(lineCd: string): Promise<any> {
-        try {
-            const r = await this.lineModelRepository
-                .createQueryBuilder('x')
-                .select([
-                    'x.Model_CD as modelCd',
-                ])
-                .where(`x.Line_CD='${lineCd}'`)
-                .getRawMany();
-            if (!r) {
-                return {
-                    status: 2,
-                    message: 'Line Model not found'
-                }
-            }
-            return {
-                status: 0,
-                data: r
-            };
-        }
-        catch (error) {
-            console.log("Error : ", error)
-            throw error;
-        }
-    }
-
     async getById(id: string): Promise<any> {
         try {
-            const r = await this.modelRepository
+            const r = await this.ngRecordRepository
                 .createQueryBuilder('m')
                 .leftJoin('um_User', 'u', 'u.User_ID = m.UPDATED_BY')
                 .select([
@@ -186,21 +70,21 @@ export class NGService {
         }
     }
 
-    async add(data: NGDto, userId: Number): Promise<BaseResponse> {
+    async add(data: NGDto, userId: number): Promise<BaseResponse> {
         try {
-            // data.createdBy = data.updatedBy = `${userId}`;
-            // data.createdDate = data.updatedDate = getCurrentDate();
-            // data.cycleTime = this.minuteToTime(data.cycleTime);
-            // const result = await this.modelRepository.save(data);
-            // if (result) {
-            //     return {
-            //         status: 0,
-            //     };
-            // }
-            // return {
-            //     status: 1,
-            //     message: 'Unable to create data, Please try again.',
-            // };
+            data.createdBy = data.updatedBy = userId;
+            data.createdDate = data.updatedDate = getCurrentDate();
+            data.ngTime = this.minuteToTime(data.ngTime);
+            const result = await this.ngRecordRepository.save(data);
+            if (result) {
+                return {
+                    status: 0,
+                };
+            }
+            return {
+                status: 1,
+                message: 'Unable to create data, Please try again.',
+            };
         } catch (error) {
             console.log("Error : ", error)
             return {

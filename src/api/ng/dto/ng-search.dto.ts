@@ -12,27 +12,33 @@ export class NGSearchDto extends BaseSearch {
 }
 
 export class NGDto {
-  @IsNotEmpty()
-  lineCd: string;
+  id: number;
 
-  modelCd: string | null;
+  planId: string | null;
+
+  lineCd: string | null;
+
+  processCd: string | null;
+
+  ngDate: Date | null;
+
+  ngTime: Date | null;
+
+  quantity: number | null;
 
   reason: string | null;
 
+  comment: string | null;
+
+  idRef: string | null;
+
   status: string | null;
-
-  dateFrom: Date | null;
-  dateTo: Date | null;
-
-  // cycleTimeMins: string | null;
-
-  // isActive: string | null;
 
   createdDate: Date | null;
 
-  createdBy: string | null;
+  createdBy: number | null;
 
   updatedDate: Date | null;
 
-  updatedBy: string | null;
+  updatedBy: number | null;
 }

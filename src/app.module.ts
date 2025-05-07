@@ -66,7 +66,7 @@ dotenv.config(); // Load environment variables from .env file
     ModelModule,
     MachineModule,
     ToolModule,
-    NGModule
+    NGModule,
     PlanModule,
   ],
   controllers: [AppController],

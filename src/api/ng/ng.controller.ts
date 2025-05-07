@@ -27,26 +27,6 @@ export class NGController extends BaseController {
     return await this.service.searchPlan(dto);
   }
 
-  @Get('statusList')
-  async getStatus() {
-    return await this.service.getStatus();
-  }
-
-  @Get('reasonList')
-  async getReason() {
-    return await this.service.getReason();
-  }
-
-  @Get('lineList/:filterActive')
-  async getLine(@Param('filterActive') filterActive: string) {
-    return await this.service.getLine(filterActive);
-  }
-
-  @Get('lineModelList/:lineCd')
-  async getModel(@Param('lineCd') id: string) {
-    return await this.service.getModelWithLineCd(id);
-  }
-
   @Get('getById/:id')
   async getById(@Param('id') id: string) {
     return await this.service.getById(id);

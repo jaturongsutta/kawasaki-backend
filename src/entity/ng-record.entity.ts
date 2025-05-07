@@ -30,8 +30,8 @@ export class NgRecord {
     @Column("nvarchar", { name: "Comment", nullable: true, length: 250 })
     comment: string | null;
 
-    @Column("int", { name: "ID_Ref", nullable: true })
-    idRef: number | null;
+    @Column("nvarchar", { name: "ID_Ref", nullable: true , length: 50 })
+    idRef: string | null;
 
     @Column("nvarchar", { name: "Status", nullable: true, length: 2 })
     status: string | null;
