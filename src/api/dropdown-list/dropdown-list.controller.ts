@@ -37,29 +37,9 @@ export class DropdownListController extends BaseController {
   @Get('line')
   getLine(@Request() req: any) {
     return this.service.getDropdownList(
-      'co_line',
-      'DISTINCT line_no',
-      'line_no',
-      "Is_Active = 'Y'",
-    );
-  }
-
-  @Get('line-tank')
-  getLineTank(@Request() req: any) {
-    return this.service.getDropdownList(
-      'co_line',
-      'tank',
-      'tank',
-      "Is_Active = 'Y'",
-    );
-  }
-
-  @Get('product')
-  getProduct(@Request() req: any) {
-    return this.service.getDropdownList(
-      'co_product',
-      'product_id',
-      'product_name',
+      'm_line',
+      'line_cd',
+      'line_cd',
       "Is_Active = 'Y'",
     );
   }
@@ -93,6 +73,18 @@ export class DropdownListController extends BaseController {
       'Process_CD',
       'Machine_No',
       "Is_Active = 'Y'",
+    );
+  }
+
+  @Get('line-model/:line?')
+  getLineModel(@Param('line') line: string | null) {
+    const _line = line ? line : '';
+
+    return this.service.getDropdownList(
+      'M_Line_Model',
+      'DISTINCT Model_CD',
+      'Model_CD',
+      "Is_Active = 'Y' AND Line_CD = '" + _line + "'  OR '" + _line + "' = ''",
     );
   }
 }
