@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
-import { ProdPlan } from 'src/entity/prod-plan';
+import { ProdPlan } from 'src/entity/prod-plan.entity';
 import { Repository } from 'typeorm';
 import { PlanSearchDto } from './dto/plan-search.dto';
 import { getCurrentDate } from 'src/utils/utils';
@@ -49,6 +49,7 @@ export class PlanService {
   }
 
   async stopPlan(id: number, userId: number) {
+    this.logger.log(`Plan ${id} stopped by user ${userId}`);
     try {
       const plan = await this.planRepository.findOneBy({ id });
       if (!plan) {
@@ -62,6 +63,7 @@ export class PlanService {
 
       this.logger.log(`Plan ${id} stopped by user ${userId}`);
       if (!result) {
+        this.logger.error(`Failed to stop plan ${id}`);
         return {
           status: 1,
           message: 'Failed to stop plan',
@@ -72,6 +74,7 @@ export class PlanService {
       };
     } catch (error) {
       console.error(error);
+      this.logger.error(`Error stopping plan ${id}: ${error.message}`);
       return {
         status: 2,
         message: 'Error stopping plan',
