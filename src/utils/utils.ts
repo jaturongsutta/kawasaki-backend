@@ -9,3 +9,11 @@ export const toLocalDateTime = (d) => {
         .setZone('utc', { keepLocalTime: true })
         .toISO();
 }
+
+export const minuteToTime = (m) => {
+    if (m) {
+        const [hh, mm, ss] = m.split(':').map(Number);
+        return new Date(0, 0, 0, hh, mm, ss);
+    }
+    return null;
+}

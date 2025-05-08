@@ -4,7 +4,7 @@ import { CommonService } from 'src/common/common.service';
 import { NGDto, NGSearchDto } from './dto/ng-search.dto';
 import { Repository } from 'typeorm';
 import { BaseResponse } from 'src/common/base-response';
-import { getCurrentDate, toLocalDateTime } from 'src/utils/utils';
+import { getCurrentDate, minuteToTime, toLocalDateTime } from 'src/utils/utils';
 import { NgRecord } from 'src/entity/ng-record.entity';
 
 @Injectable()
@@ -35,38 +35,26 @@ export class NGService {
 
     async getById(id: string): Promise<any> {
         try {
-            const r = await this.ngRecordRepository
-                .createQueryBuilder('m')
-                .leftJoin('um_User', 'u', 'u.User_ID = m.UPDATED_BY')
-                .select([
-                    'm.Model_CD as modelCd',
-                    'm.Product_CD as productCd',
-                    'm.Part_No as partNo',
-                    'm.Part_Upper as partUpper',
-                    'm.Part_Lower as partLower',
-                    `RIGHT('0' + CAST(DATEPART(HOUR, m.Cycle_Time) * 60 + DATEPART(MINUTE, m.Cycle_Time) AS VARCHAR), 2) + ':' +
-                    RIGHT('0' + CAST(DATEPART(SECOND, m.Cycle_Time) AS VARCHAR), 2) AS cycleTime`,
-                    'm.is_Active as isActive',
-                    'u.username as updatedBy',
-                    'm.UPDATED_DATE as updatedDate'
-                ])
-                .where('m.modelCd = :id', { id })
-                .getRawOne();
-            if (!r) {
+            const req = await this.commonService.getConnection();
+            req.input('Id', id);
+            const result = await this.commonService.executeStoreProcedure(
+                'sp_NG_Load',
+                req,
+            );
+            if (result.recordsets.length > 0) {
                 return {
-                    status: 2,
-                    message: 'Model not found'
-                }
+                    data: result.recordsets[0][0],
+                };
+            } else {
+                return {
+                    data: {},
+                };
             }
-            r.updatedDate = toLocalDateTime(r.updatedDate);
+        } catch (error) {
             return {
-                status: 0,
-                data: r
+                status: 2,
+                message: error.message,
             };
-        }
-        catch (error) {
-            console.log("Error : ", error)
-            throw error;
         }
     }
 
@@ -74,7 +62,7 @@ export class NGService {
         try {
             data.createdBy = data.updatedBy = userId;
             data.createdDate = data.updatedDate = getCurrentDate();
-            data.ngTime = this.minuteToTime(data.ngTime);
+            data.ngTime = minuteToTime(data.ngTime);
             const result = await this.ngRecordRepository.save(data);
             if (result) {
                 return {
@@ -95,30 +83,30 @@ export class NGService {
     }
 
     async update(
-        id: string,
+        id: number,
         data: NGDto,
         userId: number,
     ): Promise<BaseResponse> {
         try {
-            // data.updatedBy = `${userId}`;
-            // data.updatedDate = getCurrentDate();
-            // data.cycleTime = this.minuteToTime(data.cycleTime);
-            // var r = await this.modelRepository.update(
-            //     {
-            //         modelCd: id
-            //     },
-            //     data,
-            // );
+            data.updatedBy = userId;
+            data.updatedDate = getCurrentDate();
+            data.ngTime = minuteToTime(data.ngTime);
+            var r = await this.ngRecordRepository.update(
+                {
+                    id: id
+                },
+                data,
+            );
 
-            // if (r.affected > 0) {
-            //     return {
-            //         status: 0
-            //     }
-            // }
-            // return {
-            //     status: 1,
-            //     message: 'Unable to update data, Please try again.'
-            // };
+            if (r.affected > 0) {
+                return {
+                    status: 0
+                }
+            }
+            return {
+                status: 1,
+                message: 'Unable to update data, Please try again.'
+            };
         } catch (error) {
             console.log("Error : ", error)
             return {
@@ -128,12 +116,25 @@ export class NGService {
         }
     }
 
-    minuteToTime(m) {
-        if (m) {
-            const [hh, mm, ss] = m.split(':').map(Number);
-            return new Date(0, 0, 0, hh, mm, ss);
+    async delete(id: number): Promise<BaseResponse> {
+        try {
+            var r = await this.ngRecordRepository.delete({ id: id });
+            if (r.affected > 0) {
+                return {
+                    status: 0
+                }
+            }
+            return {
+                status: 1,
+                message: 'Unable to delete data, Please try again.'
+            };
+        } catch (error) {
+            console.log("Error : ", error)
+            return {
+                status: 2,
+                message: error.message,
+            };
         }
-        return null;
     }
 
 }

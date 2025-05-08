@@ -6,6 +6,7 @@ import {
   Post,
   Put,
   Request,
+  Delete,
 } from '@nestjs/common';
 import { NGService } from './ng.service';
 import { BaseController } from 'src/base.controller';
@@ -39,11 +40,15 @@ export class NGController extends BaseController {
 
   @Put('update/:id')
   async update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() dto: NGDto,
     @Request() req: any,
   ) {
     return await this.service.update(id, dto, req.user.userId);
   }
 
+  @Delete('delete/:id')
+  async delete(@Param('id') id: number) {
+    return await this.service.delete(id);
+  }
 }

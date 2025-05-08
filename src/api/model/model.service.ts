@@ -5,7 +5,7 @@ import { ModelDto, ModelSearchDto } from './dto/model-search.dto';
 import { MModel } from 'src/entity/model.entity';
 import { Repository } from 'typeorm';
 import { BaseResponse } from 'src/common/base-response';
-import { getCurrentDate, toLocalDateTime } from 'src/utils/utils';
+import { getCurrentDate, minuteToTime, toLocalDateTime } from 'src/utils/utils';
 
 @Injectable()
 export class ModelService {
@@ -64,7 +64,7 @@ export class ModelService {
         try {
             data.createdBy = data.updatedBy = `${userId}`;
             data.createdDate = data.updatedDate = getCurrentDate();
-            data.cycleTime = this.minuteToTime(data.cycleTime);
+            data.cycleTime = minuteToTime(data.cycleTime);
             const result = await this.modelRepository.save(data);
             if (result) {
                 return {
@@ -92,7 +92,7 @@ export class ModelService {
         try {
             data.updatedBy = `${userId}`;
             data.updatedDate = getCurrentDate();
-            data.cycleTime = this.minuteToTime(data.cycleTime);
+            data.cycleTime = minuteToTime(data.cycleTime);
             var r = await this.modelRepository.update(
                 {
                     modelCd: id
@@ -117,13 +117,4 @@ export class ModelService {
             };
         }
     }
-
-    minuteToTime(m) {
-        if (m) {
-            const [hh, mm, ss] = m.split(':').map(Number);
-            return new Date(0, 0, 0, hh, mm, ss);
-        }
-        return null;
-    }
-
 }
