@@ -17,6 +17,8 @@ export class NGDto {
   planId: string | null;
 
   lineCd: string | null;
+  
+  modelCd: string | null;
 
   processCd: string | null;
 

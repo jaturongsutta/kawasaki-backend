@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
 import { NGDto, NGSearchDto } from './dto/ng-search.dto';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { BaseResponse } from 'src/common/base-response';
 import { getCurrentDate, minuteToTime, toLocalDateTime } from 'src/utils/utils';
 import { NgRecord } from 'src/entity/ng-record.entity';
@@ -10,7 +10,8 @@ import { NgRecord } from 'src/entity/ng-record.entity';
 @Injectable()
 export class NGService {
     constructor(private commonService: CommonService,
-        @InjectRepository(NgRecord) private ngRecordRepository: Repository<NgRecord>
+        @InjectRepository(NgRecord) private ngRecordRepository: Repository<NgRecord>,
+        private dataSource: DataSource,
     ) { }
 
     async search(dto: NGSearchDto) {
@@ -59,11 +60,20 @@ export class NGService {
     }
 
     async add(data: NGDto, userId: number): Promise<BaseResponse> {
+        const queryRunner = this.dataSource.createQueryRunner();
         try {
             data.createdBy = data.updatedBy = userId;
             data.createdDate = data.updatedDate = getCurrentDate();
             data.ngTime = minuteToTime(data.ngTime);
-            const result = await this.ngRecordRepository.save(data);
+
+            await queryRunner.connect();
+            await queryRunner.startTransaction();
+            console.log('data : ', data);
+
+            const result = await queryRunner.manager.save(NgRecord, data);
+            await queryRunner.commitTransaction();
+            await this.updateToolLifeCount(data, userId);
+
             if (result) {
                 return {
                     status: 0,
@@ -74,11 +84,14 @@ export class NGService {
                 message: 'Unable to create data, Please try again.',
             };
         } catch (error) {
+            await queryRunner.rollbackTransaction();
             console.log("Error : ", error)
             return {
                 status: 2,
                 message: error.message,
             };
+        } finally {
+            await queryRunner.release();
         }
     }
 
@@ -87,18 +100,23 @@ export class NGService {
         data: NGDto,
         userId: number,
     ): Promise<BaseResponse> {
+        const queryRunner = this.dataSource.createQueryRunner();
         try {
             data.updatedBy = userId;
             data.updatedDate = getCurrentDate();
             data.ngTime = minuteToTime(data.ngTime);
-            var r = await this.ngRecordRepository.update(
-                {
-                    id: id
-                },
-                data,
-            );
 
-            if (r.affected > 0) {
+            await queryRunner.connect();
+            await queryRunner.startTransaction();
+            console.log('data : ', data);
+
+            const item = { ...data };
+            delete item.modelCd;
+            const result = await queryRunner.manager.update(NgRecord, id, item);
+            await queryRunner.commitTransaction();
+            await this.updateToolLifeCount(data, userId);
+
+            if (result) {
                 return {
                     status: 0
                 }
@@ -108,11 +126,14 @@ export class NGService {
                 message: 'Unable to update data, Please try again.'
             };
         } catch (error) {
+            await queryRunner.rollbackTransaction();
             console.log("Error : ", error)
             return {
                 status: 2,
                 message: error.message,
             };
+        } finally {
+            await queryRunner.release();
         }
     }
 
@@ -137,4 +158,17 @@ export class NGService {
         }
     }
 
+    async updateToolLifeCount(data: NGDto, userId: number) {
+        if (data.idRef === null && data.status === '90') { /* idRef == null and status == '90' confirmed */
+            console.log("updateToolLifeCount")
+            const req = await this.commonService.getConnection();
+            req.input('line', data.lineCd);
+            req.input('model', data.modelCd);
+            req.input('user_id', userId);
+            await this.commonService.executeStoreProcedure(
+                'sp_ToolLife_Count',
+                req,
+            );
+        }
+    }
 }
