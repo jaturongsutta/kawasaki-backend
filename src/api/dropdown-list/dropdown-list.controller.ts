@@ -35,12 +35,19 @@ export class DropdownListController extends BaseController {
   }
 
   @Get('line')
-  getLine(@Request() req: any) {
+  getLine() {
+    return this.service.getDropdownList('m_line', 'line_cd', 'line_cd', '');
+  }
+
+  @Get('line*')
+  getLine_() {
     return this.service.getDropdownList(
       'm_line',
       'line_cd',
       'line_cd',
-      "Is_Active = 'Y'",
+      '',
+      '',
+      ['Line_CD lineCd', 'Line_Name lineName', 'PK_CD pkCd'],
     );
   }
 
