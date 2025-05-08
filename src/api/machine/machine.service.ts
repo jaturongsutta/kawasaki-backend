@@ -2,15 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
 import { MachineDto, MachineSearchDto } from './dto/machine-search.dto';
-import { Repository } from 'typeorm';
+import { DataSource, QueryFailedError, Repository } from 'typeorm';
 import { BaseResponse } from 'src/common/base-response';
 import { MMachine } from 'src/entity/machine.entity';
-import { getCurrentDate, toLocalDateTime } from 'src/utils/utils';
+import { getCurrentDate, getMessageDuplicateError, toLocalDateTime } from 'src/utils/utils';
 
 @Injectable()
 export class MachineService {
     constructor(private commonService: CommonService,
-        @InjectRepository(MMachine) private machineRepository: Repository<MMachine>
+        @InjectRepository(MMachine) private machineRepository: Repository<MMachine>,
+        private dataSource: DataSource,
     ) { }
 
     async search(dto: MachineSearchDto) {
@@ -57,10 +58,16 @@ export class MachineService {
     }
 
     async add(data: MachineDto, userId: Number): Promise<BaseResponse> {
+        const queryRunner = this.dataSource.createQueryRunner();
         try {
             data.createdBy = data.updatedBy = `${userId}`;
             data.createdDate = data.updatedDate = getCurrentDate();
-            const result = await this.machineRepository.save(data);
+            await queryRunner.connect();
+            await queryRunner.startTransaction();
+            console.log('data : ', data);
+
+            const result = await queryRunner.manager.insert(MMachine, data);
+            await queryRunner.commitTransaction();
             if (result) {
                 return {
                     status: 0,
@@ -71,11 +78,13 @@ export class MachineService {
                 message: 'Unable to create data, Please try again.',
             };
         } catch (error) {
-            console.log("Error : ", error)
+            await queryRunner.rollbackTransaction();
             return {
                 status: 2,
-                message: error.message,
+                message: getMessageDuplicateError(error, "Process Code already exists"),
             };
+        } finally {
+            await queryRunner.release();
         }
     }
 
@@ -84,17 +93,18 @@ export class MachineService {
         data: MachineDto,
         userId: number,
     ): Promise<BaseResponse> {
+        const queryRunner = this.dataSource.createQueryRunner();
         try {
             data.updatedBy = `${userId}`;
             data.updatedDate = getCurrentDate();
-            var r = await this.machineRepository.update(
-                {
-                    processCd: id
-                },
-                data,
-            );
+            await queryRunner.connect();
+            await queryRunner.startTransaction();
+            console.log('data : ', data);
 
-            if (r.affected > 0) {
+            const result = await queryRunner.manager.update(MMachine, id, data);
+            await queryRunner.commitTransaction();
+
+            if (result) {
                 return {
                     status: 0
                 }
@@ -104,10 +114,13 @@ export class MachineService {
                 message: 'Unable to update data, Please try again.'
             };
         } catch (error) {
+            await queryRunner.rollbackTransaction();
             return {
                 status: 2,
                 message: error.message,
             };
+        } finally {
+            await queryRunner.release();
         }
     }
 }

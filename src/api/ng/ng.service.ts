@@ -70,7 +70,7 @@ export class NGService {
             await queryRunner.startTransaction();
             console.log('data : ', data);
 
-            const result = await queryRunner.manager.save(NgRecord, data);
+            const result = await queryRunner.manager.insert(NgRecord, data);
             await queryRunner.commitTransaction();
             await this.updateToolLifeCount(data, userId);
 

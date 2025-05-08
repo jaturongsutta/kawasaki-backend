@@ -1,4 +1,4 @@
-import { IsNotEmpty, MaxLength } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 import { BaseSearch } from 'src/common/base-search';
 
 export class MachineSearchDto extends BaseSearch {
