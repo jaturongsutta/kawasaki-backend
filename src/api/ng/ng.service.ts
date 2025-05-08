@@ -19,8 +19,8 @@ export class NGService {
         req.input('Date_From', dto.dateFrom);
         req.input('Date_To', dto.dateTo);
         req.input('Model_CD', dto.modelCd);
-        req.input('Reason', dto.reason);
-        req.input('Status', dto.status);
+        req.input('Reason', dto.reasonCd);
+        req.input('Status', dto.statusCd);
         req.input('Row_No_From', dto.searchOptions.rowFrom);
         req.input('Row_No_To', dto.searchOptions.rowTo);
         return await this.commonService.getSearch('sp_NG_Search', req);
