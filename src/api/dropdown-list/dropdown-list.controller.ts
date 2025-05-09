@@ -46,7 +46,7 @@ export class DropdownListController extends BaseController {
 
   @Get('line')
   getLine() {
-    return this.service.getDropdownList('m_line', 'line_cd', 'line_cd', '');
+    return this.service.getDropdownList('m_line', 'line_cd', 'line_cd', "Is_Active = 'Y'");
   }
 
   @Get('line*')
