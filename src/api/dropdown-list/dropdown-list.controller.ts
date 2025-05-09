@@ -24,6 +24,16 @@ export class DropdownListController extends BaseController {
     return this.service.getPredefine(group, req.headers.language);
   }
 
+  @Get('user')
+  getUser() {
+    return this.service.getDropdownList(
+      'um_User',
+      'User_ID',
+      'First_Name',
+      "Is_Active = 'Y'",
+    );
+  }
+
   @Get('role')
   getRole(@Request() req: any) {
     return this.service.getDropdownList(
@@ -91,7 +101,24 @@ export class DropdownListController extends BaseController {
       'M_Line_Model',
       'DISTINCT Model_CD',
       'Model_CD',
-      "Is_Active = 'Y' AND Line_CD = '" + _line + "'  OR '" + _line + "' = ''",
+      "Line_CD = '" + _line + "'  OR '" + _line + "' = ''",
+    );
+  }
+
+  @Get('shift')
+  getShift() {
+    return this.service.getDropdownList(
+      'm_team',
+      'ID',
+      'Team_Name',
+      "Is_Active = 'Y'",
+      '',
+      [
+        'ID id',
+        'Team_Name TeamName',
+        'Default_Operator defaultOperator',
+        'Default_Leader defaultLeader',
+      ],
     );
   }
 }

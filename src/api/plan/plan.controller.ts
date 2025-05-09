@@ -33,4 +33,27 @@ export class PlanController extends BaseController {
   async stopPlan(@Param('id') id: number, @Request() req: any) {
     return await this.service.stopPlan(id, req.user.userId);
   }
+
+  @Get('working-time-all')
+  async getWorkingTimeAll() {
+    return await this.service.getWorkingTimeAll();
+  }
+
+  @Get('line-model/:line')
+  async getLineModel(@Param('line') line: string) {
+    return await this.service.getLineModel(line);
+  }
+
+  @Post('new-plan')
+  async newPlan(@Body() dto: any, @Request() req: any) {
+    return await this.service.newPlan(dto, req.user.userId);
+  }
+  @Put('update-plan/:planId')
+  async updatePlan(
+    @Param('planId') planId,
+    @Body() dto: any,
+    @Request() req: any,
+  ) {
+    return await this.service.updatePlan(planId, dto, req.user.userId);
+  }
 }
