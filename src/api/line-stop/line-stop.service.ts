@@ -19,19 +19,20 @@ export class LineStopService {
         req.input('Line_CD', dto.lineCd);
         req.input('Date_From', dto.dateFrom);
         req.input('Date_To', dto.dateTo);
-        req.input('Model_CD', dto.modelCd);
+        req.input('Machine_No', dto.machineNo);
         req.input('Reason', dto.reasonCd);
         req.input('Status', dto.statusCd);
         req.input('Row_No_From', dto.searchOptions.rowFrom);
         req.input('Row_No_To', dto.searchOptions.rowTo);
-        return await this.commonService.getSearch('sp_NG_Search', req);
+
+        return await this.commonService.getSearch('sp_LineStop_Search', req);
     }
 
     async searchPlan(dto: LineStopSearchDto) {
         const req = await this.commonService.getConnection();
         req.input('Line_CD', dto.lineCd);
         req.input('Plan_Date', dto.planDate);
-        return await this.commonService.getSearch('sp_NG_Search_Plan', req);
+        return await this.commonService.getSearch('sp_Line_Stop_Search_Plan', req);
     }
 
     async getById(id: string): Promise<any> {
@@ -92,6 +93,43 @@ export class LineStopService {
             };
         } finally {
             await queryRunner.release();
+        }
+    }
+
+    async addFromPLC(data: LineStopDto, userId: number): Promise<BaseResponse> {
+        try {
+            const req = await this.commonService.getConnection();
+            req.input('Line_CD', data.lineCd);
+            req.input('Plan_id', data.planId);
+            req.input('userid', userId);
+            // req.output('Return_CD', '');
+            // req.output('Return_Name', '');
+            const result = await this.commonService.executeStoreProcedure(
+                'sp_LineStop_PLC',
+                req,
+            );
+
+            console.log("result ", result)
+            // const { Return_CD, Return_Name } = result.output;
+
+            if (result.recordset.length > 0) {
+                const { Return_CD, Return_Name } = result.recordset[0];
+                return {
+                    status: Return_CD !== 'Success' ? 1 : 0,
+                    message: Return_Name,
+                };
+            } else {
+                return {
+                    status: 1,
+                    message: "Unable to create item",
+                };
+            }
+
+        } catch (error) {
+            return {
+                status: 2,
+                message: error.message,
+            };
         }
     }
 
