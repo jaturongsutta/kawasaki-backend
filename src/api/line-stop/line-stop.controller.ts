@@ -33,6 +33,11 @@ export class LineStopController extends BaseController {
     return await this.service.getById(id);
   }
 
+  @Get('machineDDL/:lineCd')
+  async getMachineDDL(@Param('lineCd') lineCd: string) {
+    return await this.service.getMachineDDL(lineCd);
+  }
+
   @Post('add')
   async add(@Body() dto: LineStopDto, @Request() req: any) {
     return await this.service.add(dto, req.user.userId);

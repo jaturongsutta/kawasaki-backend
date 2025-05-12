@@ -6,11 +6,14 @@ import { DataSource, Repository } from 'typeorm';
 import { BaseResponse } from 'src/common/base-response';
 import { getCurrentDate, minuteToTime, toLocalDateTime } from 'src/utils/utils';
 import { NgRecord } from 'src/entity/ng-record.entity';
+import { MLineMachine } from 'src/entity/m-line-machine.entity';
+import { LineStopRecord } from 'src/entity/line-stop-record.entity';
 
 @Injectable()
 export class LineStopService {
     constructor(private commonService: CommonService,
-        @InjectRepository(NgRecord) private ngRecordRepository: Repository<NgRecord>,
+        @InjectRepository(LineStopRecord) private lineStopRepository: Repository<LineStopRecord>,
+        @InjectRepository(MLineMachine) private lineMachineRepository: Repository<MLineMachine>,
         private dataSource: DataSource,
     ) { }
 
@@ -40,7 +43,7 @@ export class LineStopService {
             const req = await this.commonService.getConnection();
             req.input('Id', id);
             const result = await this.commonService.executeStoreProcedure(
-                'sp_NG_Load',
+                'sp_Line_Stop_Load',
                 req,
             );
             if (result.recordsets.length > 0) {
@@ -60,20 +63,50 @@ export class LineStopService {
         }
     }
 
+    async getMachineDDL(lineCd: string): Promise<any> {
+        try {
+            const r = await this.lineMachineRepository
+                .createQueryBuilder('x')
+                .innerJoin("M_Machine", 'm', 'm.Process_CD = x.Process_CD')
+                .select([
+                    'm.Machine_No as title',
+                    'm.Machine_No as value',
+                ])
+                .where(`x.Line_CD = '${lineCd}'`)
+                .distinct(true)
+                .getRawMany();
+            if (!r) {
+                return {
+                    status: 2,
+                    message: 'Machine not found'
+                }
+            }
+            return {
+                status: 0,
+                data: r
+            };
+        }
+        catch (error) {
+            console.log("Error : ", error)
+            throw error;
+        }
+    }
+
     async add(data: LineStopDto, userId: number): Promise<BaseResponse> {
         const queryRunner = this.dataSource.createQueryRunner();
         try {
+            console.log("Before ", data)
             data.createdBy = data.updatedBy = userId;
             data.createdDate = data.updatedDate = getCurrentDate();
-            data.ngTime = minuteToTime(data.ngTime);
+            data.lineStopTime = minuteToTime(data.lineStopTime);
+            data.lossTime = this.hhmmssToSeconds(data.lossTime);
 
             await queryRunner.connect();
             await queryRunner.startTransaction();
             console.log('data : ', data);
 
-            const result = await queryRunner.manager.insert(NgRecord, data);
+            const result = await queryRunner.manager.insert(LineStopRecord, data);
             await queryRunner.commitTransaction();
-            await this.updateToolLifeCount(data, userId);
 
             if (result) {
                 return {
@@ -142,17 +175,15 @@ export class LineStopService {
         try {
             data.updatedBy = userId;
             data.updatedDate = getCurrentDate();
-            data.ngTime = minuteToTime(data.ngTime);
+            data.lineStopTime = minuteToTime(data.lineStopTime);
+            data.lossTime = this.hhmmssToSeconds(data.lossTime);
 
             await queryRunner.connect();
             await queryRunner.startTransaction();
             console.log('data : ', data);
 
-            const item = { ...data };
-            delete item.modelCd;
-            const result = await queryRunner.manager.update(NgRecord, id, item);
+            const result = await queryRunner.manager.update(LineStopRecord, id, data);
             await queryRunner.commitTransaction();
-            await this.updateToolLifeCount(data, userId);
 
             if (result) {
                 return {
@@ -177,7 +208,7 @@ export class LineStopService {
 
     async delete(id: number): Promise<BaseResponse> {
         try {
-            var r = await this.ngRecordRepository.delete({ id: id });
+            var r = await this.lineStopRepository.delete({ id: id });
             if (r.affected > 0) {
                 return {
                     status: 0
@@ -196,17 +227,19 @@ export class LineStopService {
         }
     }
 
-    async updateToolLifeCount(data: LineStopDto, userId: number) {
-        if (data.idRef === null && data.status === '90') { /* idRef == null and status == '90' confirmed */
-            console.log("updateToolLifeCount")
-            const req = await this.commonService.getConnection();
-            req.input('line', data.lineCd);
-            req.input('model', data.modelCd);
-            req.input('user_id', userId);
-            await this.commonService.executeStoreProcedure(
-                'sp_ToolLife_Count',
-                req,
-            );
-        }
+
+    hhmmssToSeconds(timeStr) {
+        const [hh, mm, ss] = timeStr.split(':').map(Number)
+        return (hh * 3600) + (mm * 60) + ss
+    }
+
+    secondsToHHMMSS(totalSeconds) {
+        const hours = Math.floor(totalSeconds / 3600)
+        const minutes = Math.floor((totalSeconds % 3600) / 60)
+        const seconds = totalSeconds % 60
+
+        const pad = (n) => String(n).padStart(2, '0')
+
+        return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
     }
 }

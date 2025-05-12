@@ -18,21 +18,17 @@ export class LineStopDto {
 
   lineCd: string | null;
 
-  modelCd: string | null;
+  machineNo: string | null;
 
-  processCd: string | null;
+  lineStopDate: Date | null;
 
-  ngDate: Date | null;
+  lineStopTime: Date | null;
 
-  ngTime: Date | null;
-
-  quantity: number | null;
+  lossTime: number | null;
 
   reason: string | null;
 
   comment: string | null;
-
-  idRef: string | null;
 
   status: string | null;
 
@@ -43,4 +39,6 @@ export class LineStopDto {
   updatedDate: Date | null;
 
   updatedBy: number | null;
+
+  idRef: number | null;
 }
