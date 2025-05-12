@@ -49,8 +49,42 @@ export class DropdownListController extends BaseController {
     return this.service.getDropdownList('m_line', 'line_cd', 'line_cd', "Is_Active = 'Y'");
   }
 
+  @Get('lineAll')
+  getLineAll(@Request() req: any) {
+    return this.service.getDropdownList(
+      'm_line',
+      'line_cd',
+      'line_cd',
+    );
+  }
+
+  @Get('line-model/:line?')
+  getLineModel(@Param('line') line: string | null) {
+    const _line = line ? line : '';
+    return this.service.getDropdownList(
+      'M_Line_Model',
+      'DISTINCT Model_CD',
+      'Model_CD',
+      "Line_CD = '" + _line + "'  OR '" + _line + "' = ''",
+    );
+  }
+
+  @Get('line-machine/:line/:model?')
+  getLineMachine(@Param('line') line: string | null, @Param('model') model: string | null) {
+    const _line = line ? line : '';
+    const _model = model ? model : '';
+
+    return this.service.getDropdownList(
+      'M_Line_Machine',
+      'DISTINCT Process_CD',
+      'Process_CD',
+      "Is_Active = 'Y' AND (Line_CD = '" + _line + "'  OR '" + _line + "' = '') AND (Model_CD = '" + _model + "'  OR '" + _model + "' = '')",
+    );
+  }
+
   @Get('line*')
   getLine_() {
+    console.log("line all is ** ")
     return this.service.getDropdownList(
       'm_line',
       'line_cd',
@@ -60,15 +94,7 @@ export class DropdownListController extends BaseController {
       ['Line_CD lineCd', 'Line_Name lineName', 'PK_CD pkCd'],
     );
   }
-
-  @Get('lineAll')
-  getLineAll(@Request() req: any) {
-    return this.service.getDropdownList(
-      'm_line',
-      'line_cd',
-      'line_cd',
-    );
-  }
+ 
 
   @Get('model')
   getModel(@Request() req: any) {
@@ -102,18 +128,6 @@ export class DropdownListController extends BaseController {
     );
   }
 
-  @Get('line-model/:line?')
-  getLineModel(@Param('line') line: string | null) {
-    const _line = line ? line : '';
-
-    return this.service.getDropdownList(
-      'M_Line_Model',
-      'DISTINCT Model_CD',
-      'Model_CD',
-      "Line_CD = '" + _line + "'  OR '" + _line + "' = ''",
-    );
-  }
-
   @Get('shift')
   getShift() {
     return this.service.getDropdownList(
@@ -128,19 +142,6 @@ export class DropdownListController extends BaseController {
         'Default_Operator defaultOperator',
         'Default_Leader defaultLeader',
       ],
-    );
-  }
-
-  @Get('line-machine/:line/:model?')
-  getLineMachine(@Param('line') line: string | null, @Param('model') model: string | null) {
-    const _line = line ? line : '';
-    const _model = model ? model : '';
-
-    return this.service.getDropdownList(
-      'M_Line_Machine',
-      'DISTINCT Process_CD',
-      'Process_CD',
-      "Is_Active = 'Y' AND (Line_CD = '" + _line + "'  OR '" + _line + "' = '') AND (Model_CD = '" + _model + "'  OR '" + _model + "' = '')",
     );
   }
 }
