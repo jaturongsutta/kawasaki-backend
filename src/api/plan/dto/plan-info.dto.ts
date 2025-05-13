@@ -4,6 +4,7 @@ export class PlanInfoDto extends BaseDto {
   id: number;
   lineCd?: string | null;
   pkCd?: string | null;
+  lineName?: string | null;
   planDate?: Date | null;
   planStartTime?: Date | null;
   shiftTeam?: number | null;
@@ -28,8 +29,10 @@ export class PlanInfoDto extends BaseDto {
   okAmt?: number | null;
   ngAmt?: number | null;
   status?: string | null;
+  statusName?: string | null;
   createdDate?: Date | null;
   createdBy?: number | null;
   updatedDate?: Date | null;
   updatedBy?: number | null;
+  updatedByName?: string | null;
 }

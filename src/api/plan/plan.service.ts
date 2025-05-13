@@ -7,6 +7,9 @@ import { PlanSearchDto } from './dto/plan-search.dto';
 import { getCurrentDate } from 'src/utils/utils';
 import { MWorkingTime } from 'src/entity/m-working-time.entity';
 import { PlanInfoDto } from './dto/plan-info.dto';
+import { MLine } from 'src/entity/m-line.entity';
+import { Predefine } from 'src/entity/predefine.entity';
+import { User } from 'src/entity/user.entity';
 
 @Injectable()
 export class PlanService {
@@ -16,8 +19,87 @@ export class PlanService {
     private planRepository: Repository<ProdPlan>,
     @InjectRepository(MWorkingTime)
     private workingTimeRepository: Repository<MWorkingTime>,
+
+    @InjectRepository(MLine)
+    private lineRepository: Repository<MLine>,
+
+    @InjectRepository(Predefine)
+    private predefineRepository: Repository<Predefine>,
+
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private commonService: CommonService,
   ) {}
+
+  async getPlanById(id: number): Promise<PlanInfoDto> {
+    try {
+      const plan = await this.planRepository.findOneBy({ id });
+      if (!plan) {
+        this.logger.error(`Plan with id ${id} not found`);
+        throw new Error('Plan not found');
+      }
+
+      // Map entity to DTO
+      const planInfo = new PlanInfoDto();
+      planInfo.id = plan.id;
+      planInfo.lineCd = plan.lineCd;
+      planInfo.pkCd = plan.pkCd;
+      planInfo.planDate = plan.planDate;
+      planInfo.planStartTime = plan.planStartTime;
+      planInfo.shiftTeam = plan.shiftTeam;
+      planInfo.shiftPeriod = plan.shiftPeriod;
+      planInfo.b1 = plan.b1;
+      planInfo.b2 = plan.b2;
+      planInfo.b3 = plan.b3;
+      planInfo.b4 = plan.b4;
+      planInfo.ot = plan.ot;
+      planInfo.modelCd = plan.modelCd;
+      planInfo.productCd = plan.productCd;
+      planInfo.cycleTime = plan.cycleTime;
+      planInfo.operator = plan.operator;
+      planInfo.leader = plan.leader;
+      planInfo.actualStartDt = plan.actualStartDt;
+      planInfo.actualStopDt = plan.actualStopDt;
+      planInfo.setupTime = plan.setupTime;
+      planInfo.actualTotalTime = plan.actualTotalTime;
+      planInfo.status = plan.status;
+
+      planInfo.updatedBy = plan.updatedBy;
+      planInfo.updatedDate = plan.updatedDate;
+
+      // get line by lineCd
+      const line = await this.lineRepository.findOneBy({
+        lineCd: plan.lineCd,
+      });
+      if (line) {
+        planInfo.lineName = line.lineName;
+      }
+
+      // get state by status
+      const status = await this.predefineRepository.findOneBy({
+        predefineGroup: 'Plan_Status',
+        predefineCd: plan.status,
+      });
+      if (status) {
+        planInfo.statusName = status.valueEn;
+      }
+
+      // get user by updatedBy
+      const user = await this.userRepository.findOneBy({
+        userId: plan.updatedBy,
+      });
+      if (user) {
+        planInfo.updatedByName = user.firstName;
+      }
+
+      return planInfo;
+    } catch (error) {
+      this.logger.error(
+        `Error getting plan info by id ${id}: ${error.message}`,
+      );
+      throw error;
+    }
+  }
 
   async planListCurrent(line: string) {
     try {
@@ -112,6 +194,30 @@ export class PlanService {
     }
   }
 
+  // get plan info by id
+  async getPlanInfo(id: number) {
+    try {
+      const plan = await this.planRepository.findOneBy({ id });
+      if (!plan) {
+        this.logger.error(`Plan with id ${id} not found`);
+        return {
+          status: 1,
+          message: 'Plan not found',
+        };
+      }
+      return {
+        status: 0,
+        data: plan,
+      };
+    } catch (error) {
+      this.logger.error(`Error getting plan info: ${error.message}`);
+      return {
+        status: 2,
+        message: 'Error getting plan info',
+      };
+    }
+  }
+
   async newPlan(dto: PlanInfoDto, userId: number) {
     // log data dto
     this.logger.log(`New plan data: ${JSON.stringify(dto)}`);
@@ -172,7 +278,59 @@ export class PlanService {
     }
   }
 
-  updatePlan(planId: any, dto: any, userId: any) {
-    throw new Error('Method not implemented.');
+  async updatePlan(planId: number, dto: PlanInfoDto, userId: number) {
+    //  update plan by id
+    this.logger.log(`Update plan data: ${JSON.stringify(dto)}`);
+    this.logger.log(`Update plan id: ${planId}`);
+    this.logger.log(`Update plan userId: ${userId}`);
+    try {
+      const plan = await this.planRepository.findOneBy({ id: planId });
+      if (!plan) {
+        this.logger.error(`Plan with id ${planId} not found`);
+        return {
+          status: 1,
+          message: 'Plan not found',
+        };
+      }
+      if (plan.status === '00') {
+        plan.planDate = dto.planDate;
+        plan.planStartTime = dto.planStartTime;
+        plan.shiftTeam = dto.shiftTeam;
+        plan.shiftPeriod = dto.shiftPeriod;
+        plan.modelCd = dto.modelCd;
+        plan.productCd = dto.productCd;
+        plan.cycleTime = dto.cycleTime;
+        plan.operator = dto.operator;
+        plan.leader = dto.leader;
+        plan.planFgAmt = dto.planFgAmt;
+      }
+
+      plan.b1 = dto.b1 === 'Y' ? 'Y' : 'N';
+      plan.b2 = dto.b2 === 'Y' ? 'Y' : 'N';
+      plan.b3 = dto.b3 === 'Y' ? 'Y' : 'N';
+      plan.b4 = dto.b4 === 'Y' ? 'Y' : 'N';
+      plan.ot = dto.ot === 'Y' ? 'Y' : 'N';
+      plan.planTotalTime = dto.planTotalTime;
+
+      // Save the updated plan to the database
+      const result = this.planRepository.save(plan);
+      if (!result) {
+        this.logger.error('Failed to update new plan');
+        return {
+          status: 1,
+          message: 'Failed to update new plan',
+        };
+      }
+    } catch (error) {
+      this.logger.error(`Error updating new plan: ${error.message}`);
+      return {
+        status: 2,
+        message: 'Error updating new plan',
+      };
+    }
+    return {
+      status: 0,
+      message: 'Update plan successfully',
+    };
   }
 }

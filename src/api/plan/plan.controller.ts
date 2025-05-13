@@ -44,6 +44,12 @@ export class PlanController extends BaseController {
     return await this.service.getLineModel(line);
   }
 
+  // API to get the plan by id
+  @Get('/:id')
+  async getPlanById(@Param('id') id: number) {
+    return await this.service.getPlanById(id);
+  }
+
   @Post('new-plan')
   async newPlan(@Body() dto: any, @Request() req: any) {
     return await this.service.newPlan(dto, req.user.userId);
