@@ -50,6 +50,16 @@ export class PlanController extends BaseController {
     return await this.service.getPlanById(id);
   }
 
+  @Get('product-data/:id')
+  async getProductData(@Param('id') id: number) {
+    return await this.service.getProductionDataByPlanId(id);
+  }
+
+  @Get('product-data-by-id/:id')
+  async getProductDataById(@Param('id') id: any) {
+    return await this.service.getProductionDataById(id);
+  }
+
   @Post('new-plan')
   async newPlan(@Body() dto: any, @Request() req: any) {
     return await this.service.newPlan(dto, req.user.userId);

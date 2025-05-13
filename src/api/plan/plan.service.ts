@@ -218,6 +218,30 @@ export class PlanService {
     }
   }
 
+  async getProductionDataByPlanId(planId: number) {
+    const req = await this.commonService.getConnection();
+    req.input('Plan_Id', planId);
+
+    const result = await this.commonService.executeStoreProcedure(
+      'sp_Plan_List_ProdData',
+      req,
+    );
+
+    return result.recordset;
+  }
+
+  async getProductionDataById(id: any) {
+    const req = await this.commonService.getConnection();
+    req.input('Id', id);
+
+    const result = await this.commonService.executeStoreProcedure(
+      'sp_Plan_Load_ProdData',
+      req,
+    );
+
+    return result.recordset[0];
+  }
+
   async newPlan(dto: PlanInfoDto, userId: number) {
     // log data dto
     this.logger.log(`New plan data: ${JSON.stringify(dto)}`);
@@ -283,6 +307,7 @@ export class PlanService {
     this.logger.log(`Update plan data: ${JSON.stringify(dto)}`);
     this.logger.log(`Update plan id: ${planId}`);
     this.logger.log(`Update plan userId: ${userId}`);
+
     try {
       const plan = await this.planRepository.findOneBy({ id: planId });
       if (!plan) {
