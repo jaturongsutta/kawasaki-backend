@@ -6,10 +6,12 @@ import {
   Body,
   Param,
   Put,
+  Delete,
 } from '@nestjs/common';
 import { BaseController } from 'src/base.controller';
 import { PlanService } from './plan.service';
 import { PlanSearchDto } from './dto/plan-search.dto';
+import { PlanProductionDataDto } from './dto/plan-production-data.dto';
 
 @Controller('plan')
 export class PlanController extends BaseController {
@@ -71,5 +73,25 @@ export class PlanController extends BaseController {
     @Request() req: any,
   ) {
     return await this.service.updatePlan(planId, dto, req.user.userId);
+  }
+
+  @Delete('delete-plan/:id')
+  async deletePlan(@Param('id') id: number, @Request() req: any) {
+    return await this.service.deletePlan(id, req.user.userId);
+  }
+
+  @Put('update-production-data/:id')
+  async updateProductionData(
+    @Param('id') id,
+    @Body() dto: PlanProductionDataDto,
+    @Request() req: any,
+  ) {
+    return await this.service.updateProductionData(id, dto, req.user.userId);
+  }
+
+  @Post('confirm-list')
+  async confirmList(@Body() dto: any, @Request() req: any) {
+    console.log('confirmList', dto);
+    return await this.service.confirmList(dto, req.user.userId);
   }
 }

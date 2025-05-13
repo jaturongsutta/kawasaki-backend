@@ -20,15 +20,15 @@ const config = {
 
 // Custom filter to exclude NestJS start-up messages
 const excludeNestJsStart = format((info) => {
-  // const excludeMessages = [
-  //   'dependencies initialized',
-  //   'Mapped {/api',
-  //   'Controller {/api',
-  // ];
+  const excludeMessages = [
+    'dependencies initialized',
+    'Mapped {/api',
+    'Controller {/api',
+  ];
 
-  // if (excludeMessages.some((msg) => info.message.includes(msg))) {
-  //   return false; // Exclude these logs
-  // }
+  if (excludeMessages.some((msg) => (info.message as string).includes(msg))) {
+    return false; // Exclude these logs
+  }
 
   return info; // Log everything else
 });

@@ -10,6 +10,8 @@ import { PlanInfoDto } from './dto/plan-info.dto';
 import { MLine } from 'src/entity/m-line.entity';
 import { Predefine } from 'src/entity/predefine.entity';
 import { User } from 'src/entity/user.entity';
+import { PlanProductionDataDto } from './dto/plan-production-data.dto';
+import { ProdData } from 'src/entity/prod-data.entity';
 
 @Injectable()
 export class PlanService {
@@ -17,6 +19,8 @@ export class PlanService {
   constructor(
     @InjectRepository(ProdPlan)
     private planRepository: Repository<ProdPlan>,
+    @InjectRepository(ProdData)
+    private prodDataRepository: Repository<ProdData>,
     @InjectRepository(MWorkingTime)
     private workingTimeRepository: Repository<MWorkingTime>,
 
@@ -230,16 +234,38 @@ export class PlanService {
     return result.recordset;
   }
 
-  async getProductionDataById(id: any) {
+  async getProductionDataById(id: any): Promise<PlanProductionDataDto> {
     const req = await this.commonService.getConnection();
     req.input('Id', id);
+
+    console.log('sasdasdasdasdasdasdasd');
 
     const result = await this.commonService.executeStoreProcedure(
       'sp_Plan_Load_ProdData',
       req,
     );
 
-    return result.recordset[0];
+    if (result.recordset.length === 0) {
+      this.logger.error(`No production data found for plan id ${id}`);
+      return null;
+    }
+    console.log(result.recordset[0]);
+    // Map the first record to the DTO
+    const productionData = new PlanProductionDataDto();
+    productionData.prodDataId = id;
+    productionData.lineCd = result.recordset[0].Line_CD;
+    productionData.planId = result.recordset[0].plan_id;
+    productionData.modelCd = result.recordset[0].Model_CD;
+    productionData.status = result.recordset[0].status;
+    productionData.confirmedStatus = result.recordset[0].Confirmed_Status;
+    productionData.ngProcess = result.recordset[0].process_cd;
+    productionData.ngReason = result.recordset[0].reason;
+    productionData.ngComment = result.recordset[0].comment;
+    productionData.productionDate = result.recordset[0].production_date;
+    productionData.planDate = result.recordset[0].Plan_Date;
+    productionData.planStartTime = result.recordset[0].Plan_Start_Time;
+
+    return productionData;
   }
 
   async newPlan(dto: PlanInfoDto, userId: number) {
@@ -356,6 +382,106 @@ export class PlanService {
     return {
       status: 0,
       message: 'Update plan successfully',
+    };
+  }
+
+  async deletePlan(id: number, userId: number) {
+    this.logger.log(`Delete plan id: ${id}`);
+    try {
+      const plan = await this.planRepository.findOneBy({ id });
+      if (!plan) {
+        this.logger.error(`Plan with id ${id} not found`);
+        return {
+          status: 1,
+          message: 'Plan not found',
+        };
+      }
+
+      // Delete the plan
+      const result = await this.planRepository.delete(id);
+      if (result.affected === 0) {
+        this.logger.error(`Failed to delete plan with id ${id}`);
+        return {
+          status: 1,
+          message: 'Failed to delete plan',
+        };
+      }
+      this.logger.log(`Plan with id ${id} deleted successfully`);
+      return {
+        status: 0,
+        message: 'Plan deleted successfully',
+      };
+    } catch (error) {
+      this.logger.error(`Error deleting plan with id ${id}: ${error.message}`);
+      return {
+        status: 2,
+        message: 'Error deleting plan',
+      };
+    }
+  }
+
+  async updateProductionData(
+    id: number,
+    dto: PlanProductionDataDto,
+    userId: number,
+  ): Promise<any> {
+    try {
+      const req = await this.commonService.getConnection();
+      req.input('ProdData_Id', id);
+      req.input('Plan_Id', dto.planId);
+      req.input('Line', dto.lineCd);
+      req.input('Production_Date', dto.productionDate);
+      req.input('Status', dto.status);
+      req.input('Confirmed_Status', dto.confirmedStatus);
+      req.input('userid', userId);
+      req.input('NG_Process', dto.ngProcess);
+      req.input('NG_Reason', dto.ngReason);
+      req.input('NG_Comment', dto.ngComment);
+
+      const result = await this.commonService.executeStoreProcedure(
+        'sp_Plan_Update_ProdData',
+        req,
+      );
+      return {
+        status: 0,
+      };
+    } catch (error) {
+      console.error(error);
+      return {
+        status: 2,
+        message: 'Error updating production data',
+      };
+    }
+  }
+
+  async confirmList(dto: any, userId: number): Promise<any> {
+    //  { confirmList: [ '0AAB8CF4-D0E6-4589-8FD8-849D80853F72' ] }
+    // update production data by id
+    this.logger.log(`Confirm list data: ${JSON.stringify(dto)}`);
+    this.logger.log(`Confirm list userId: ${userId}`);
+
+    // update by typeorm
+    const ids = dto.confirmList.map((item) => item);
+    const result = await this.prodDataRepository
+      .createQueryBuilder()
+      .update(ProdData)
+      .set({
+        confirmedStatus: '90',
+        confirmedDate: getCurrentDate(),
+        confirmedBy: userId,
+      })
+      .where('id IN (:...ids)', { ids })
+      .execute();
+    if (result.affected === 0) {
+      this.logger.error(`Failed to confirm production data`);
+      return {
+        status: 1,
+        message: 'Failed to confirm production data',
+      };
+    }
+    this.logger.log(`Confirm production data successfully`);
+    return {
+      status: 0,
     };
   }
 }

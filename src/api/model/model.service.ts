@@ -3,14 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
 import { ModelDto, ModelSearchDto } from './dto/model-search.dto';
 import { MModel } from 'src/entity/model.entity';
-import { Repository } from 'typeorm';
+import { DataSource, QueryFailedError, Repository } from 'typeorm';
 import { BaseResponse } from 'src/common/base-response';
-import { getCurrentDate, toLocalDateTime } from 'src/utils/utils';
+import { getCurrentDate, getMessageDuplicateError, minuteToTime, toLocalDateTime } from 'src/utils/utils';
 
 @Injectable()
 export class ModelService {
     constructor(private commonService: CommonService,
-        @InjectRepository(MModel) private modelRepository: Repository<MModel>
+        @InjectRepository(MModel) private modelRepository: Repository<MModel>,
+        private dataSource: DataSource,
     ) { }
 
     async search(dto: ModelSearchDto) {
@@ -61,11 +62,17 @@ export class ModelService {
     }
 
     async add(data: ModelDto, userId: Number): Promise<BaseResponse> {
+        const queryRunner = this.dataSource.createQueryRunner();
         try {
             data.createdBy = data.updatedBy = `${userId}`;
             data.createdDate = data.updatedDate = getCurrentDate();
-            data.cycleTime = this.minuteToTime(data.cycleTime);
-            const result = await this.modelRepository.save(data);
+            data.cycleTime = minuteToTime(data.cycleTime);
+            await queryRunner.connect();
+            await queryRunner.startTransaction();
+            console.log('data : ', data);
+
+            const result = await queryRunner.manager.insert(MModel, data);
+            await queryRunner.commitTransaction();
             if (result) {
                 return {
                     status: 0,
@@ -76,11 +83,14 @@ export class ModelService {
                 message: 'Unable to create data, Please try again.',
             };
         } catch (error) {
+            await queryRunner.rollbackTransaction();
             console.log("Error : ", error)
             return {
                 status: 2,
-                message: error.message,
+                message: getMessageDuplicateError(error, 'Model Code already exists'),
             };
+        } finally {
+            await queryRunner.release();
         }
     }
 
@@ -89,18 +99,18 @@ export class ModelService {
         data: ModelDto,
         userId: number,
     ): Promise<BaseResponse> {
+        const queryRunner = this.dataSource.createQueryRunner();
         try {
             data.updatedBy = `${userId}`;
             data.updatedDate = getCurrentDate();
-            data.cycleTime = this.minuteToTime(data.cycleTime);
-            var r = await this.modelRepository.update(
-                {
-                    modelCd: id
-                },
-                data,
-            );
+            data.cycleTime = minuteToTime(data.cycleTime);
+            await queryRunner.connect();
+            await queryRunner.startTransaction();
+            console.log('data : ', data);
 
-            if (r.affected > 0) {
+            const result = await queryRunner.manager.update(MModel, id, data);
+            await queryRunner.commitTransaction();
+            if (result) {
                 return {
                     status: 0
                 }
@@ -110,20 +120,14 @@ export class ModelService {
                 message: 'Unable to update data, Please try again.'
             };
         } catch (error) {
+            await queryRunner.rollbackTransaction();
             console.log("Error : ", error)
             return {
                 status: 2,
                 message: error.message,
             };
+        } finally {
+            await queryRunner.release();
         }
     }
-
-    minuteToTime(m) {
-        if (m) {
-            const [hh, mm, ss] = m.split(':').map(Number);
-            return new Date(0, 0, 0, hh, mm, ss);
-        }
-        return null;
-    }
-
 }

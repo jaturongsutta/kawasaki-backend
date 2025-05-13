@@ -79,6 +79,9 @@ export class CommonService {
       return result;
     } catch (error) {
       this.logger.log(JSON.stringify(this.getLogSql(req)));
+      if (error.originalError) {
+        throw { message: error.originalError.message };
+      }
       throw error;
     }
   }

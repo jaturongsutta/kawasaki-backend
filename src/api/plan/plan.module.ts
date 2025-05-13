@@ -8,10 +8,18 @@ import { MWorkingTime } from 'src/entity/m-working-time.entity';
 import { MLine } from 'src/entity/m-line.entity';
 import { Predefine } from 'src/entity/predefine.entity';
 import { User } from 'src/entity/user.entity';
+import { ProdData } from 'src/entity/prod-data.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ProdPlan, MWorkingTime, MLine, Predefine, User]),
+    TypeOrmModule.forFeature([
+      ProdPlan,
+      MWorkingTime,
+      MLine,
+      Predefine,
+      User,
+      ProdData,
+    ]),
   ],
   exports: [TypeOrmModule],
   providers: [PlanService, CommonService],
