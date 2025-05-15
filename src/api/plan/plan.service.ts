@@ -454,32 +454,66 @@ export class PlanService {
   async confirmList(dto: any, userId: number): Promise<any> {
     //  { confirmList: [ '0AAB8CF4-D0E6-4589-8FD8-849D80853F72' ] }
     // update production data by id
-    this.logger.log(`Confirm list data: ${JSON.stringify(dto)}`);
-    this.logger.log(`Confirm list userId: ${userId}`);
 
-    // update by typeorm
-    const ids = dto.confirmList.map((item) => item);
-    const result = await this.prodDataRepository
-      .createQueryBuilder()
-      .update(ProdData)
-      .set({
-        confirmedStatus: '90',
-        confirmedDate: getCurrentDate(),
-        confirmedBy: userId,
-      })
-      .where('id IN (:...ids)', { ids })
-      .execute();
-    if (result.affected === 0) {
-      this.logger.error(`Failed to confirm production data`);
+    try {
+      this.logger.log(`Confirm list data: ${JSON.stringify(dto.confirmList)}`);
+      this.logger.log(`Confirm list userId: ${userId}`);
+
+      // update by store procedure "sp_Plan_Update_ProdData"
+
+      for (let i = 0; i < dto.confirmList.length; i++) {
+        const req = await this.commonService.getConnection();
+
+        const item = dto.confirmList[i];
+        req.input('ProdData_Id', item.prod_data_id);
+        req.input('Plan_Id', item.Plan_Id);
+        req.input('Line', item.Line_CD);
+        req.input('Production_Date', item.dt);
+        req.input('Status', item.Status);
+        req.input('Confirmed_Status', '90');
+        req.input('userid', userId);
+        req.input('NG_Process', item.Process_CD);
+        req.input('NG_Reason', item.Reason);
+        req.input('NG_Comment', item.Comment);
+        const result = await this.commonService.executeStoreProcedure(
+          'sp_Plan_Update_ProdData',
+          req,
+        );
+
+        this.logger.log(`Confirm production data ${item} successfully`);
+      }
+
+      // // update by typeorm
+      // const ids = dto.confirmList.map((item) => item);
+      // const result = await this.prodDataRepository
+      //   .createQueryBuilder()
+      //   .update(ProdData)
+      //   .set({
+      //     confirmedStatus: '90',
+      //     confirmedDate: getCurrentDate(),
+      //     confirmedBy: userId,
+      //   })
+      //   .where('id IN (:...ids)', { ids })
+      //   .execute();
+      // if (result.affected === 0) {
+      //   this.logger.error(`Failed to confirm production data`);
+      //   return {
+      //     status: 1,
+      //     message: 'Failed to confirm production data',
+      //   };
+      // }
+      // this.logger.log(`Confirm production data successfully`);
       return {
-        status: 1,
-        message: 'Failed to confirm production data',
+        status: 0,
+      };
+    } catch (error) {
+      console.error(error);
+
+      return {
+        status: 2,
+        message: 'Error confirming production data',
       };
     }
-    this.logger.log(`Confirm production data successfully`);
-    return {
-      status: 0,
-    };
   }
 
   async getAS400PlanAmt(pkCd: string, partNo, planDate: string) {
