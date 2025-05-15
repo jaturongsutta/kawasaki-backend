@@ -70,6 +70,17 @@ export class DropdownListController extends BaseController {
     );
   }
 
+  @Get('line-machine/:line?')
+  getLineMachineWithLine(@Param('line') line: string | null) {
+    const _line = line ? line : '';
+    return this.service.getDropdownList(
+      'M_Line_Machine',
+      'DISTINCT Process_CD',
+      'Process_CD',
+      "Line_CD = '" + _line + "'  OR '" + _line + "' = ''",
+    );
+  }
+
   @Get('line-machine/:line/:model?')
   getLineMachine(
     @Param('line') line: string | null,

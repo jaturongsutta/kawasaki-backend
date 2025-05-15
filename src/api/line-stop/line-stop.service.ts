@@ -63,35 +63,6 @@ export class LineStopService {
         }
     }
 
-    async getProcessDDL(lineCd: string): Promise<any> {
-        try {
-            const r = await this.lineMachineRepository
-                .createQueryBuilder('x')
-                .innerJoin("M_Machine", 'm', 'm.Process_CD = x.Process_CD')
-                .select([
-                    'm.Process_CD as title',
-                    'm.Process_CD as value',
-                ])
-                .where(`x.Line_CD = '${lineCd}'`)
-                .distinct(true)
-                .getRawMany();
-            if (!r) {
-                return {
-                    status: 2,
-                    message: 'Process not found'
-                }
-            }
-            return {
-                status: 0,
-                data: r
-            };
-        }
-        catch (error) {
-            console.log("Error : ", error)
-            throw error;
-        }
-    }
-
     async add(data: LineStopDto, userId: number): Promise<BaseResponse> {
         const queryRunner = this.dataSource.createQueryRunner();
         try {
