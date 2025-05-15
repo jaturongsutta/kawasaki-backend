@@ -22,7 +22,7 @@ export class LineStopService {
         req.input('Line_CD', dto.lineCd);
         req.input('Date_From', dto.dateFrom);
         req.input('Date_To', dto.dateTo);
-        req.input('Machine_No', dto.machineNo);
+        req.input('Process_CD', dto.processCd);
         req.input('Reason', dto.reasonCd);
         req.input('Status', dto.statusCd);
         req.input('Row_No_From', dto.searchOptions.rowFrom);
@@ -63,14 +63,14 @@ export class LineStopService {
         }
     }
 
-    async getMachineDDL(lineCd: string): Promise<any> {
+    async getProcessDDL(lineCd: string): Promise<any> {
         try {
             const r = await this.lineMachineRepository
                 .createQueryBuilder('x')
                 .innerJoin("M_Machine", 'm', 'm.Process_CD = x.Process_CD')
                 .select([
-                    'm.Machine_No as title',
-                    'm.Machine_No as value',
+                    'm.Process_CD as title',
+                    'm.Process_CD as value',
                 ])
                 .where(`x.Line_CD = '${lineCd}'`)
                 .distinct(true)
@@ -78,7 +78,7 @@ export class LineStopService {
             if (!r) {
                 return {
                     status: 2,
-                    message: 'Machine not found'
+                    message: 'Process not found'
                 }
             }
             return {

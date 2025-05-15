@@ -12,8 +12,8 @@ export class LineStopRecord {
   @Column("nvarchar", { name: "Line_CD", nullable: true, length: 10 })
   lineCd: string | null;
 
-  @Column("nvarchar", { name: "Machine_No", nullable: true, length: 10 })
-  machineNo: string | null;
+  @Column("nvarchar", { name: "Process_CD", nullable: true, length: 10 })
+  processCd: string | null;
 
   @Column("datetime", { name: "Line_Stop_Date", nullable: true })
   lineStopDate: Date | null;

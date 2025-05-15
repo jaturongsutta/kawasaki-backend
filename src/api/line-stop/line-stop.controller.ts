@@ -33,9 +33,9 @@ export class LineStopController extends BaseController {
     return await this.service.getById(id);
   }
 
-  @Get('machineDDL/:lineCd')
-  async getMachineDDL(@Param('lineCd') lineCd: string) {
-    return await this.service.getMachineDDL(lineCd);
+  @Get('processDDL/:lineCd')
+  async getProcessDDL(@Param('lineCd') lineCd: string) {
+    return await this.service.getProcessDDL(lineCd);
   }
 
   @Post('add')

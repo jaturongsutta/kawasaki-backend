@@ -3,7 +3,7 @@ import { BaseSearch } from 'src/common/base-search';
 
 export class LineStopSearchDto extends BaseSearch {
   lineCd: string;
-  machineNo: string | null;
+  processCd: string | null;
   reasonCd: string | null;
   statusCd: string | null;
   dateFrom: Date | null;
@@ -18,7 +18,7 @@ export class LineStopDto {
 
   lineCd: string | null;
 
-  machineNo: string | null;
+  processCd: string | null;
 
   lineStopDate: Date | null;
 
