@@ -52,6 +52,15 @@ export class PlanController extends BaseController {
     return await this.service.getPlanById(id);
   }
 
+  // API to get as400
+  @Get('as400-plan-amt/:pkCd/:partNo/:planDate')
+  async getAS400PlanAmt(
+    @Param('pkCd') pkCd: string,
+    @Param('partNo') partNo: string,
+    @Param('planDate') planDate: string,
+  ) {
+    return await this.service.getAS400PlanAmt(pkCd, partNo, planDate);
+  }
   @Get('product-data/:id')
   async getProductData(@Param('id') id: number) {
     return await this.service.getProductionDataByPlanId(id);

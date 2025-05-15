@@ -37,64 +37,63 @@ export class PlanService {
 
   async getPlanById(id: number): Promise<PlanInfoDto> {
     try {
-      const plan = await this.planRepository.findOneBy({ id });
-      if (!plan) {
+      const req = await this.commonService.getConnection();
+      req.input('Id', id);
+
+      const result = await this.commonService.executeStoreProcedure(
+        'sp_Plan_Load',
+        req,
+      );
+
+      console.log(result.recordset);
+
+      const item = result.recordset[0];
+
+      if (!item) {
         this.logger.error(`Plan with id ${id} not found`);
         throw new Error('Plan not found');
       }
 
       // Map entity to DTO
       const planInfo = new PlanInfoDto();
-      planInfo.id = plan.id;
-      planInfo.lineCd = plan.lineCd;
-      planInfo.pkCd = plan.pkCd;
-      planInfo.planDate = plan.planDate;
-      planInfo.planStartTime = plan.planStartTime;
-      planInfo.shiftTeam = plan.shiftTeam;
-      planInfo.shiftPeriod = plan.shiftPeriod;
-      planInfo.b1 = plan.b1;
-      planInfo.b2 = plan.b2;
-      planInfo.b3 = plan.b3;
-      planInfo.b4 = plan.b4;
-      planInfo.ot = plan.ot;
-      planInfo.modelCd = plan.modelCd;
-      planInfo.productCd = plan.productCd;
-      planInfo.cycleTime = plan.cycleTime;
-      planInfo.operator = plan.operator;
-      planInfo.leader = plan.leader;
-      planInfo.actualStartDt = plan.actualStartDt;
-      planInfo.actualStopDt = plan.actualStopDt;
-      planInfo.setupTime = plan.setupTime;
-      planInfo.actualTotalTime = plan.actualTotalTime;
-      planInfo.status = plan.status;
+      planInfo.id = item.id;
+      planInfo.lineCd = item.Line_CD;
+      planInfo.lineName = item.Line_Name;
+      planInfo.pkCd = item.PK_CD;
+      planInfo.planDate = item.Plan_Date;
+      planInfo.planStartTime = item.Plan_Start_Time;
+      planInfo.shiftTeam = item.shift_team;
+      planInfo.shiftPeriod = item.Shift_Period;
+      planInfo.b1 = item.B1 === 'Y' ? 'Y' : 'N';
+      planInfo.b2 = item.B2 === 'Y' ? 'Y' : 'N';
+      planInfo.b3 = item.B3 === 'Y' ? 'Y' : 'N';
+      planInfo.b4 = item.B4 === 'Y' ? 'Y' : 'N';
+      planInfo.ot = item.OT === 'Y' ? 'Y' : 'N';
+      planInfo.modelCd = item.Model_CD;
+      planInfo.productCd = item.Product_CD;
+      planInfo.cycleTime = item.Cycle_Time;
+      planInfo.operator = item.Operator;
+      planInfo.leader = item.Leader;
+      planInfo.actualStartDt = item.Actual_Start_DT;
+      planInfo.actualStopDt = item.Actual_Stop_DT;
+      planInfo.setupTime = item.Setup_Time;
+      planInfo.actualTotalTime = item.Actual_Total_Time;
+      planInfo.status = item.status;
+      planInfo.statusName = item.status_name;
+      planInfo.updatedBy = item.updated_by;
+      planInfo.updatedByName = item.updated_by;
+      planInfo.updatedDate = item.updated_date;
 
-      planInfo.updatedBy = plan.updatedBy;
-      planInfo.updatedDate = plan.updatedDate;
+      planInfo.as400PlanAmt = item.As400_Plan_Amt;
+      planInfo.planFgAmt = item.Plan_FG_Amt;
+      planInfo.planTotalTime = item.Plan_Total_Time;
+      planInfo.planFgAmt = item.Plan_FG_Amt;
+      planInfo.okAmt = item.OK_Amt;
+      planInfo.ngAmt = item.NG_Amt;
 
-      // get line by lineCd
-      const line = await this.lineRepository.findOneBy({
-        lineCd: plan.lineCd,
-      });
-      if (line) {
-        planInfo.lineName = line.lineName;
-      }
-
-      // get state by status
-      const status = await this.predefineRepository.findOneBy({
-        predefineGroup: 'Plan_Status',
-        predefineCd: plan.status,
-      });
-      if (status) {
-        planInfo.statusName = status.valueEn;
-      }
-
-      // get user by updatedBy
-      const user = await this.userRepository.findOneBy({
-        userId: plan.updatedBy,
-      });
-      if (user) {
-        planInfo.updatedByName = user.firstName;
-      }
+      planInfo.partNo = item.Part_No;
+      planInfo.partUpper = item.Part_Upper;
+      planInfo.partLower = item.Part_Lower;
 
       return planInfo;
     } catch (error) {
@@ -237,8 +236,6 @@ export class PlanService {
   async getProductionDataById(id: any): Promise<PlanProductionDataDto> {
     const req = await this.commonService.getConnection();
     req.input('Id', id);
-
-    console.log('sasdasdasdasdasdasdasd');
 
     const result = await this.commonService.executeStoreProcedure(
       'sp_Plan_Load_ProdData',
@@ -483,5 +480,24 @@ export class PlanService {
     return {
       status: 0,
     };
+  }
+
+  async getAS400PlanAmt(pkCd: string, partNo, planDate: string) {
+    try {
+      const qry = ` SELECT Plan_Amt 
+      FROM Inf_Plan 
+      where PK_CD = '${pkCd}' and Part_No = '${partNo}' and Plan_Date = '${planDate}'
+        `;
+      const data = await this.commonService.executeQuery(qry);
+      if (data.length === 0) {
+        return { planAmt: null };
+      } else {
+        return { planAmt: data[0].Plan_Amt };
+      }
+      return data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 }

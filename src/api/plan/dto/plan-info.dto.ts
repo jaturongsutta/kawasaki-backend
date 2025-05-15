@@ -35,4 +35,10 @@ export class PlanInfoDto extends BaseDto {
   updatedDate?: Date | null;
   updatedBy?: number | null;
   updatedByName?: string | null;
+
+  as400PlanAmt?: number | null;
+  partNo: any;
+  partUpper: any;
+  partLower: any;
+  productName: any;
 }
