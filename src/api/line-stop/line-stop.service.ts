@@ -70,7 +70,6 @@ export class LineStopService {
             data.createdBy = data.updatedBy = userId;
             data.createdDate = data.updatedDate = getCurrentDate();
             data.lineStopTime = minuteToTime(data.lineStopTime);
-            data.lossTime = this.hhmmssToSeconds(data.lossTime);
 
             await queryRunner.connect();
             await queryRunner.startTransaction();
@@ -147,7 +146,6 @@ export class LineStopService {
             data.updatedBy = userId;
             data.updatedDate = getCurrentDate();
             data.lineStopTime = minuteToTime(data.lineStopTime);
-            data.lossTime = this.hhmmssToSeconds(data.lossTime);
 
             await queryRunner.connect();
             await queryRunner.startTransaction();
