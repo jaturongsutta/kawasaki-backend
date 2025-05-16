@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
 import { NGDto, NGSearchDto } from './dto/ng-search.dto';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { BaseResponse } from 'src/common/base-response';
 import { getCurrentDate, minuteToTime, toLocalDateTime } from 'src/utils/utils';
 import { NgRecord } from 'src/entity/ng-record.entity';
+import { ProdPlan } from 'src/entity/prod-plan.entity';
 
 @Injectable()
 export class NGService {
@@ -71,6 +72,7 @@ export class NGService {
             console.log('data : ', data);
 
             const result = await queryRunner.manager.insert(NgRecord, data);
+            await this.updateProdPlan(queryRunner, data, userId);
             await queryRunner.commitTransaction();
             await this.updateToolLifeCount(data, userId);
 
@@ -113,6 +115,7 @@ export class NGService {
             const item = { ...data };
             delete item.modelCd;
             const result = await queryRunner.manager.update(NgRecord, id, item);
+            await this.updateProdPlan(queryRunner, data, userId);
             await queryRunner.commitTransaction();
             await this.updateToolLifeCount(data, userId);
 
@@ -159,7 +162,7 @@ export class NGService {
     }
 
     async updateToolLifeCount(data: NGDto, userId: number) {
-        if (data.idRef === null && data.status === '90') { /* idRef == null and status == '90' confirmed */
+        if (data.idRef === null && data.status === '90') { /* idRef == null and status == '90' not from PLC and confirmed */
             console.log("updateToolLifeCount")
             const req = await this.commonService.getConnection();
             req.input('line', data.lineCd);
@@ -169,6 +172,27 @@ export class NGService {
                 'sp_ToolLife_Count',
                 req,
             );
+        }
+    }
+
+    async updateProdPlan(
+        queryRunner: QueryRunner,
+        data: NGDto,
+        userId: number
+    ): Promise<void> {
+        if (data.idRef === null && data.status === '90') { /* idRef == null and status == '90' not from PLC and confirmed */
+            console.log("updateProdPlan")
+            await queryRunner.manager
+                .createQueryBuilder()
+                .update(ProdPlan)
+                .set({
+                    actualFgAmt: () => 'ISNULL(Actual_FG_Amt, 0) + 1',
+                    ngAmt: () => 'ISNULL(NG_Amt, 0) + 1',
+                    updatedBy: userId,
+                    updatedDate: () => 'GETDATE()',
+                })
+                .where(`ID = '${data.planId}'`)
+                .execute();
         }
     }
 }
