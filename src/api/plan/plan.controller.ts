@@ -103,4 +103,21 @@ export class PlanController extends BaseController {
     console.log('confirmList', dto);
     return await this.service.confirmList(dto, req.user.userId);
   }
+
+  @Post('get-plan-total-time')
+  async getPlanTotalTime(@Body() dto: any) {
+    return await this.service.getPlanTotalTime(dto);
+  }
+
+  @Post('validate-plan-time-overlap')
+  async validatePlanTimeOverlap(@Body() dto: any) {
+    const { lineCd, planDate, planStartTime, planStopTime, id } = dto;
+    return await this.service.validatePlanTimeOverlap(
+      lineCd,
+      planDate,
+      planStartTime,
+      planStopTime,
+      id,
+    );
+  }
 }

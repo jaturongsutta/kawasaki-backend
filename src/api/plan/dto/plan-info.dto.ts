@@ -7,6 +7,7 @@ export class PlanInfoDto extends BaseDto {
   lineName?: string | null;
   planDate?: Date | null;
   planStartTime?: Date | null;
+  planStopTime?: Date | null;
   shiftTeam?: number | null;
   shiftPeriod?: string | null;
   b1?: string | null;

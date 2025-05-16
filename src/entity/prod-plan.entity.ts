@@ -18,6 +18,9 @@ export class ProdPlan {
   @Column('time', { name: 'Plan_Start_Time', nullable: true })
   planStartTime: Date | null;
 
+  @Column('time', { name: 'Plan_Stop_Time', nullable: true })
+  planStopTime: Date | null;
+
   @Column('int', { name: 'Shift_Team', nullable: true })
   shiftTeam: number | null;
 

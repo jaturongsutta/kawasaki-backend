@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
 import { ProdPlan } from 'src/entity/prod-plan.entity';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { PlanSearchDto } from './dto/plan-search.dto';
 import { getCurrentDate } from 'src/utils/utils';
 import { MWorkingTime } from 'src/entity/m-working-time.entity';
@@ -33,6 +33,7 @@ export class PlanService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private commonService: CommonService,
+    private dataSource: DataSource, // Inject DataSource
   ) {}
 
   async getPlanById(id: number): Promise<PlanInfoDto> {
@@ -62,6 +63,7 @@ export class PlanService {
       planInfo.pkCd = item.PK_CD;
       planInfo.planDate = item.Plan_Date;
       planInfo.planStartTime = item.Plan_Start_Time;
+      planInfo.planStopTime = item.Plan_Stop_Time;
       planInfo.shiftTeam = item.shift_team;
       planInfo.shiftPeriod = item.Shift_Period;
       planInfo.b1 = item.B1 === 'Y' ? 'Y' : 'N';
@@ -268,12 +270,15 @@ export class PlanService {
   async newPlan(dto: PlanInfoDto, userId: number) {
     // log data dto
     this.logger.log(`New plan data: ${JSON.stringify(dto)}`);
+    this.logger.log(`New plan userId: ${userId}`);
+
     // Create a new plan
     const newPlan = new ProdPlan();
     newPlan.lineCd = dto.lineCd;
     newPlan.pkCd = dto.pkCd;
     newPlan.planDate = dto.planDate;
     newPlan.planStartTime = dto.planStartTime;
+    newPlan.planStopTime = dto.planStopTime;
     newPlan.shiftTeam = dto.shiftTeam;
     newPlan.shiftPeriod = dto.shiftPeriod;
     newPlan.b1 = dto.b1 === 'Y' ? 'Y' : 'N';
@@ -343,6 +348,7 @@ export class PlanService {
       if (plan.status === '00') {
         plan.planDate = dto.planDate;
         plan.planStartTime = dto.planStartTime;
+        plan.planStopTime = dto.planStopTime;
         plan.shiftTeam = dto.shiftTeam;
         plan.shiftPeriod = dto.shiftPeriod;
         plan.modelCd = dto.modelCd;
@@ -533,5 +539,108 @@ export class PlanService {
       console.error(error);
       throw error;
     }
+  }
+
+  async getPlanTotalTime(dto: any): Promise<any | null> {
+    try {
+      const {
+        lineCd,
+        planDate,
+        planStartTime,
+        planStopTime,
+        b1,
+        b2,
+        b3,
+        b4,
+        ot,
+      } = dto;
+
+      const sql = `
+      SELECT dbo.fn_get_Plan_OperTime(
+        @0, @1, @2, @3, @4, @5, @6, @7, @8
+      ) AS Total_Plan_Time
+    `;
+
+      const result = await this.dataSource.query(sql, [
+        lineCd,
+        planDate,
+        planStartTime,
+        planStopTime,
+        b1,
+        b2,
+        b3,
+        b4,
+        ot,
+      ]);
+      return {
+        planTotalTime: result[0]?.Total_Plan_Time ?? null,
+      };
+    } catch (error) {
+      console.error(error);
+      this.logger.error(`Error in getPlanTotalTime: ${error.message}`);
+      return {
+        planTotalTime: null,
+        message: 'Error in getPlanTotalTime',
+      };
+    }
+  }
+
+  /**
+   * Validate that the new plan's time does not overlap with existing plans for the same line.
+   * Returns { valid: boolean, message?: string }
+   */
+  async validatePlanTimeOverlap(
+    lineCd: string,
+    planDate: string,
+    planStartTime: string,
+    planStopTime: string,
+    excludePlanId?: number,
+  ): Promise<{ valid: boolean; message?: string }> {
+    // Compose start and stop datetime for the new plan
+    // If time >= 08:00:00 use planDate, else use planDate + 1 day (for cross-midnight)
+    function getDateTime(date: string, time: string): string {
+      if (time >= '08:00:00') {
+        return `${date} ${time}`;
+      } else {
+        const d = new Date(date);
+        d.setDate(d.getDate() + 1);
+        return `${d.toISOString().slice(0, 10)} ${time}`;
+      }
+    }
+    const newStartDt = getDateTime(planDate, planStartTime);
+    const newEndDt = getDateTime(planDate, planStopTime);
+
+    // Build SQL to check for overlap
+    const sql = `
+    SELECT COUNT(*) as cnt FROM (
+      SELECT
+        p.id,
+        CASE WHEN CONVERT(VARCHAR(8), p.Plan_Start_Time, 108) >= '08:00:00'
+          THEN DATEADD(ms, DATEDIFF(ms, '00:00:00', p.Plan_Start_Time), CONVERT(DATETIME, p.Plan_Date))
+          ELSE DATEADD(ms, DATEDIFF(ms, '00:00:00', p.Plan_Start_Time), CONVERT(DATETIME, DATEADD(DAY, 1, p.Plan_Date)))
+        END AS start_dt,
+        CASE WHEN CONVERT(VARCHAR(8), p.Plan_Stop_Time, 108) >= '08:00:00'
+          THEN DATEADD(ms, DATEDIFF(ms, '00:00:00', p.Plan_Stop_Time), CONVERT(DATETIME, p.Plan_Date))
+          ELSE DATEADD(ms, DATEDIFF(ms, '00:00:00', p.Plan_Stop_Time), CONVERT(DATETIME, DATEADD(DAY, 1, p.Plan_Date)))
+        END AS end_dt
+      FROM Prod_Plan p
+      WHERE p.Line_CD = @0
+      ${excludePlanId ? 'AND p.id != @3' : ''}
+    ) t
+    WHERE
+      (@1 >= t.start_dt AND (@2 >= t.end_dt OR @2 <= t.end_dt))
+  `;
+
+    // Prepare parameters
+    const params = [lineCd, newStartDt, newEndDt];
+    if (excludePlanId) params.push(excludePlanId.toString());
+
+    const result = await this.dataSource.query(sql, params);
+    const cnt = result[0]?.cnt ?? 0;
+
+    if (cnt > 0) {
+      return { valid: false, message: 'มี Plan ที่ช่วงเวลาซ้ำ' };
+    }
+    return { valid: true };
   }
 }
