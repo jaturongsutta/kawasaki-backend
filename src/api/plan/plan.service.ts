@@ -88,9 +88,10 @@ export class PlanService {
 
       planInfo.as400PlanAmt = item.As400_Plan_Amt;
       planInfo.planTotalTime = item.plan_total_time;
-      planInfo.planFgAmt = item.Plan_FG_Amt;
+      planInfo.planFgAmt = item.plan_fg_amt;
       planInfo.okAmt = item.OK_Amt;
       planInfo.ngAmt = item.NG_Amt;
+      planInfo.actualFgAmt = item.Actual_FG_Amt;
 
       planInfo.partNo = item.Part_No;
       planInfo.partUpper = item.Part_Upper;
