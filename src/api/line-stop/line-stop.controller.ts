@@ -38,11 +38,6 @@ export class LineStopController extends BaseController {
     return await this.service.add(dto, req.user.userId);
   }
 
-  @Post('add-plc')
-  async addFromPLC(@Body() dto: LineStopDto, @Request() req: any) {
-    return await this.service.addFromPLC(dto, req.user.userId);
-  }
-
   @Put('update/:id')
   async update(
     @Param('id') id: number,

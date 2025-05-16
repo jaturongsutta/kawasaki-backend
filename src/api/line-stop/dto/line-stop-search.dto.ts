@@ -5,6 +5,7 @@ export class LineStopSearchDto extends BaseSearch {
   lineCd: string;
   processCd: string | null;
   reasonCd: string | null;
+  typeCd: string | null;
   statusCd: string | null;
   dateFrom: Date | null;
   dateTo: Date | null;

@@ -24,6 +24,7 @@ export class LineStopService {
         req.input('Date_To', dto.dateTo);
         req.input('Process_CD', dto.processCd);
         req.input('Reason', dto.reasonCd);
+        req.input('Type', dto.typeCd);
         req.input('Status', dto.statusCd);
         req.input('Row_No_From', dto.searchOptions.rowFrom);
         req.input('Row_No_To', dto.searchOptions.rowTo);
@@ -96,43 +97,6 @@ export class LineStopService {
             };
         } finally {
             await queryRunner.release();
-        }
-    }
-
-    async addFromPLC(data: LineStopDto, userId: number): Promise<BaseResponse> {
-        try {
-            const req = await this.commonService.getConnection();
-            req.input('Line_CD', data.lineCd);
-            req.input('Plan_id', data.planId);
-            req.input('userid', userId);
-            // req.output('Return_CD', '');
-            // req.output('Return_Name', '');
-            const result = await this.commonService.executeStoreProcedure(
-                'sp_LineStop_PLC',
-                req,
-            );
-
-            console.log("result ", result)
-            // const { Return_CD, Return_Name } = result.output;
-
-            if (result.recordset.length > 0) {
-                const { Return_CD, Return_Name } = result.recordset[0];
-                return {
-                    status: Return_CD !== 'Success' ? 1 : 0,
-                    message: Return_Name,
-                };
-            } else {
-                return {
-                    status: 1,
-                    message: "Unable to create item",
-                };
-            }
-
-        } catch (error) {
-            return {
-                status: 2,
-                message: error.message,
-            };
         }
     }
 
