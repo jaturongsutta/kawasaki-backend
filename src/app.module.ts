@@ -27,6 +27,7 @@ import { NGModule } from './api/ng/ng.module';
 import { PlanModule } from './api/plan/plan.module';
 import { LineStopModule } from './api/line-stop/line-stop.module';
 import { InfoAlertModule } from './api/information-alert/info-alert.module';
+import { TeamModule } from './api/team/team.module';
 
 dotenv.config(); // Load environment variables from .env file
 @Module({
@@ -71,7 +72,8 @@ dotenv.config(); // Load environment variables from .env file
     NGModule,
     PlanModule,
     LineStopModule,
-    InfoAlertModule
+    InfoAlertModule,
+    TeamModule
   ],
   controllers: [AppController],
   providers: [AppService],

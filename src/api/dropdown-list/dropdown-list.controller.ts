@@ -31,6 +31,10 @@ export class DropdownListController extends BaseController {
       'User_ID',
       'First_Name',
       "Is_Active = 'Y'",
+      '',
+      [
+        `ISNULL(First_Name, '') + ' ' + ISNULL(Last_Name, '') fullName`,
+      ],
     );
   }
 
@@ -94,14 +98,14 @@ export class DropdownListController extends BaseController {
       'DISTINCT Process_CD',
       'Process_CD',
       "Is_Active = 'Y' AND (Line_CD = '" +
-        _line +
-        "'  OR '" +
-        _line +
-        "' = '') AND (Model_CD = '" +
-        _model +
-        "'  OR '" +
-        _model +
-        "' = '')",
+      _line +
+      "'  OR '" +
+      _line +
+      "' = '') AND (Model_CD = '" +
+      _model +
+      "'  OR '" +
+      _model +
+      "' = '')",
     );
   }
 
