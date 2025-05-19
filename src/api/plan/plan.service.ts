@@ -12,6 +12,8 @@ import { Predefine } from 'src/entity/predefine.entity';
 import { User } from 'src/entity/user.entity';
 import { PlanProductionDataDto } from './dto/plan-production-data.dto';
 import { ProdData } from 'src/entity/prod-data.entity';
+import * as sql from 'mssql';
+import * as moment from 'moment';
 
 @Injectable()
 export class PlanService {
@@ -429,11 +431,18 @@ export class PlanService {
     userId: number,
   ): Promise<any> {
     try {
+      console.log(dto);
+
+      const _productionDate = moment(
+        dto.productionDate,
+        'DD/MM/YYYY HH:mm:ss',
+      ).format('YYYY-MM-DD HH:mm:ss');
+
       const req = await this.commonService.getConnection();
       req.input('ProdData_Id', id);
       req.input('Plan_Id', dto.planId);
       req.input('Line', dto.lineCd);
-      req.input('Production_Date', dto.productionDate);
+      req.input('Production_Date', _productionDate);
       req.input('Status', dto.status);
       req.input('Confirmed_Status', dto.confirmedStatus);
       req.input('userid', userId);
