@@ -119,4 +119,9 @@ export class PlanController extends BaseController {
       id,
     );
   }
+
+  @Get('default-stop-time/:shiftPeriod')
+  async getDefaultStopTime(@Param('shiftPeriod') shiftPeriod: string) {
+    return await this.service.getDefaultStopTime(shiftPeriod);
+  }
 }

@@ -88,7 +88,7 @@ export class PlanService {
       planInfo.updatedByName = item.updated_by;
       planInfo.updatedDate = item.updated_date;
 
-      planInfo.as400PlanAmt = item.As400_Plan_Amt;
+      planInfo.as400PlanAmt = item.AS400_Plan_Amt;
       planInfo.planTotalTime = item.plan_total_time;
       planInfo.planFgAmt = item.plan_fg_amt;
       planInfo.okAmt = item.OK_Amt;
@@ -685,5 +685,25 @@ export class PlanService {
       valid,
       message,
     };
+  }
+
+  // get default stop time
+  async getDefaultStopTime(shiftPeriod: string): Promise<string | null> {
+    const sql = `
+    SELECT TOP(1) CONVERT(time, t.Time_End) AS x
+    FROM (
+      SELECT
+        CASE
+          WHEN CONVERT(VARCHAR(8), Time_Start, 108) < '08:00:00'
+            THEN DATEADD(ms, DATEDIFF(ms, '00:00:00', Time_End), CONVERT(DATETIME, DATEADD(DAY, 1, CAST(GETDATE() AS date))))
+          ELSE DATEADD(ms, DATEDIFF(ms, '00:00:00', Time_End), CONVERT(DATETIME, CAST(GETDATE() AS date)))
+        END AS Time_End
+      FROM M_Working_Time
+      WHERE D_N = '${shiftPeriod}'
+    ) t
+    ORDER BY Time_End DESC
+  `;
+    const result = await this.commonService.executeQuery(sql);
+    return result[0]?.x ?? null;
   }
 }
