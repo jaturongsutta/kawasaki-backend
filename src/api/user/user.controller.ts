@@ -46,15 +46,22 @@ export class UserController extends BaseController {
   ): Promise<BaseResponse> {
     data.createdBy = req.user.userId;
 
-    if (data.password) {
-      data.password = EncryptData.hash(data.password);
-    }
+    try {
+      if (data.password) {
+        data.password = EncryptData.hash(data.password);
+      }
 
-    const result = await this.userService.addUser(data);
+      const result = await this.userService.addUser(data);
 
-    if (result) {
+      if (result) {
+        return {
+          status: 0,
+        };
+      }
+    } catch (error) {
       return {
-        status: 0,
+        status: 1,
+        message: error.message,
       };
     }
   }

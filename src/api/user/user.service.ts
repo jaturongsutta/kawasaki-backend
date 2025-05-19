@@ -68,6 +68,14 @@ export class UserService {
     }
   }
   async addUser(data: UserDto): Promise<User> {
+    // validate if username already exists
+    const existingUser = await this.userRepository.findOneBy({
+      username: data.username,
+    });
+    if (existingUser) {
+      throw new Error('Username already exists');
+    }
+
     const user = this.userRepository.create(data);
     if (data.password) {
       user.userPassword = data.password;
