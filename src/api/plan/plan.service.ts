@@ -637,17 +637,12 @@ export class PlanService {
     id: number,
   ): Promise<{ valid: boolean; message?: string }> {
     const sql = `
-      SELECT dbo.fn_chk_Plan_Time_Duplicate(
-        @0, @1, @2 ,@3
-      ) AS cnt
-    `;
+    SELECT dbo.fn_chk_Plan_Time_Duplicate(
+      '${lineCd}', '${planStartTime}', '${planStopTime}', '${id}'
+    ) AS cnt
+  `;
 
-    const result = await this.dataSource.query(sql, [
-      lineCd,
-      planStartTime,
-      planStopTime,
-      id,
-    ]);
+    const result = await this.commonService.executeQuery(sql);
     return {
       valid: result[0]?.cnt === 0,
       message: result[0]?.cnt > 0 ? 'มี Plan ที่ช่วงเวลาซ้ำ' : '',
