@@ -111,10 +111,9 @@ export class PlanController extends BaseController {
 
   @Post('validate-plan-time-overlap')
   async validatePlanTimeOverlap(@Body() dto: any) {
-    const { lineCd, planDate, planStartTime, planStopTime, id } = dto;
+    const { lineCd, planStartTime, planStopTime, id } = dto;
     return await this.service.validatePlanTimeOverlap(
       lineCd,
-      planDate,
       planStartTime,
       planStopTime,
       id,

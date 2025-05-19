@@ -1,7 +1,7 @@
 import { BaseDto } from 'src/common/base-dto';
 
 export class PlanInfoDto extends BaseDto {
-  id: number;
+  id: number | null;
   lineCd?: string | null;
   pkCd?: string | null;
   lineName?: string | null;

@@ -274,6 +274,22 @@ export class PlanService {
     this.logger.log(`New plan data: ${JSON.stringify(dto)}`);
     this.logger.log(`New plan userId: ${userId}`);
 
+    // Check if the line exists
+    const { valid, message } = await this.validateDuplicatePlan(
+      null,
+      dto.lineCd,
+      dto.planDate,
+      dto.modelCd,
+      dto.shiftPeriod,
+    );
+    if (!valid) {
+      this.logger.error(`Duplicate plan found: ${message}`);
+      return {
+        status: 1,
+        message: message,
+      };
+    }
+
     // Create a new plan
     const newPlan = new ProdPlan();
     newPlan.lineCd = dto.lineCd;
@@ -337,6 +353,22 @@ export class PlanService {
     this.logger.log(`Update plan data: ${JSON.stringify(dto)}`);
     this.logger.log(`Update plan id: ${planId}`);
     this.logger.log(`Update plan userId: ${userId}`);
+
+    // Check if the line exists
+    const { valid, message } = await this.validateDuplicatePlan(
+      dto.id,
+      dto.lineCd,
+      dto.planDate,
+      dto.modelCd,
+      dto.shiftPeriod,
+    );
+    if (!valid) {
+      this.logger.error(`Duplicate plan found: ${message}`);
+      return {
+        status: 1,
+        message: message,
+      };
+    }
 
     try {
       const plan = await this.planRepository.findOneBy({ id: planId });
@@ -600,56 +632,63 @@ export class PlanService {
    */
   async validatePlanTimeOverlap(
     lineCd: string,
-    planDate: string,
     planStartTime: string,
     planStopTime: string,
-    excludePlanId?: number,
+    id: number,
   ): Promise<{ valid: boolean; message?: string }> {
-    // Compose start and stop datetime for the new plan
-    // If time >= 08:00:00 use planDate, else use planDate + 1 day (for cross-midnight)
-    function getDateTime(date: string, time: string): string {
-      if (time >= '08:00:00') {
-        return `${date} ${time}`;
-      } else {
-        const d = new Date(date);
-        d.setDate(d.getDate() + 1);
-        return `${d.toISOString().slice(0, 10)} ${time}`;
-      }
-    }
-    const newStartDt = getDateTime(planDate, planStartTime);
-    const newEndDt = getDateTime(planDate, planStopTime);
-
-    // Build SQL to check for overlap
     const sql = `
-    SELECT COUNT(*) as cnt FROM (
-      SELECT
-        p.id,
-        CASE WHEN CONVERT(VARCHAR(8), p.Plan_Start_Time, 108) >= '08:00:00'
-          THEN DATEADD(ms, DATEDIFF(ms, '00:00:00', p.Plan_Start_Time), CONVERT(DATETIME, p.Plan_Date))
-          ELSE DATEADD(ms, DATEDIFF(ms, '00:00:00', p.Plan_Start_Time), CONVERT(DATETIME, DATEADD(DAY, 1, p.Plan_Date)))
-        END AS start_dt,
-        CASE WHEN CONVERT(VARCHAR(8), p.Plan_Stop_Time, 108) >= '08:00:00'
-          THEN DATEADD(ms, DATEDIFF(ms, '00:00:00', p.Plan_Stop_Time), CONVERT(DATETIME, p.Plan_Date))
-          ELSE DATEADD(ms, DATEDIFF(ms, '00:00:00', p.Plan_Stop_Time), CONVERT(DATETIME, DATEADD(DAY, 1, p.Plan_Date)))
-        END AS end_dt
-      FROM Prod_Plan p
-      WHERE p.Line_CD = @0
-      ${excludePlanId ? 'AND p.id != @3' : ''}
-    ) t
-    WHERE
-      (@1 >= t.start_dt AND (@2 >= t.end_dt OR @2 <= t.end_dt))
+      SELECT dbo.fn_chk_Plan_Time_Duplicate(
+        @0, @1, @2 ,@3
+      ) AS cnt
+    `;
+
+    const result = await this.dataSource.query(sql, [
+      lineCd,
+      planStartTime,
+      planStopTime,
+      id,
+    ]);
+    return {
+      valid: result[0]?.cnt === 0,
+      message: result[0]?.cnt > 0 ? 'มี Plan ที่ช่วงเวลาซ้ำ' : '',
+    };
+  }
+
+  /**
+   * Validate duplication of plan by Line_CD, Plan_Date, Model_CD, and shift_period.
+   * Returns { valid: boolean, message?: string }
+   */
+  async validateDuplicatePlan(
+    id: number,
+    lineCd: string,
+    planDate: Date,
+    modelCd: string,
+    shiftPeriod: string,
+  ): Promise<{ valid: boolean; message?: string }> {
+    const _planDate = moment(planDate).format('YYYY-MM-DD');
+    let sql = `
+    SELECT COUNT(*) as cnt
+    FROM Prod_Plan
+    WHERE Line_CD = '${lineCd}'
+      AND Plan_Date = '${_planDate}'
+      AND Model_CD = '${modelCd}'
+      AND shift_period = '${shiftPeriod}'
   `;
-
-    // Prepare parameters
-    const params = [lineCd, newStartDt, newEndDt];
-    if (excludePlanId) params.push(excludePlanId.toString());
-
-    const result = await this.dataSource.query(sql, params);
+    // Exclude current id if provided (for update case)
+    if (id) {
+      sql += ` AND id != '${id}'`;
+    }
+    const result = await this.commonService.executeQuery(sql);
     const cnt = result[0]?.cnt ?? 0;
 
-    if (cnt > 0) {
-      return { valid: false, message: 'มี Plan ที่ช่วงเวลาซ้ำ' };
-    }
-    return { valid: true };
+    const valid = cnt === 0;
+    const message =
+      cnt > 0
+        ? `มี Plan สำหรับ Model ${modelCd} วันที่ ${_planDate} ช่วง ${shiftPeriod} แล้ว`
+        : '';
+    return {
+      valid,
+      message,
+    };
   }
 }
