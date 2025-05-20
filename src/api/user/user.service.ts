@@ -104,6 +104,7 @@ export class UserService {
     }
     user.firstName = data.firstName;
     user.lastName = data.lastName;
+    user.positionName = data.positionName;
     user.isActive = data.isActive;
     user.updateBy = data.updatedBy;
     user.updateDate = new Date();
