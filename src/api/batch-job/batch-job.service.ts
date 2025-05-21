@@ -34,12 +34,15 @@ export class BatchJobService {
   async processLineCYH6_sp_AutoStart_CYH6() {
     try {
       const req = await this.commonService.getConnection();
-      await this.commonService.executeStoreProcedure('sp_AutoStart_CYH6', req);
+      const result = await this.commonService.executeStoreProcedure(
+        'sp_AutoStart_CYH6',
+        req,
+      );
       return {
         process: 'sp_AutoStart_CYH6',
         status: 'SUCCESS',
         message: '',
-        recordset: req.recordset,
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
       };
     } catch (error) {
       return {
@@ -53,12 +56,15 @@ export class BatchJobService {
   async processLineCYH6_sp_MappedMES_CYH6() {
     try {
       const req = await this.commonService.getConnection();
-      await this.commonService.executeStoreProcedure('sp_MappedMES_CYH6', req);
+      const result = await this.commonService.executeStoreProcedure(
+        'sp_MappedMES_CYH6',
+        req,
+      );
       return {
         process: 'sp_MappedMES_CYH6',
         status: 'SUCCESS',
         message: '',
-        recordset: req.recordset,
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
       };
     } catch (error) {
       return {
@@ -72,7 +78,7 @@ export class BatchJobService {
   async processLineCYH6_sp_MappedMES_CYH6_003() {
     try {
       const req = await this.commonService.getConnection();
-      await this.commonService.executeStoreProcedure(
+      const result = await this.commonService.executeStoreProcedure(
         'sp_MappedMES_CYH6_003',
         req,
       );
@@ -80,7 +86,7 @@ export class BatchJobService {
         process: 'sp_MappedMES_CYH6_003',
         status: 'SUCCESS',
         message: null,
-        recordset: req.recordset.length > 0 ? req.recordset : null,
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
       };
     } catch (error) {
       return {
