@@ -12,8 +12,8 @@ import { Predefine } from 'src/entity/predefine.entity';
 import { User } from 'src/entity/user.entity';
 import { PlanProductionDataDto } from './dto/plan-production-data.dto';
 import { ProdData } from 'src/entity/prod-data.entity';
-import * as sql from 'mssql';
 import * as moment from 'moment';
+import { convertTimeStringToDate } from 'src/utils/utils';
 
 @Injectable()
 export class PlanService {
@@ -290,6 +290,9 @@ export class PlanService {
       };
     }
 
+    dto.planStartTime = convertTimeStringToDate(dto.planStartTime);
+    dto.planStopTime = convertTimeStringToDate(dto.planStopTime);
+
     // Create a new plan
     const newPlan = new ProdPlan();
     newPlan.lineCd = dto.lineCd;
@@ -379,6 +382,10 @@ export class PlanService {
           message: 'Plan not found',
         };
       }
+
+      dto.planStartTime = convertTimeStringToDate(dto.planStartTime);
+      dto.planStopTime = convertTimeStringToDate(dto.planStopTime);
+      console.log('planStartTime', dto.planStartTime);
       if (plan.status === '00') {
         plan.planDate = dto.planDate;
         plan.planStartTime = dto.planStartTime;
