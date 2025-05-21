@@ -67,8 +67,16 @@ export class LineController extends BaseController {
     return await this.service.update(id, dto, req.user.userId);
   }
 
-  @Delete('delete/:id')
-  async delete(@Param('id') id: number, @Request() req: any) {
-    return await this.service.delete(id, req.user.userId);
+  // @Delete('delete/:id')
+  // async delete(@Param('id') id: number, @Request() req: any) {
+  //   return await this.service.delete(id, req.user.userId);
+  // }
+
+  @Delete('delete-line-model/:lineCd/:modelCd')
+  async deleteLineModel(
+    @Param('lineCd') lineCd: string,
+    @Param('modelCd') modelCd: string,
+  ) {
+    return await this.service.deleteLineModel(lineCd, modelCd);
   }
 }

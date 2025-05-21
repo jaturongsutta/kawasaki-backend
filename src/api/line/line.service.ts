@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
 import { LineSearchDto } from './dto/line-search.dto';
@@ -11,9 +11,11 @@ import { DataSource } from 'typeorm'; // Import DataSource for transactions
 import { MLineMachine } from 'src/entity/m-line-machine.entity';
 import { MLineTool } from 'src/entity/m-line-tool.entity';
 import { MTool } from 'src/entity/tool.entity';
+import { convertTimeStringToDate } from 'src/utils/utils';
 
 @Injectable()
 export class LineService {
+  private readonly logger = new Logger(LineService.name);
   constructor(
     private commonService: CommonService,
     @InjectRepository(MLine)
@@ -62,25 +64,32 @@ export class LineService {
       // Fetch related MLineModel and MModel using a left join
       const lineModels = await this.lineModelRepository
         .createQueryBuilder('MLineModel')
-        .leftJoinAndSelect('MLineModel.model', 'model') // Left join with MModel
+        .leftJoinAndSelect('MLineModel.model', 'model')
+        .leftJoin(
+          'Predefine',
+          'predefine',
+          'MLineModel.isActive = predefine.predefineCd AND predefine.predefineGroup = :group',
+          { group: 'Is_Active' },
+        )
         .where('MLineModel.lineCd = :lineCd', { lineCd: id })
         .select([
           'MLineModel.lineCd',
           'MLineModel.modelCd',
           'MLineModel.isActive',
-          'model.partNo', // Include fields from MModel
+          'model.partNo',
+          'predefine.valueEn AS statusName',
         ])
-        .getMany();
+        .getRawMany();
 
       // Map the result to LineModelDto
       dto.lineModel = lineModels.map((lineModel) => ({
-        lineCd: lineModel.lineCd,
-        modelCd: lineModel.modelCd,
-        partNo: lineModel.model?.partNo || null, // Handle null for unmatched records
-        isActive: lineModel.isActive,
+        lineCd: lineModel.MLineModel_Line_CD,
+        modelCd: lineModel.MLineModel_Model_CD,
+        partNo: lineModel.model_Part_No, // Handle null for unmatched records
+        isActive: lineModel.MLineModel_is_Active,
+        statusName: lineModel.statusName,
         rowState: '', // Default value for rowState
       }));
-      console.log('dto.lineModel : ', dto.lineModel);
 
       // Fetch related MLineMachine
       const lineMachines = await this.lineMachineRepository
@@ -96,7 +105,6 @@ export class LineService {
           'MLineMachine.isActive',
         ])
         .getMany();
-      console.log('lineMachines : ', lineMachines);
       // Map the result to LineMachineDto
       dto.lineMachine = lineMachines.map((lineMachine) => ({
         lineCd: lineMachine.lineCd,
@@ -273,7 +281,7 @@ export class LineService {
     userId: number,
   ): Promise<BaseResponse> {
     const queryRunner = this.dataSource.createQueryRunner();
-    console.log('update line data : ', data);
+    // console.log('update line data : ', data);
     try {
       // Start a transaction
       await queryRunner.connect();
@@ -300,13 +308,32 @@ export class LineService {
           newLineModel.lineCd = data.lineCd;
           newLineModel.modelCd = model.modelCd;
           newLineModel.isActive = model.isActive;
-
           await queryRunner.manager.save(MLineModel, newLineModel);
+        } else if (model.rowState === 'UPDATE') {
+          const existingLineModel = await queryRunner.manager.findOne(
+            MLineModel,
+            {
+              where: { lineCd: data.lineCd, modelCd: model.modelCd },
+            },
+          );
+
+          console.log('existingLineModel : ', existingLineModel);
+          if (existingLineModel) {
+            existingLineModel.isActive = model.isActive;
+            existingLineModel.updatedBy = userId;
+            existingLineModel.updatedDate = new Date();
+            // Add more fields to update if needed
+            await queryRunner.manager.save(MLineModel, existingLineModel);
+          }
         }
       }
 
       // save line machine
       for (const machine of data.lineMachine) {
+        machine.wt = convertTimeStringToDate(machine.wt);
+        machine.ht = convertTimeStringToDate(machine.ht);
+        machine.mt = convertTimeStringToDate(machine.mt);
+
         if (machine.rowState === 'DELETE') {
           await queryRunner.manager.delete(MLineMachine, {
             lineCd: data.lineCd,
@@ -401,24 +428,81 @@ export class LineService {
     }
   }
 
-  async delete(id: number, userId: number): Promise<BaseResponse> {
+  async delete(lineCd: string, userId: number): Promise<BaseResponse> {
     try {
-      const req = await this.commonService.getConnection();
-      req.input('Line_Id', id);
-      req.input('Updated_By', userId);
-      req.output('Return_CD', '');
-      req.output('Return_Name', '');
+      // Update isActive to 'N' for the main line
 
-      const result = await this.commonService.executeStoreProcedure(
-        'sp_delete_co_line',
-        req,
+      // log
+      this.logger.log(`Deleting line with lineCd: ${lineCd}`);
+      this.logger.log(`User ID: ${userId}`);
+
+      const lineResult = await this.lineRepository.update(
+        { lineCd },
+        { isActive: 'N', updatedBy: userId, updatedDate: new Date() },
       );
+      if (lineResult.affected === 0) {
+        return {
+          status: 1,
+          message: 'Line not found',
+        };
+      }
 
-      const { Return_CD, Return_Name } = result.output;
+      // Update isActive to 'N' for related line models
+      await this.lineModelRepository.update({ lineCd }, { isActive: 'N' });
+
+      // Update isActive to 'N' for related line machines
+      await this.lineMachineRepository.update({ lineCd }, { isActive: 'N' });
+
+      // Update isActive to 'N' for related line tools
+      await this.lineToolRepository.update({ lineCd }, { isActive: 'N' });
 
       return {
-        status: Return_CD !== 'Success' ? 1 : 0,
-        message: Return_Name,
+        status: 0,
+        message: 'Line and related entities set to inactive successfully',
+      };
+    } catch (error) {
+      return {
+        status: 2,
+        message: error.message,
+      };
+    }
+  }
+
+  async deleteLineModel(
+    lineCd: string,
+    modelCd: string,
+  ): Promise<BaseResponse> {
+    try {
+      // Update isActive to 'N' for line model
+      this.logger.log(
+        `Deleting line model with lineCd: ${lineCd}, modelCd: ${modelCd}`,
+      );
+
+      const result = await this.lineModelRepository.update(
+        { lineCd, modelCd },
+        { isActive: 'N' },
+      );
+      if (result.affected === 0) {
+        return {
+          status: 1,
+          message: 'Line model not found',
+        };
+      }
+
+      // Update isActive to 'N' for related line tools
+      await this.lineToolRepository.update(
+        { lineCd, modelCd },
+        { isActive: 'N' },
+      );
+      // Update isActive to 'N' for related line machines
+      await this.lineMachineRepository.update(
+        { lineCd, modelCd },
+        { isActive: 'N' },
+      );
+
+      return {
+        status: 0,
+        message: 'Line model set to inactive successfully',
       };
     } catch (error) {
       return {

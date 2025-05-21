@@ -22,8 +22,8 @@ export class MLineModel {
   @Column('datetime', { name: 'UPDATED_DATE', nullable: true })
   updatedDate: Date | null;
 
-  @Column('nvarchar', { name: 'UPDATED_BY', nullable: true, length: 10 })
-  updatedBy: string | null;
+  @Column('int', { name: 'UPDATED_BY', nullable: true })
+  updatedBy: number | null;
 
   @ManyToOne(() => MModel)
   @JoinColumn({ name: 'Model_CD', referencedColumnName: 'modelCd' })
