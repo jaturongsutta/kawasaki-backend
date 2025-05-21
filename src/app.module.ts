@@ -28,7 +28,8 @@ import { PlanModule } from './api/plan/plan.module';
 import { LineStopModule } from './api/line-stop/line-stop.module';
 import { InfoAlertModule } from './api/information-alert/info-alert.module';
 import { TeamModule } from './api/team/team.module';
-
+import { ScheduleModule } from '@nestjs/schedule';
+import { BatchJobModule } from './api/batch-job/batch-job.module';
 dotenv.config(); // Load environment variables from .env file
 @Module({
   imports: [
@@ -47,6 +48,7 @@ dotenv.config(); // Load environment variables from .env file
         },
       }),
     }),
+    ScheduleModule.forRoot(),
     ApplicationLogModule,
     UserModule,
     AuthModule,
@@ -73,9 +75,10 @@ dotenv.config(); // Load environment variables from .env file
     PlanModule,
     LineStopModule,
     InfoAlertModule,
-    TeamModule
+    TeamModule,
+    BatchJobModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
