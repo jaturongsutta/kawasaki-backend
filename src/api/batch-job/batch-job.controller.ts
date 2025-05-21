@@ -45,7 +45,7 @@ export class BatchJobController {
   private writeBatchLog(message: string, line: string) {
     // Use logPath if available, otherwise fallback to default
     const logDir = this.logPath || path.resolve(__dirname, '../../../logs');
-    const lineDir = path.join(logDir, line, 'BatchJob');
+    const lineDir = path.join(logDir, 'BatchJob', line);
     if (!fs.existsSync(lineDir)) {
       fs.mkdirSync(lineDir, { recursive: true });
     }
