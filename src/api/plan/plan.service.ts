@@ -431,6 +431,7 @@ export class PlanService {
 
   async deletePlan(id: number, userId: number) {
     this.logger.log(`Delete plan id: ${id}`);
+    this.logger.log(`Delete plan userId: ${userId}`);
     try {
       const plan = await this.planRepository.findOneBy({ id });
       if (!plan) {
@@ -506,14 +507,9 @@ export class PlanService {
   }
 
   async confirmList(dto: any, userId: number): Promise<any> {
-    //  { confirmList: [ '0AAB8CF4-D0E6-4589-8FD8-849D80853F72' ] }
-    // update production data by id
-
     try {
       this.logger.log(`Confirm list data: ${JSON.stringify(dto.confirmList)}`);
       this.logger.log(`Confirm list userId: ${userId}`);
-
-      // update by store procedure "sp_Plan_Update_ProdData"
 
       for (let i = 0; i < dto.confirmList.length; i++) {
         const req = await this.commonService.getConnection();
