@@ -3,6 +3,8 @@ import { Cron } from '@nestjs/schedule';
 import { BatchJobService } from './batch-job.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as moment from 'moment';
+
 @Controller('batch-job')
 export class BatchJobController {
   private dbTime: Date | null = null; // Initialize dbTime to null
@@ -36,18 +38,23 @@ export class BatchJobController {
     } else {
       // add dbTime 1 second
       this.dbTime.setSeconds(this.dbTime.getSeconds() + 1);
-      //   console.log('Database time (counter):', this.dbTime);
+      // console.log('Database time (counter):', this.dbTime);
     }
   }
 
-  private writeBatchLog(message: string) {
+  private writeBatchLog(message: string, line: string) {
     // Use logPath if available, otherwise fallback to default
     const logDir = this.logPath || path.resolve(__dirname, '../../../logs');
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
+    const lineDir = path.join(logDir, line);
+    if (!fs.existsSync(lineDir)) {
+      fs.mkdirSync(lineDir, { recursive: true });
     }
-    const logFile = path.join(logDir, 'batch-job.log');
-    const logMsg = `[${new Date().toISOString()}] ${message}\n`;
+
+    const currentDate = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    const dateStr = currentDate.slice(0, 10); // YYYY-MM-DD
+    const logFile = path.join(lineDir, `${dateStr}.log`);
+    const logMsg = `[${currentDate}] ${message}\n`;
     fs.appendFileSync(logFile, logMsg, { encoding: 'utf8' });
   }
 
@@ -69,21 +76,21 @@ export class BatchJobController {
 
   Job_Line_CYH6() {
     try {
-      this.writeBatchLog('Job_Line_CYH6 started'); // Log job start
+      this.writeBatchLog('Job_Line_CYH6 started', 'CYH6'); // Log job start
       // Call the processLineCYH6 method from the service
       this.service.processLineCYH6_sp_AutoStart_CYH6().then((result) => {
-        this.writeBatchLog(JSON.stringify(result)); // Log job completion
+        this.writeBatchLog(JSON.stringify(result), 'CYH6'); // Log job completion
       });
 
       this.service.processLineCYH6_sp_MappedMES_CYH6().then((result2) => {
-        this.writeBatchLog(JSON.stringify(result2)); // Log job completion
+        this.writeBatchLog(JSON.stringify(result2), 'CYH6'); // Log job completion
       });
 
       this.service.processLineCYH6_sp_MappedMES_CYH6_003().then((result3) => {
-        this.writeBatchLog(JSON.stringify(result3)); // Log job completion
+        this.writeBatchLog(JSON.stringify(result3), 'CYH6'); // Log job completion
       });
     } catch (error) {
-      this.writeBatchLog(error.message); // Log job completion
+      this.writeBatchLog(error.message, 'CYH6'); // Log job completion
     }
   }
 }

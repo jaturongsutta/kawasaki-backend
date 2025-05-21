@@ -6,12 +6,16 @@ export class BatchJobService {
   constructor(private commonService: CommonService) {}
 
   // get database time
-  async getDatabaseTime() {
+  async getDatabaseTime(): Promise<Date | null> {
     const result = await this.commonService.executeQuery(
       'SELECT GETDATE() AS currentTime',
     );
     const dbTime = result[0]?.currentTime
-      ? new Date(result[0].currentTime)
+      ? new Date(
+          new Date(result[0].currentTime)
+            .toISOString()
+            .replace(/\.\d{3}Z$/, 'Z'),
+        )
       : null;
 
     return dbTime;
