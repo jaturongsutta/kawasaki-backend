@@ -26,6 +26,7 @@ export class ApplicationLogService {
 
     const directoryPathCombined = path.join(logDir, 'combined');
     const directoryPathError = path.join(logDir, 'error');
+    const directoryPathBatchJob = path.join(logDir, 'BatchJob');
 
     try {
       const filesCombined = await fs.promises.readdir(directoryPathCombined);
@@ -42,9 +43,32 @@ export class ApplicationLogService {
           filename: file,
         }));
 
+      // BatchJob log files, get folder name and file name
+      const logFilesBatchJob: Array<{ folders: string; filename: string }> = [];
+      if (fs.existsSync(directoryPathBatchJob)) {
+        const batchFolders = await fs.promises.readdir(directoryPathBatchJob, {
+          withFileTypes: true,
+        });
+        for (const folder of batchFolders) {
+          if (folder.isDirectory()) {
+            const folderPath = path.join(directoryPathBatchJob, folder.name);
+            const files = await fs.promises.readdir(folderPath);
+            files
+              .filter((file) => file.endsWith('.log'))
+              .forEach((file) => {
+                logFilesBatchJob.push({
+                  folders: folder.name,
+                  filename: file,
+                });
+              });
+          }
+        }
+      }
+
       return {
         logCombined: logFilesCombined,
         logError: logFilesError,
+        logBatchJob: logFilesBatchJob,
       };
     } catch (error) {
       throw new Error(error.message || 'Failed to read directory');
@@ -71,11 +95,19 @@ export class ApplicationLogService {
       logDir = data.valueEn;
     }
 
-    const directoryPathCombined = path.join(logDir, 'combined');
-    const directoryPathError = path.join(logDir, 'error');
+    let directoryPathSelected = '';
+    // logType === 'error' ? directoryPathError : directoryPathCombined;
 
-    const directoryPathSelected =
-      logType === 'error' ? directoryPathError : directoryPathCombined;
+    if (logType === 'BatchJob') {
+      const sp = filename.split('_');
+      const folderName = sp[0];
+      filename = sp[1];
+      directoryPathSelected = path.join(logDir, 'BatchJob', folderName);
+    } else if (logType === 'error') {
+      directoryPathSelected = path.join(logDir, 'error');
+    } else {
+      directoryPathSelected = path.join(logDir, 'combined');
+    }
 
     return path.join(directoryPathSelected, filename);
   }
