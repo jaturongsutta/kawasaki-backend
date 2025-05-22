@@ -20,10 +20,13 @@ export class BatchJobController {
           'BatchJob',
         );
         this.logPath = logDir;
+
+        this.writeBatchLog('BatchJob started', '_BatchStart'); // Log job start
       } else {
         this.service.getLogPath().then((_logPath) => {
           const logDir = path.join(_logPath, 'BatchJob');
           this.logPath = logDir;
+          this.writeBatchLog('BatchJob started', '_BatchStart'); // Log job start
         });
       }
     } catch (error) {
