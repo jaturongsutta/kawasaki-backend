@@ -2,9 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
 import { LineSearchDto } from './dto/line-search.dto';
-import { LineDto } from './dto/line.dto';
+import { LineDto, LineModel, LineMachine, LineTool } from './dto/line.dto';
 import { BaseResponse } from 'src/common/base-response';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { MLine } from 'src/entity/m-line.entity';
 import { MLineModel } from 'src/entity/m-line-model.entity';
 import { DataSource } from 'typeorm'; // Import DataSource for transactions
@@ -116,7 +116,6 @@ export class LineService {
         isActive: lineMachine.isActive,
         rowState: '', // Default value for rowState
       }));
-      console.log('dto.lineMachine : ', dto.lineMachine);
       // Fetch related MLineTool
       const lineTools = await this.lineToolRepository
         .createQueryBuilder('MLineTool')
@@ -129,7 +128,6 @@ export class LineService {
           'MLineTool.isActive',
         ])
         .getMany();
-      console.log('lineTools : ', lineTools);
       // Map the result to LineToolDto
       dto.lineTool = lineTools.map((lineTool) => ({
         lineCd: lineTool.lineCd,
@@ -139,7 +137,6 @@ export class LineService {
         isActive: lineTool.isActive,
         rowState: '', // Default value for rowState
       }));
-      console.log('dto.lineTool : ', dto.lineTool);
 
       return dto;
     } catch (error) {
@@ -153,11 +150,9 @@ export class LineService {
 
   async getProcessByModel(lineCd: string, modelCd: string): Promise<any> {
     try {
-      console.log('modelCd : ', modelCd);
       const lineMachine = await this.lineMachineRepository.find({
         where: { lineCd: lineCd, modelCd: modelCd },
       });
-      console.log('lineMachine : ', lineMachine);
 
       return lineMachine;
     } catch (error) {
@@ -172,9 +167,6 @@ export class LineService {
     processCd: string,
   ): Promise<any> {
     try {
-      console.log('lineCd : ', lineCd);
-      console.log('modelCd : ', modelCd);
-      console.log('processCd : ', processCd);
       // const lineTool = await this.lineToolRepository.find({
       //   where: { lineCd: lineCd, modelCd: modelCd, processCd: processCd },
       // });
@@ -208,8 +200,6 @@ export class LineService {
         ])
         .getRawMany(); // Use getRawMany to retrieve raw results
 
-      console.log('lineTool : ', lineTool);
-
       return lineTool;
     } catch (error) {
       console.error('Error fetching process by model:', error);
@@ -231,11 +221,32 @@ export class LineService {
   async add(data: LineDto, userId: number): Promise<BaseResponse> {
     const queryRunner = this.dataSource.createQueryRunner();
 
+    // validate duplicate data PK_CD
+    const existingLine = await this.lineRepository.findOne({
+      where: { pkCd: data.pkCd },
+    });
+    if (existingLine) {
+      return {
+        status: 1,
+        message: 'Duplicate PK Code',
+      };
+    }
+
+    // validate duplicate data LINE_CD
+    const existingLineCd = await this.lineRepository.findOne({
+      where: { lineCd: data.lineCd },
+    });
+    if (existingLineCd) {
+      return {
+        status: 1,
+        message: 'Duplicate Line Code',
+      };
+    }
+
     try {
       // Start a transaction
       await queryRunner.connect();
       await queryRunner.startTransaction();
-      console.log('data : ', data);
       data.createdBy = userId;
       data.updatedBy = userId;
       data.createdDate = new Date();
@@ -244,16 +255,11 @@ export class LineService {
 
       await queryRunner.manager.save(MLine, data);
 
-      // Save line models
-      for (const model of data.lineModel) {
-        const lineModel = new MLineModel();
-        lineModel.lineCd = data.lineCd;
-        lineModel.modelCd = model.modelCd;
-        lineModel.isActive = model.isActive;
+      await this.saveLineModel(queryRunner, data, userId);
 
-        // await this.lineModel.save(lineModel);
-        await queryRunner.manager.save(MLineModel, lineModel);
-      }
+      await this.savelineMachine(queryRunner, data, userId);
+
+      await this.saveLineTool(queryRunner, data, userId);
 
       // Commit the transaction
       await queryRunner.commitTransaction();
@@ -264,6 +270,7 @@ export class LineService {
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      console.error('Error adding line:', error);
 
       return {
         status: 2,
@@ -281,7 +288,6 @@ export class LineService {
     userId: number,
   ): Promise<BaseResponse> {
     const queryRunner = this.dataSource.createQueryRunner();
-    // console.log('update line data : ', data);
     try {
       // Start a transaction
       await queryRunner.connect();
@@ -297,115 +303,122 @@ export class LineService {
       await queryRunner.manager.save(MLine, data);
 
       // Save line models
-      for (const model of data.lineModel) {
-        if (model.rowState === 'DELETE') {
-          await queryRunner.manager.delete(MLineModel, {
-            lineCd: data.lineCd,
-            modelCd: model.modelCd,
-          });
-        } else if (model.rowState === 'NEW') {
-          const newLineModel = new MLineModel();
-          newLineModel.lineCd = data.lineCd;
-          newLineModel.modelCd = model.modelCd;
-          newLineModel.isActive = model.isActive;
-          await queryRunner.manager.save(MLineModel, newLineModel);
-        } else if (model.rowState === 'UPDATE') {
-          const existingLineModel = await queryRunner.manager.findOne(
-            MLineModel,
-            {
-              where: { lineCd: data.lineCd, modelCd: model.modelCd },
-            },
-          );
+      await this.saveLineModel(queryRunner, data, userId);
+      // for (const model of data.lineModel) {
+      //   if (model.rowState === 'DELETE') {
+      //     await queryRunner.manager.delete(MLineModel, {
+      //       lineCd: data.lineCd,
+      //       modelCd: model.modelCd,
+      //     });
+      //   } else if (model.rowState === 'NEW') {
+      //     const newLineModel = new MLineModel();
+      //     newLineModel.lineCd = data.lineCd;
+      //     newLineModel.modelCd = model.modelCd;
+      //     newLineModel.isActive = model.isActive;
+      //     await queryRunner.manager.save(MLineModel, newLineModel);
+      //   } else if (model.rowState === 'UPDATE') {
+      //     const existingLineModel = await queryRunner.manager.findOne(
+      //       MLineModel,
+      //       {
+      //         where: { lineCd: data.lineCd, modelCd: model.modelCd },
+      //       },
+      //     );
 
-          console.log('existingLineModel : ', existingLineModel);
-          if (existingLineModel) {
-            existingLineModel.isActive = model.isActive;
-            existingLineModel.updatedBy = userId;
-            existingLineModel.updatedDate = new Date();
-            // Add more fields to update if needed
-            await queryRunner.manager.save(MLineModel, existingLineModel);
-          }
-        }
-      }
+      //     // console.log('existingLineModel : ', existingLineModel);
+      //     if (existingLineModel) {
+      //       existingLineModel.isActive = model.isActive;
+      //       existingLineModel.updatedBy = userId;
+      //       existingLineModel.updatedDate = new Date();
+      //       // Add more fields to update if needed
+      //       await queryRunner.manager.save(MLineModel, existingLineModel);
+      //     }
+      //   }
+      // }
 
       // save line machine
-      for (const machine of data.lineMachine) {
-        machine.wt = convertTimeStringToDate(machine.wt);
-        machine.ht = convertTimeStringToDate(machine.ht);
-        machine.mt = convertTimeStringToDate(machine.mt);
+      await this.savelineMachine(queryRunner, data, userId);
+      // for (const machine of data.lineMachine) {
+      //   machine.wt = convertTimeStringToDate(machine.wt);
+      //   machine.ht = convertTimeStringToDate(machine.ht);
+      //   machine.mt = convertTimeStringToDate(machine.mt);
 
-        if (machine.rowState === 'DELETE') {
-          await queryRunner.manager.delete(MLineMachine, {
-            lineCd: data.lineCd,
-            modelCd: machine.modelCd,
-          });
-        } else if (machine.rowState === 'NEW') {
-          const newLineMachine = new MLineMachine();
-          newLineMachine.lineCd = data.lineCd;
-          newLineMachine.modelCd = machine.modelCd;
-          newLineMachine.processCd = machine.processCd;
-          newLineMachine.wt = machine.wt;
-          newLineMachine.ht = machine.ht;
-          newLineMachine.mt = machine.mt;
-          newLineMachine.isActive = machine.isActive;
-          newLineMachine.createdBy = userId;
-          newLineMachine.updatedBy = userId;
-          newLineMachine.createdDate = new Date();
-          newLineMachine.updatedDate = new Date();
-          await queryRunner.manager.save(MLineMachine, newLineMachine);
-        } else if (machine.rowState === 'UPDATE') {
-          const existingLineMachine = await this.lineMachineRepository.findOne({
-            where: { lineCd: data.lineCd, modelCd: machine.modelCd },
-          });
-          if (existingLineMachine) {
-            existingLineMachine.wt = machine.wt;
-            existingLineMachine.ht = machine.ht;
-            existingLineMachine.mt = machine.mt;
-            existingLineMachine.updatedBy = userId;
-            existingLineMachine.updatedDate = new Date();
-            await queryRunner.manager.save(MLineMachine, existingLineMachine);
-          }
-        }
-      }
+      //   if (machine.rowState === 'DELETE') {
+      //     await queryRunner.manager.delete(MLineMachine, {
+      //       lineCd: data.lineCd,
+      //       modelCd: machine.modelCd,
+      //     });
+      //   } else if (machine.rowState === 'NEW') {
+      //     const newLineMachine = new MLineMachine();
+      //     newLineMachine.lineCd = data.lineCd;
+      //     newLineMachine.modelCd = machine.modelCd;
+      //     newLineMachine.processCd = machine.processCd;
+      //     newLineMachine.wt = machine.wt;
+      //     newLineMachine.ht = machine.ht;
+      //     newLineMachine.mt = machine.mt;
+      //     newLineMachine.isActive = machine.isActive;
+      //     newLineMachine.createdBy = userId;
+      //     newLineMachine.updatedBy = userId;
+      //     newLineMachine.createdDate = new Date();
+      //     newLineMachine.updatedDate = new Date();
+      //     await queryRunner.manager.save(MLineMachine, newLineMachine);
+      //   } else if (machine.rowState === 'UPDATE') {
+      //     const existingLineMachine = await this.lineMachineRepository.findOne({
+      //       where: {
+      //         lineCd: data.lineCd,
+      //         modelCd: machine.modelCd,
+      //         processCd: machine.processCd,
+      //       },
+      //     });
+      //     if (existingLineMachine) {
+      //       existingLineMachine.wt = machine.wt;
+      //       existingLineMachine.ht = machine.ht;
+      //       existingLineMachine.mt = machine.mt;
+      //       existingLineMachine.updatedBy = userId;
+      //       existingLineMachine.updatedDate = new Date();
+      //       await queryRunner.manager.save(MLineMachine, existingLineMachine);
+      //     }
+      //   }
+      // }
 
       // save line tool
-      for (const tool of data.lineTool) {
-        if (tool.rowState === 'DELETE') {
-          await queryRunner.manager.delete(MLineTool, {
-            lineCd: data.lineCd,
-            modelCd: tool.modelCd,
-            processCd: tool.processCd,
-            toolCd: tool.toolCd,
-          });
-        } else if (tool.rowState === 'NEW') {
-          const newLineTool = new MLineTool();
-          newLineTool.lineCd = data.lineCd;
-          newLineTool.modelCd = tool.modelCd;
-          newLineTool.processCd = tool.processCd;
-          newLineTool.toolCd = tool.toolCd;
-          newLineTool.isActive = tool.isActive;
-          newLineTool.createdBy = userId;
-          newLineTool.updatedBy = userId;
-          newLineTool.createdDate = new Date();
-          newLineTool.updatedDate = new Date();
-          await queryRunner.manager.save(MLineTool, newLineTool);
-        } else if (tool.rowState === 'UPDATE') {
-          const existingLineTool = await this.lineToolRepository.findOne({
-            where: {
-              lineCd: data.lineCd,
-              modelCd: tool.modelCd,
-              processCd: tool.processCd,
-              toolCd: tool.toolCd,
-            },
-          });
-          if (existingLineTool) {
-            existingLineTool.isActive = tool.isActive;
-            existingLineTool.updatedBy = userId;
-            existingLineTool.updatedDate = new Date();
-            await queryRunner.manager.save(MLineTool, existingLineTool);
-          }
-        }
-      }
+      await this.saveLineTool(queryRunner, data, userId);
+      // for (const tool of data.lineTool) {
+      //   if (tool.rowState === 'DELETE') {
+      //     await queryRunner.manager.delete(MLineTool, {
+      //       lineCd: data.lineCd,
+      //       modelCd: tool.modelCd,
+      //       processCd: tool.processCd,
+      //       toolCd: tool.toolCd,
+      //     });
+      //   } else if (tool.rowState === 'NEW') {
+      //     const newLineTool = new MLineTool();
+      //     newLineTool.lineCd = data.lineCd;
+      //     newLineTool.modelCd = tool.modelCd;
+      //     newLineTool.processCd = tool.processCd;
+      //     newLineTool.toolCd = tool.toolCd;
+      //     newLineTool.isActive = tool.isActive;
+      //     newLineTool.createdBy = userId;
+      //     newLineTool.updatedBy = userId;
+      //     newLineTool.createdDate = new Date();
+      //     newLineTool.updatedDate = new Date();
+      //     await queryRunner.manager.save(MLineTool, newLineTool);
+      //   } else if (tool.rowState === 'UPDATE') {
+      //     const existingLineTool = await this.lineToolRepository.findOne({
+      //       where: {
+      //         lineCd: data.lineCd,
+      //         modelCd: tool.modelCd,
+      //         processCd: tool.processCd,
+      //         toolCd: tool.toolCd,
+      //       },
+      //     });
+      //     if (existingLineTool) {
+      //       existingLineTool.isActive = tool.isActive;
+      //       existingLineTool.updatedBy = userId;
+      //       existingLineTool.updatedDate = new Date();
+      //       await queryRunner.manager.save(MLineTool, existingLineTool);
+      //     }
+      //   }
+      // }
 
       // Commit the transaction
       await queryRunner.commitTransaction();
@@ -425,6 +438,131 @@ export class LineService {
     } finally {
       // Release the query runner
       await queryRunner.release();
+    }
+  }
+
+  async saveLineModel(queryRunner: QueryRunner, data: LineDto, userId: number) {
+    // Save line models
+    for (const model of data.lineModel) {
+      if (model.rowState === 'DELETE') {
+        await queryRunner.manager.delete(MLineModel, {
+          lineCd: data.lineCd,
+          modelCd: model.modelCd,
+        });
+      } else if (model.rowState === 'NEW') {
+        const newLineModel = new MLineModel();
+        newLineModel.lineCd = data.lineCd;
+        newLineModel.modelCd = model.modelCd;
+        newLineModel.isActive = model.isActive;
+        await queryRunner.manager.save(MLineModel, newLineModel);
+      } else if (model.rowState === 'UPDATE') {
+        const existingLineModel = await queryRunner.manager.findOne(
+          MLineModel,
+          {
+            where: { lineCd: data.lineCd, modelCd: model.modelCd },
+          },
+        );
+
+        // console.log('existingLineModel : ', existingLineModel);
+        if (existingLineModel) {
+          existingLineModel.isActive = model.isActive;
+          existingLineModel.updatedBy = userId;
+          existingLineModel.updatedDate = new Date();
+          // Add more fields to update if needed
+          await queryRunner.manager.save(MLineModel, existingLineModel);
+        }
+      }
+    }
+  }
+
+  async savelineMachine(
+    queryRunner: QueryRunner,
+    data: LineDto,
+    userId: number,
+  ) {
+    for (const machine of data.lineMachine) {
+      machine.wt = convertTimeStringToDate(machine.wt);
+      machine.ht = convertTimeStringToDate(machine.ht);
+      machine.mt = convertTimeStringToDate(machine.mt);
+      // console.log('machine : ', machine);
+
+      if (machine.rowState === 'DELETE') {
+        await queryRunner.manager.delete(MLineMachine, {
+          lineCd: data.lineCd,
+          modelCd: machine.modelCd,
+        });
+      } else if (machine.rowState === 'NEW') {
+        const newLineMachine = new MLineMachine();
+        newLineMachine.lineCd = data.lineCd;
+        newLineMachine.modelCd = machine.modelCd;
+        newLineMachine.processCd = machine.processCd;
+        newLineMachine.wt = machine.wt;
+        newLineMachine.ht = machine.ht;
+        newLineMachine.mt = machine.mt;
+        newLineMachine.isActive = machine.isActive;
+        newLineMachine.createdBy = userId;
+        newLineMachine.updatedBy = userId;
+        newLineMachine.createdDate = new Date();
+        newLineMachine.updatedDate = new Date();
+        await queryRunner.manager.save(MLineMachine, newLineMachine);
+      } else if (machine.rowState === 'UPDATE') {
+        const existingLineMachine = await this.lineMachineRepository.findOne({
+          where: {
+            lineCd: data.lineCd,
+            modelCd: machine.modelCd,
+            processCd: machine.processCd,
+          },
+        });
+        if (existingLineMachine) {
+          existingLineMachine.wt = machine.wt;
+          existingLineMachine.ht = machine.ht;
+          existingLineMachine.mt = machine.mt;
+          existingLineMachine.updatedBy = userId;
+          existingLineMachine.updatedDate = new Date();
+          await queryRunner.manager.save(MLineMachine, existingLineMachine);
+        } else {
+          console.error('existingLineMachine not found');
+        }
+      }
+    }
+  }
+  async saveLineTool(queryRunner: QueryRunner, data: LineDto, userId: number) {
+    for (const tool of data.lineTool) {
+      if (tool.rowState === 'DELETE') {
+        await queryRunner.manager.delete(MLineTool, {
+          lineCd: data.lineCd,
+          modelCd: tool.modelCd,
+          processCd: tool.processCd,
+          toolCd: tool.toolCd,
+        });
+      } else if (tool.rowState === 'NEW') {
+        const newLineTool = new MLineTool();
+        newLineTool.lineCd = data.lineCd;
+        newLineTool.modelCd = tool.modelCd;
+        newLineTool.processCd = tool.processCd;
+        newLineTool.toolCd = tool.toolCd;
+        newLineTool.isActive = tool.isActive;
+        newLineTool.createdBy = userId;
+        newLineTool.updatedBy = userId;
+        newLineTool.createdDate = new Date();
+        newLineTool.updatedDate = new Date();
+        await queryRunner.manager.save(MLineTool, newLineTool);
+      } else if (tool.rowState === 'UPDATE') {
+        const existingLineTool = await this.lineToolRepository.findOne({
+          where: {
+            lineCd: data.lineCd,
+            modelCd: tool.modelCd,
+            processCd: tool.processCd,
+            toolCd: tool.toolCd,
+          },
+        });
+        if (existingLineTool) {
+          existingLineTool.isActive = tool.isActive;
+          existingLineTool.updatedBy = userId;
+          existingLineTool.updatedDate = new Date();
+          await queryRunner.manager.save(MLineTool, existingLineTool);
+        }
+      }
     }
   }
 

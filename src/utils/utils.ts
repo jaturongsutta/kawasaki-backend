@@ -9,7 +9,12 @@ export const convertTimeStringToDate = (strTime): Date | null => {
   // if tinme format "08:00" to "08:00:00"
   let ret = null;
   if (strTime) {
-    const timeFormat = moment(strTime, 'HH:mm').format('YYYY-MM-DD HH:mm:ss');
+    let timeFormat = '';
+    if (strTime.length === 5) {
+      timeFormat = moment(strTime, 'HH:mm').format('YYYY-MM-DD HH:mm:ss');
+    } else if (strTime.length === 8) {
+      timeFormat = moment(strTime, 'HH:mm:ss').format('YYYY-MM-DD HH:mm:ss');
+    }
     ret = moment(timeFormat, 'YYYY-MM-DD HH:mm:ss').toDate();
   } else {
     throw new Error('Invalid time format');
