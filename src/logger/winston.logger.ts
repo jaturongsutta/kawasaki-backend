@@ -61,8 +61,8 @@ const options = {
 };
 
 const _createLogger = async () => {
-  let logDir = path.join(process.env.ENV_DEVELOP_DIR);
-  let logDirCombined = path.join(logDir, 'logs', '%DATE%.log');
+  let logDir = path.join(process.env.ENV_DEVELOP_DIR, 'logs');
+  let logDirCombined = path.join(logDir, 'combined', '%DATE%.log');
   let logDirError = path.join(logDir, 'error', '%DATE%-error.log');
   if (process.env.ENV !== 'develop') {
     try {
