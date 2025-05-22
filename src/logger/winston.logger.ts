@@ -71,7 +71,7 @@ const _createLogger = async () => {
         await mssql.query`SELECT VALUE_EN FROM co_Predefine where Predefine_Group ='ConfigPath' and Predefine_CD = 'LOG'`;
       logDir = result.recordset[0].VALUE_EN;
       if (result.recordset.length > 0) {
-        logDir = path.join(logDir, 'logs');
+        // logDir = path.join(logDir, 'logs');
         let existsSync = fs.existsSync(logDir);
         if (!existsSync) {
           console.log('Create log directory');
