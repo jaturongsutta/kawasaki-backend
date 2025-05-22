@@ -99,7 +99,7 @@ export class ApplicationLogService {
     // logType === 'error' ? directoryPathError : directoryPathCombined;
 
     if (logType === 'BatchJob') {
-      const sp = filename.split('_');
+      const sp = filename.split('|');
       const folderName = sp[0];
       filename = sp[1];
       directoryPathSelected = path.join(logDir, 'BatchJob', folderName);
