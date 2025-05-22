@@ -96,7 +96,6 @@ export class ApplicationLogService {
     }
 
     let directoryPathSelected = '';
-    // logType === 'error' ? directoryPathError : directoryPathCombined;
 
     if (logType === 'BatchJob') {
       const sp = filename.split('|');
