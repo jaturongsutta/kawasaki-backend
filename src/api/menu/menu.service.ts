@@ -21,7 +21,7 @@ export class MenuService {
     req.input('Menu_No', dto.menu_no);
     req.input('Menu_Name', dto.menu_name);
     req.input('Status', dto.status);
-    req.input('Language', 'TH');
+    req.input('Language', 'EN');
     return this.commonService.getSearch('sp_um_Search_Menu', req);
   }
 
