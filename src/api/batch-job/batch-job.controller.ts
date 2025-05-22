@@ -14,17 +14,20 @@ export class BatchJobController {
   constructor(private service: BatchJobService) {
     try {
       if (process.env.ENV !== 'production') {
-        const logDir = path.join(process.env.ENV_DEVELOP_DIR, 'BatchJob');
+        const logDir = path.join(
+          process.env.ENV_DEVELOP_DIR,
+          'logs',
+          'BatchJob',
+        );
         this.logPath = logDir;
       } else {
-        this.service.getLogPath().then((_path) => {
-          const logDir = path.join(_path, 'BatchJob');
+        this.service.getLogPath().then((_logPath) => {
+          const logDir = path.join(_logPath, 'BatchJob');
           this.logPath = logDir;
         });
       }
-      this.logger.log('Log path:', this.logPath);
     } catch (error) {
-      this.logger.error('Error initializing log path:', error);
+      this.logger.error('Error initializing log path:', error.message);
     }
   }
 
