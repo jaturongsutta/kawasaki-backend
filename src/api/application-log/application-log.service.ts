@@ -24,7 +24,7 @@ export class ApplicationLogService {
       logDir = data.valueEn;
     }
 
-    const directoryPathCombined = path.join(logDir, 'logs');
+    const directoryPathCombined = path.join(logDir, 'combined');
     const directoryPathError = path.join(logDir, 'error');
 
     try {
@@ -71,7 +71,7 @@ export class ApplicationLogService {
       logDir = data.valueEn;
     }
 
-    const directoryPathCombined = path.join(logDir, 'logs');
+    const directoryPathCombined = path.join(logDir, 'combined');
     const directoryPathError = path.join(logDir, 'error');
 
     const directoryPathSelected =
