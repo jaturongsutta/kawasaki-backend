@@ -17,8 +17,8 @@ export class BatchJobController {
         const logDir = path.join(process.env.ENV_DEVELOP_DIR, 'BatchJob');
         this.logPath = logDir;
       } else {
-        this.service.getLogPath().then((path) => {
-          const logDir = path.join(path, 'BatchJob');
+        this.service.getLogPath().then((_path) => {
+          const logDir = path.join(_path, 'BatchJob');
           this.logPath = logDir;
         });
       }
