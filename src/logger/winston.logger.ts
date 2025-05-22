@@ -61,7 +61,7 @@ const options = {
 };
 
 const _createLogger = async () => {
-  let logDir = path.join(process.env.ENV_DEVELOP_DIR, 'logs');
+  let logDir = path.join(process.env.ENV_DEVELOP_DIR);
   let logDirCombined = path.join(logDir, 'logs', '%DATE%.log');
   let logDirError = path.join(logDir, 'error', '%DATE%-error.log');
   if (process.env.ENV !== 'develop') {
@@ -71,6 +71,7 @@ const _createLogger = async () => {
         await mssql.query`SELECT VALUE_EN FROM co_Predefine where Predefine_Group ='ConfigPath' and Predefine_CD = 'LOG'`;
       logDir = result.recordset[0].VALUE_EN;
       if (result.recordset.length > 0) {
+        logDir = path.join(logDir, 'logs');
         let existsSync = fs.existsSync(logDir);
         if (!existsSync) {
           console.log('Create log directory');

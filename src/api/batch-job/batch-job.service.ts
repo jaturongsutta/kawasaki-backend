@@ -7,12 +7,14 @@ export class BatchJobService {
 
   // get database time
   async getDatabaseTime(): Promise<Date | null> {
-    const result = await this.commonService.executeQuery(
-      'SELECT GETDATE() AS currentTime',
-    );
-    const dbTime = result[0]?.currentTime
+    const req = await this.commonService.getConnection();
+    const result = await req.query('SELECT GETDATE() AS currentTime');
+    // const result = await this.commonService.executeQuery(
+    //   'SELECT GETDATE() AS currentTime',
+    // );
+    const dbTime = result.recordset[0]?.currentTime
       ? new Date(
-          new Date(result[0].currentTime)
+          new Date(result.recordset[0].currentTime)
             .toISOString()
             .replace(/\.\d{3}Z$/, 'Z'),
         )
@@ -38,14 +40,14 @@ export class BatchJobService {
   async processLineCYH6_sp_AutoStart_CYH6() {
     try {
       const req = await this.commonService.getConnection();
-      const result = await this.commonService.executeStoreProcedure(
-        'sp_AutoStart_CYH6',
-        req,
-      );
+      const result = await req.execute('sp_AutoStart_CYH6');
+      // const result = await this.commonService.executeStoreProcedure(
+      //   'sp_AutoStart_CYH6',
+      //   req,
+      // );
       return {
         process: 'sp_AutoStart_CYH6',
         status: 'SUCCESS',
-        message: '',
         recordset: result.recordset?.length > 0 ? result.recordset : null,
       };
     } catch (error) {
@@ -53,21 +55,20 @@ export class BatchJobService {
         process: 'sp_AutoStart_CYH6',
         status: 'ERROR',
         message: error.message,
-        recordset: [],
       };
     }
   }
   async processLineCYH6_sp_MappedMES_CYH6() {
     try {
       const req = await this.commonService.getConnection();
-      const result = await this.commonService.executeStoreProcedure(
-        'sp_MappedMES_CYH6',
-        req,
-      );
+      const result = await req.execute('sp_MappedMES_CYH6');
+      // const result = await this.commonService.executeStoreProcedure(
+      //   'sp_MappedMES_CYH6',
+      //   req,
+      // );
       return {
         process: 'sp_MappedMES_CYH6',
         status: 'SUCCESS',
-        message: '',
         recordset: result.recordset?.length > 0 ? result.recordset : null,
       };
     } catch (error) {
@@ -75,21 +76,21 @@ export class BatchJobService {
         process: 'sp_MappedMES_CYH6',
         status: 'ERROR',
         message: error.message,
-        recordset: [],
       };
     }
   }
   async processLineCYH6_sp_MappedMES_CYH6_003() {
     try {
       const req = await this.commonService.getConnection();
-      const result = await this.commonService.executeStoreProcedure(
-        'sp_MappedMES_CYH6_003',
-        req,
-      );
+      const result = await req.execute('sp_MappedMES_CYH6_003');
+
+      // const result = await this.commonService.executeStoreProcedure(
+      //   'sp_MappedMES_CYH6_003',
+      //   req,
+      // );
       return {
         process: 'sp_MappedMES_CYH6_003',
         status: 'SUCCESS',
-        message: null,
         recordset: result.recordset?.length > 0 ? result.recordset : null,
       };
     } catch (error) {
@@ -97,7 +98,6 @@ export class BatchJobService {
         process: 'sp_MappedMES_CYH6_003',
         status: 'ERROR',
         message: error.message,
-        recordset: [],
       };
     }
   }

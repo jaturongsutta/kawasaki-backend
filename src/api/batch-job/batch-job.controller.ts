@@ -12,12 +12,14 @@ export class BatchJobController {
 
   constructor(private service: BatchJobService) {
     if (process.env.ENV !== 'production') {
-      return;
+      const logDir = path.join(process.env.ENV_DEVELOP_DIR, 'BatchJob');
+      this.logPath = logDir;
+    } else {
+      this.service.getLogPath().then((path) => {
+        const logDir = path.join(path, 'BatchJob');
+        this.logPath = logDir;
+      });
     }
-    this.service.getLogPath().then((path) => {
-      this.logPath = path;
-      console.log('Log path:', this.logPath);
-    });
   }
 
   @Cron('* * * * * *') // every second
@@ -45,7 +47,7 @@ export class BatchJobController {
   private writeBatchLog(message: string, line: string) {
     // Use logPath if available, otherwise fallback to default
     const logDir = this.logPath || path.resolve(__dirname, '../../../logs');
-    const lineDir = path.join(logDir, 'BatchJob', line);
+    const lineDir = path.join(logDir, line);
     if (!fs.existsSync(lineDir)) {
       fs.mkdirSync(lineDir, { recursive: true });
     }
