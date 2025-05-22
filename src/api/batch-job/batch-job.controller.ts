@@ -34,14 +34,14 @@ export class BatchJobController {
     }
   }
 
-  @Cron('* * * * * *') // every second
+  // @Cron('* * * * * *') // every second
   async counterDatabaseTime() {
-    if (process.env.ENV !== 'production') {
-      return;
-    }
+    // if (process.env.ENV !== 'production') {
+    //   return;
+    // }
     if (
       !this.dbTime ||
-      (this.dbTime.getMinutes() % 5 === 0 && this.dbTime.getSeconds() === 30)
+      (this.dbTime.getMinutes() % 3 === 0 && this.dbTime.getSeconds() === 0)
     ) {
       const _dbTime = await this.service.getDatabaseTime();
       // console.log('Database time ', this.dbTime);
@@ -77,6 +77,8 @@ export class BatchJobController {
     if (process.env.ENV !== 'production') {
       return;
     }
+    this.counterDatabaseTime();
+
     if (
       this.dbTime &&
       this.dbTime.getMinutes() % 5 === 0 &&
