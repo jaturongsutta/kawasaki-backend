@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { BatchJobService } from './batch-job.service';
 import * as fs from 'fs';
@@ -7,18 +7,24 @@ import * as moment from 'moment';
 
 @Controller('batch-job')
 export class BatchJobController {
+  private readonly logger = new Logger(BatchJobController.name);
   private dbTime: Date | null = null; // Initialize dbTime to null
   private logPath: string | null = null; // Initialize logPath to null
 
   constructor(private service: BatchJobService) {
-    if (process.env.ENV !== 'production') {
-      const logDir = path.join(process.env.ENV_DEVELOP_DIR, 'BatchJob');
-      this.logPath = logDir;
-    } else {
-      this.service.getLogPath().then((path) => {
-        const logDir = path.join(path, 'BatchJob');
+    try {
+      if (process.env.ENV !== 'production') {
+        const logDir = path.join(process.env.ENV_DEVELOP_DIR, 'BatchJob');
         this.logPath = logDir;
-      });
+      } else {
+        this.service.getLogPath().then((path) => {
+          const logDir = path.join(path, 'BatchJob');
+          this.logPath = logDir;
+        });
+      }
+      this.logger.log('Log path:', this.logPath);
+    } catch (error) {
+      this.logger.error('Error initializing log path:', error);
     }
   }
 
