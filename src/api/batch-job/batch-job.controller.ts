@@ -77,7 +77,7 @@ export class BatchJobController {
     if (process.env.ENV !== 'production') {
       return;
     }
-    this.counterDatabaseTime();
+    await this.counterDatabaseTime();
 
     if (
       this.dbTime &&
