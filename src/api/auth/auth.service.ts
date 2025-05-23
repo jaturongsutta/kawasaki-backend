@@ -51,6 +51,7 @@ export class AuthService {
     const execute = await this.commonService.executeStoreProcedure(
       'sp_um_User_Role_Permission',
       req,
+      false, // false = not log
     );
 
     let res;

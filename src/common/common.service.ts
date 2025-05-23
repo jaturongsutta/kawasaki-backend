@@ -66,14 +66,23 @@ export class CommonService {
           : result.recordsets[1][0].Total_Record,
     };
   }
-
-  async executeStoreProcedure(storedProcedure: string, req: any) {
+  // overload method
+  async executeStoreProcedure(storedProcedure: string, req: any);
+  async executeStoreProcedure(storedProcedure: string, req: any, log: boolean);
+  async executeStoreProcedure(
+    storedProcedure: string,
+    req: any,
+    log: boolean = true,
+  ) {
     try {
       const result = await req.execute(storedProcedure);
-      this.logger.log(JSON.stringify(this.getLogSql(req)));
 
-      if (Object.keys(result.output).length > 0) {
-        this.logger.log(JSON.stringify(result.output));
+      if (log) {
+        this.logger.log(JSON.stringify(this.getLogSql(req)));
+
+        if (Object.keys(result.output).length > 0) {
+          this.logger.log(JSON.stringify(result.output));
+        }
       }
 
       return result;
