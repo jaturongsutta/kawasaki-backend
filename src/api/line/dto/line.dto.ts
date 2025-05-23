@@ -5,9 +5,9 @@ export class LineDto extends BaseDto {
   lineName?: string | null;
   pkCd?: string | null;
   isActive?: string | null;
-  createdDate?: Date | null;
+  createdDate?: string | null;
   createdBy?: number | null;
-  updatedDate?: Date | null;
+  updatedDate?: string | null;
   updatedBy?: number | null;
 
   lineModel: LineModel[];

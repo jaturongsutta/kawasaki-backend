@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
 import { LineSearchDto } from './dto/line-search.dto';
-import { LineDto, LineModel, LineMachine, LineTool } from './dto/line.dto';
+import { LineDto } from './dto/line.dto';
 import { BaseResponse } from 'src/common/base-response';
 import { QueryRunner, Repository } from 'typeorm';
 import { MLine } from 'src/entity/m-line.entity';
@@ -11,7 +11,11 @@ import { DataSource } from 'typeorm'; // Import DataSource for transactions
 import { MLineMachine } from 'src/entity/m-line-machine.entity';
 import { MLineTool } from 'src/entity/m-line-tool.entity';
 import { MTool } from 'src/entity/tool.entity';
-import { convertTimeStringToDate } from 'src/utils/utils';
+import {
+  convertTimeStringToDate,
+  getCurrentDate,
+  toLocalDateTime,
+} from 'src/utils/utils';
 
 @Injectable()
 export class LineService {
@@ -56,10 +60,12 @@ export class LineService {
       dto.lineName = line.lineName;
       dto.pkCd = line.pkCd;
       dto.isActive = line.isActive;
-      dto.createdDate = line.createdDate;
+      dto.createdDate = toLocalDateTime(line.createdDate);
       dto.createdBy = line.createdBy;
-      dto.updatedDate = line.updatedDate;
+      dto.updatedDate = toLocalDateTime(line.updatedDate);
       dto.updatedBy = line.updatedBy;
+
+      console.log('dto : ', dto);
 
       // Fetch related MLineModel and MModel using a left join
       const lineModels = await this.lineModelRepository
@@ -247,13 +253,19 @@ export class LineService {
       // Start a transaction
       await queryRunner.connect();
       await queryRunner.startTransaction();
-      data.createdBy = userId;
-      data.updatedBy = userId;
-      data.createdDate = new Date();
-      data.updatedDate = new Date();
-      await this.lineRepository.save(data);
+      const mLine = new MLine();
+      mLine.lineCd = data.lineCd;
+      mLine.lineName = data.lineName;
+      mLine.pkCd = data.pkCd;
+      mLine.isActive = data.isActive;
+      mLine.createdBy = userId;
+      mLine.updatedBy = userId;
+      mLine.createdDate = getCurrentDate();
+      mLine.updatedDate = getCurrentDate();
 
-      await queryRunner.manager.save(MLine, data);
+      // await this.lineRepository.save(data);
+
+      await queryRunner.manager.save(MLine, mLine);
 
       await this.saveLineModel(queryRunner, data, userId);
 
@@ -297,8 +309,8 @@ export class LineService {
       if (!line) {
         throw new Error('Line not found');
       }
-      data.updatedBy = userId;
-      data.updatedDate = new Date();
+      line.updatedBy = userId;
+      line.updatedDate = getCurrentDate();
 
       await queryRunner.manager.save(MLine, data);
 
@@ -467,7 +479,7 @@ export class LineService {
         if (existingLineModel) {
           existingLineModel.isActive = model.isActive;
           existingLineModel.updatedBy = userId;
-          existingLineModel.updatedDate = new Date();
+          existingLineModel.updatedDate = getCurrentDate();
           // Add more fields to update if needed
           await queryRunner.manager.save(MLineModel, existingLineModel);
         }
@@ -502,8 +514,8 @@ export class LineService {
         newLineMachine.isActive = machine.isActive;
         newLineMachine.createdBy = userId;
         newLineMachine.updatedBy = userId;
-        newLineMachine.createdDate = new Date();
-        newLineMachine.updatedDate = new Date();
+        newLineMachine.createdDate = getCurrentDate();
+        newLineMachine.updatedDate = getCurrentDate();
         await queryRunner.manager.save(MLineMachine, newLineMachine);
       } else if (machine.rowState === 'UPDATE') {
         const existingLineMachine = await this.lineMachineRepository.findOne({
@@ -518,7 +530,7 @@ export class LineService {
           existingLineMachine.ht = machine.ht;
           existingLineMachine.mt = machine.mt;
           existingLineMachine.updatedBy = userId;
-          existingLineMachine.updatedDate = new Date();
+          existingLineMachine.updatedDate = getCurrentDate();
           await queryRunner.manager.save(MLineMachine, existingLineMachine);
         } else {
           console.error('existingLineMachine not found');
@@ -544,8 +556,8 @@ export class LineService {
         newLineTool.isActive = tool.isActive;
         newLineTool.createdBy = userId;
         newLineTool.updatedBy = userId;
-        newLineTool.createdDate = new Date();
-        newLineTool.updatedDate = new Date();
+        newLineTool.createdDate = getCurrentDate();
+        newLineTool.updatedDate = getCurrentDate();
         await queryRunner.manager.save(MLineTool, newLineTool);
       } else if (tool.rowState === 'UPDATE') {
         const existingLineTool = await this.lineToolRepository.findOne({
@@ -559,7 +571,7 @@ export class LineService {
         if (existingLineTool) {
           existingLineTool.isActive = tool.isActive;
           existingLineTool.updatedBy = userId;
-          existingLineTool.updatedDate = new Date();
+          existingLineTool.updatedDate = getCurrentDate();
           await queryRunner.manager.save(MLineTool, existingLineTool);
         }
       }
@@ -576,7 +588,7 @@ export class LineService {
 
       const lineResult = await this.lineRepository.update(
         { lineCd },
-        { isActive: 'N', updatedBy: userId, updatedDate: new Date() },
+        { isActive: 'N', updatedBy: userId, updatedDate: getCurrentDate() },
       );
       if (lineResult.affected === 0) {
         return {
