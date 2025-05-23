@@ -110,7 +110,7 @@ const _createLogger = async () => {
         format: customFormat,
         datePattern: 'YYYY-MM-DD',
         zippedArchive: false,
-        // maxFiles: '30d',
+        maxFiles: '30d',
       }),
       ,
     ],

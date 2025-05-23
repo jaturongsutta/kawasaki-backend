@@ -121,4 +121,40 @@ export class BatchJobController extends BaseController {
       this.writeBatchLog(error.message, 'CYH6'); // Log job completion
     }
   }
+  @Cron('0 0 1 * * *') // every day at 01:00
+  async cleanOldLogs() {
+    try {
+      const logDir = this.logPath || path.resolve(__dirname, '../../../logs');
+      if (!fs.existsSync(logDir)) return;
+
+      // Loop through all line folders
+      const lineFolders = await fs.promises.readdir(logDir, {
+        withFileTypes: true,
+      });
+      for (const folder of lineFolders) {
+        if (folder.isDirectory()) {
+          const folderPath = path.join(logDir, folder.name);
+          const files = await fs.promises.readdir(folderPath);
+          for (const file of files) {
+            if (file.endsWith('.log')) {
+              const fileDateStr = file.replace('.log', ''); // 'YYYY-MM-DD'
+              if (moment(fileDateStr, 'YYYY-MM-DD', true).isValid()) {
+                const fileDate = moment(fileDateStr, 'YYYY-MM-DD');
+                if (fileDate.isBefore(moment().subtract(30, 'days'), 'day')) {
+                  // Delete file older than 30 days
+                  await fs.promises.unlink(path.join(folderPath, file));
+                }
+              }
+            }
+          }
+        }
+      }
+      this.writeBatchLog('Cleaned old log files', '_BatchClean');
+    } catch (error) {
+      this.writeBatchLog(
+        `Error cleaning logs: ${error.message}`,
+        '_BatchClean',
+      );
+    }
+  }
 }
