@@ -399,7 +399,6 @@ export class PlanService {
         plan.cycleTime = dto.cycleTime;
         plan.operator = dto.operator;
         plan.leader = dto.leader;
-        plan.planFgAmt = dto.planFgAmt;
       }
 
       plan.b1 = dto.b1 === 'Y' ? 'Y' : 'N';
@@ -408,6 +407,7 @@ export class PlanService {
       plan.b4 = dto.b4 === 'Y' ? 'Y' : 'N';
       plan.ot = dto.ot === 'Y' ? 'Y' : 'N';
       plan.planTotalTime = dto.planTotalTime;
+      plan.planFgAmt = dto.planFgAmt;
 
       // Save the updated plan to the database
       const result = this.planRepository.save(plan);
