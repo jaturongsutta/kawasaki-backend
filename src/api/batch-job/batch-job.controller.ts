@@ -1,17 +1,19 @@
-import { Controller, Logger } from '@nestjs/common';
+import { Controller, Get, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { BatchJobService } from './batch-job.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as moment from 'moment';
+import { BaseController } from 'src/base.controller';
 
 @Controller('batch-job')
-export class BatchJobController {
+export class BatchJobController extends BaseController {
   private readonly logger = new Logger(BatchJobController.name);
   private dbTime: Date | null = null; // Initialize dbTime to null
   private logPath: string | null = null; // Initialize logPath to null
 
   constructor(private service: BatchJobService) {
+    super();
     try {
       if (process.env.ENV !== 'production') {
         const logDir = path.join(
@@ -32,6 +34,16 @@ export class BatchJobController {
     } catch (error) {
       this.logger.error('Error initializing log path:', error.message);
     }
+  }
+
+  @Get('time') // get database time and schedule time
+  async getDatabaseTime() {
+    const databaseTime = await this.service.getDatabaseTime();
+
+    return {
+      databaseTime: databaseTime,
+      scheduleTime: this.dbTime,
+    };
   }
 
   // @Cron('* * * * * *') // every second

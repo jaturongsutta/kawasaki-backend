@@ -112,10 +112,12 @@ export class PlanService {
     try {
       const req = await this.commonService.getConnection();
       req.input('Line_CD', line);
-      const { recordset } = await this.commonService.executeStoreProcedure(
-        'sp_Plan_List_Current',
-        req,
-      );
+      // execute stored procedure without log
+      const { recordset } = await req.execute('sp_Plan_List_Current');
+      // const { recordset } = await this.commonService.executeStoreProcedure(
+      //   'sp_Plan_List_Current',
+      //   req,
+      // );
       return recordset;
     } catch (error) {
       console.error(error);

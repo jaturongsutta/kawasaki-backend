@@ -98,7 +98,7 @@ export class CommonService {
 
       // Execute the query using the request object
       const result = await request.query(query);
-      this.logger.log(query);
+      // this.logger.log(query);
 
       return result.recordset;
 
