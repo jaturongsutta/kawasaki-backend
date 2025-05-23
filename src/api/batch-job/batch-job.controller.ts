@@ -102,26 +102,36 @@ export class BatchJobController extends BaseController {
     }
   }
 
-  Job_Line_CYH6() {
+  async Job_Line_CYH6() {
     try {
       this.writeBatchLog('Job_Line_CYH6 started', 'CYH6'); // Log job start
-      // Call the processLineCYH6 method from the service
-      this.service.processLineCYH6_sp_AutoStart_CYH6().then((result) => {
-        this.writeBatchLog(JSON.stringify(result), 'CYH6'); // Log job completion
-      });
 
-      this.service.processLineCYH6_sp_MappedMES_CYH6().then((result2) => {
-        this.writeBatchLog(JSON.stringify(result2), 'CYH6'); // Log job completion
-      });
+      const result = await this.service.processLineCYH6_sp_AutoStart_CYH6();
+      this.writeBatchLog(JSON.stringify(result), 'CYH6'); // Log job completion
 
-      this.service.processLineCYH6_sp_MappedMES_CYH6_003().then((result3) => {
-        this.writeBatchLog(JSON.stringify(result3), 'CYH6'); // Log job completion
-      });
+      const result2 = await this.service.processLineCYH6_sp_MappedMES_CYH6();
+      this.writeBatchLog(JSON.stringify(result2), 'CYH6'); // Log job completion
+
+      const result3 =
+        await this.service.processLineCYH6_sp_MappedMES_CYH6_003();
+      this.writeBatchLog(JSON.stringify(result3), 'CYH6'); // Log job completion
     } catch (error) {
-      this.writeBatchLog(error.message, 'CYH6'); // Log job completion
+      this.writeBatchLog('[ERROR] ' + error.message, 'CYH6'); // Log error
     }
   }
+
   @Cron('0 0 1 * * *') // every day at 01:00
+  /**
+   * Cleans up old log files from the log directory.
+   *
+   * This method iterates through all subdirectories (representing line folders) within the log directory,
+   * identifies log files with names in the 'YYYY-MM-DD.log' format, and deletes those that are older than 30 days.
+   * After cleaning, it writes a batch log entry indicating the operation's completion.
+   * In case of errors during the process, it logs the error message.
+   *
+   * @async
+   * @returns {Promise<void>} Resolves when the cleanup operation is complete.
+   */
   async cleanOldLogs() {
     try {
       const logDir = this.logPath || path.resolve(__dirname, '../../../logs');
