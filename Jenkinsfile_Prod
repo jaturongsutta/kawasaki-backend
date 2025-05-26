@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         GIT_URL = ""
-        DEPLOY_PATH = "D:\\WebDeployment\\KAWASAKI_Backend\\"
+        DEPLOY_PATH = "D:\\IIS_Share\\kawasaki\\"
     }
     
     stages {
@@ -14,7 +14,7 @@ pipeline {
                  
                 // Checkout the repository
                 script {
-                    git branch: 'develop', 
+                    git branch: 'main', 
                         url: GIT_URL
                     
                     // Retrieve last commit info
@@ -24,7 +24,6 @@ pipeline {
                     // Parse the commit message to remove unnecessary parts
                     def parsedMessage = commitMessage.substring(commitMessage.indexOf('>') + cmd.length()).trim()
                     
-                    parsedMessage = parsedMessage.replace("'", "") 
                     // Save the last commit info to an environment variable
                     env.LAST_COMMIT = parsedMessage 
                 } 
@@ -54,9 +53,9 @@ pipeline {
                         echo DB_HOST=172.20.91.109
                         echo DB_PORT=1433
                         echo DB_USERNAME=sa
-                        echo DB_PASSWORD=password
+                        echo DB_PASSWORD=P@ssw0rd
                         echo DB_NAME=KAWASAKI_DB
-                        echo ENV_DEVELOP_DIR=.\\application-files\\
+                        echo ENV_DEVELOP_DIR=D:\\ApplicationFile\\Log\\KAWASAKI
                         echo GIT_COMMIT_LOG=%LAST_COMMIT%
                     ) >> dist\\.env
                 '''
@@ -64,40 +63,24 @@ pipeline {
          
         }
         
-        stage('Deploy') {
+        stage('.Zip and backup') {
             steps {
-                // Delete old deployment and copy new version
                 bat ''' echo %DEPLOY_PATH%  '''
+                
+                      bat '''
+                    if exist "%DEPLOY_PATH%kawasaki-backend-main-dev*.zip" (
+                        move /Y "%DEPLOY_PATH%kawasaki-backend-main-dev*.zip" "%DEPLOY_PATH%backup\\"
+                    )
+                '''
                 bat '''
                     @echo on
-                    rmdir /S /Q %DEPLOY_PATH%
-                    xcopy /s /y /d /r dist\\ %DEPLOY_PATH%
-                    xcopy /y /d /r package.json %DEPLOY_PATH%
-                    xcopy /y /d /r package-lock.json %DEPLOY_PATH%
+                    powershell -Command "$date = Get-Date -Format yyyyMMdd_HHmmss; $zipName = \\""%DEPLOY_PATH%kawasaki-backend-main-dev_$date.zip\\"; Compress-Archive -Path dist, package.json, package-lock.json -DestinationPath $zipName"
                 '''
-   
-                bat ''' 
-                    @echo off
-                    d:
-                    cd %DEPLOY_PATH% 
-                    npm install --prefer-offline
-                '''
+ 
                 
 
             }
         }
-        stage('Restart Service') {
-            steps {
-                
-                bat '''
-                    sc stop kawasaki-backend
-    
-                    waitfor neverhappen /T 10
-    
-                    sc start kawasaki-backend     
-                ''' 
-            }
-         
-        }
+      
     }
 }
