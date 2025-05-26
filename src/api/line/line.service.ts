@@ -312,7 +312,7 @@ export class LineService {
       line.updatedBy = userId;
       line.updatedDate = getCurrentDate();
 
-      await queryRunner.manager.save(MLine, data);
+      await queryRunner.manager.save(MLine, line);
 
       // Save line models
       await this.saveLineModel(queryRunner, data, userId);
