@@ -18,6 +18,9 @@ export class MModel {
   @Column("nvarchar", { name: "Part_Lower", nullable: true, length: 10 })
   partLower: string | null;
 
+  @Column("nvarchar", { name: "AS400_Product_Cd", nullable: true, length: 10 })
+  as400ProductCd: string | null;
+
   @Column("time", { name: "Cycle_Time", nullable: true })
   cycleTime: Date | null;
 

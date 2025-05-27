@@ -19,6 +19,8 @@ export class ModelDto {
 
   partLower: string | null;
 
+  as400ProductCd: string | null;
+
   cycleTime: Date | null;
 
   cycleTimeMins: string | null;

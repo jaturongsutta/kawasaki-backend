@@ -35,6 +35,7 @@ export class ModelService {
                     'm.Part_No as partNo',
                     'm.Part_Upper as partUpper',
                     'm.Part_Lower as partLower',
+                    'm.AS400_Product_Cd as as400ProductCd',
                     `RIGHT('0' + CAST(DATEPART(HOUR, m.Cycle_Time) * 60 + DATEPART(MINUTE, m.Cycle_Time) AS VARCHAR), 2) + ':' +
                     RIGHT('0' + CAST(DATEPART(SECOND, m.Cycle_Time) AS VARCHAR), 2) AS cycleTime`,
                     'm.is_Active as isActive',
