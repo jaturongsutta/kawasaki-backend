@@ -3,6 +3,7 @@ import { BaseSearch } from 'src/common/base-search';
 
 export class ToolSearchDto extends BaseSearch {
   tool_cd: string;
+  h_Cd: string;
   process_cd: string;
   status: string;
 }
@@ -10,6 +11,8 @@ export class ToolSearchDto extends BaseSearch {
 export class ToolDto {
   @IsNotEmpty()
   processCd: string;
+
+  hCode: string;
 
   @IsNotEmpty()
   toolCd: string;

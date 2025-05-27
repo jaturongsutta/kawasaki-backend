@@ -19,6 +19,7 @@ export class ToolService {
     async search(dto: ToolSearchDto) {
         const req = await this.commonService.getConnection();
         req.input('Tool_CD', dto.tool_cd);
+        req.input('H_Code', dto.h_Cd);
         req.input('Process_CD', dto.process_cd);
         req.input('Status', dto.status);
         req.input('Row_No_From', dto.searchOptions.rowFrom);
@@ -34,6 +35,7 @@ export class ToolService {
                 .leftJoin('um_User', 'u', 'u.User_ID = t.UPDATED_BY')
                 .select([
                     't.Tool_CD as toolCd',
+                    't.H_Code as hCode',
                     't.Process_CD as processCd',
                     't.Tool_Name as toolName',
                     't.Tool_Life as toolLife',
@@ -92,7 +94,7 @@ export class ToolService {
             console.log("Error : ", error)
             return {
                 status: 2,
-                message: getMessageDuplicateError(error, 'Tool Code already exists'),
+                message: getMessageDuplicateError(error, 'H Code already exists'),
             };
         } finally {
             await queryRunner.release();

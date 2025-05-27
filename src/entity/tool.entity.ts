@@ -6,6 +6,9 @@ export class MTool {
   @Column("nvarchar", { primary: true, name: "Process_CD", length: 10 })
   processCd: string;
 
+  @Column("nvarchar", { primary: true, name: "H_Code", length: 10 })
+  hCode: string;
+
   @Column("nvarchar", { primary: true, name: "Tool_CD", length: 10 })
   toolCd: string;
 
