@@ -8,7 +8,7 @@ export class DropdownListService {
   constructor(
     @InjectRepository(Predefine)
     private predefineRepository: Repository<Predefine>,
-  ) {}
+  ) { }
 
   async getPredefindAll() {
     const sql = `select predefine_group , predefine_group + ' : ' + display as display from (select predefine_group, max(description) display from co_predefine where is_active = 'Y' group by predefine_group) x`;
@@ -24,6 +24,12 @@ export class DropdownListService {
     // return this.predefineRepository.findBy({Predefine_Group : group , Is_Active : 'Y'});
   }
 
+  async getPredefineItem(group: string, search: string = '', language: string = 'EN') {
+    const sql = `SELECT predefine_group, Predefine_Item_CD as value, case when '${language}' = 'TH' then Value_TH else Value_EN end as title 
+    FROM co_Predefine_Item WHERE predefine_group = '${group}' and is_active = 'Y' and Value_EN like '%${search}%'  `;
+    return await this.predefineRepository.query(sql);
+  }
+  
   async getMenu(language: string) {
     const menus = [{ value: '', text: 'ROOT' }];
     const col = language === 'EN' ? 'Menu_Name_EN' : 'Menu_Name_TH';

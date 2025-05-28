@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Request } from '@nestjs/common';
+import { Controller, Get, Param, Query, Request } from '@nestjs/common';
 import { BaseController } from 'src/base.controller';
 import { DropdownListService } from './dropdown-list.service';
 
@@ -22,6 +22,11 @@ export class DropdownListController extends BaseController {
   @Get('predefine-group/:group')
   getPredefine(@Request() req: any, @Param('group') group: string) {
     return this.service.getPredefine(group, req.headers.language);
+  }
+
+  @Get('predefine-group-item/:group')
+  getPredefineItem(@Request() req: any, @Param('group') group: string, @Query('search') search: string) {
+    return this.service.getPredefineItem(group, search, req.headers.language);
   }
 
   @Get('user')
