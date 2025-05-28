@@ -103,7 +103,7 @@ export class ToolService {
 
     async resetTool(data: ToolHistoryDto, userId: Number): Promise<BaseResponse> {
         try {
-            const tool = await this.toolRepository.findOneBy({ processCd: data.Process_CD, toolCd: data.Tool_CD });
+            const tool = await this.toolRepository.findOneBy({ processCd: data.Process_CD, hCode: data.H_Code });
             if (!tool) {
                 return {
                     status: 2,
@@ -117,7 +117,7 @@ export class ToolService {
             if (result.identifiers.length > 0) {
                 var r = await this.toolRepository.update(
                     {
-                        toolCd: data.Tool_CD,
+                        hCode: data.H_Code,
                         processCd: data.Process_CD
                     },
                     {
@@ -161,7 +161,7 @@ export class ToolService {
             console.log('data : ', data);
 
             const result = await queryRunner.manager.update(MTool, {
-                toolCd: id,
+                hCode: id,
                 processCd: data.processCd
             }, data);
             await queryRunner.commitTransaction();

@@ -49,6 +49,8 @@ export class ToolHistoryDto {
 
   @IsNotEmpty()
   @MaxLength(20)
+  H_Code: string;
+
   Process_CD: string;
 
   Tool_Name: string;
