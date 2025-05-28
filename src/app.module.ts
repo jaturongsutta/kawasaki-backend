@@ -30,6 +30,7 @@ import { InfoAlertModule } from './api/information-alert/info-alert.module';
 import { TeamModule } from './api/team/team.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BatchJobModule } from './api/batch-job/batch-job.module';
+import { PredefineItemModule } from './api/predefine-item/predefine-item.module';
 dotenv.config(); // Load environment variables from .env file
 @Module({
   imports: [
@@ -77,6 +78,7 @@ dotenv.config(); // Load environment variables from .env file
     InfoAlertModule,
     TeamModule,
     BatchJobModule,
+    PredefineItemModule,
   ],
   controllers: [AppController],
   providers: [AppService],

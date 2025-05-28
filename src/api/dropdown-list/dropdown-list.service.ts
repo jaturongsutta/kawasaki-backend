@@ -11,7 +11,16 @@ export class DropdownListService {
   ) {}
 
   async getPredefindAll() {
-    const sql = `select predefine_group , predefine_group + ' : ' + display as display from (select predefine_group, max(description) display from co_predefine where is_active = 'Y' group by predefine_group) x`;
+    // const sql = `select predefine_group , predefine_group + ' : ' + display as display from (select predefine_group, max(Value_EN) display from co_predefine   group by predefine_group) x`;
+    const sql = `select distinct predefine_group from co_predefine   `;
+    return await this.predefineRepository.query(sql);
+    // return this.predefineRepository.findBy({Predefine_Group : group , Is_Active : 'Y'});
+  }
+
+  async getPredefileByGroup(group: string) {
+    const sql = `SELECT predefine_group, predefine_cd as value, case when 'EN' = 'TH' then Value_TH else Value_EN end as title
+    ,predefine_cd , Value_TH , Value_EN
+    FROM co_predefine WHERE predefine_group = '${group}' and is_active = 'Y'`;
     return await this.predefineRepository.query(sql);
     // return this.predefineRepository.findBy({Predefine_Group : group , Is_Active : 'Y'});
   }
