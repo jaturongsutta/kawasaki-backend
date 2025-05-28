@@ -7,14 +7,24 @@ import { PredefineItemSearchDto } from './dto/predefine-item.search.dto';
 import { BaseResponse } from 'src/common/base-response';
 import { PredefineItem } from 'src/entity/predefine-item.entity';
 import { getCurrentDate } from 'src/utils/utils';
+import { Predefine } from 'src/entity/predefine.entity';
 
 @Injectable()
 export class PredefineItemService {
   constructor(
+    @InjectRepository(Predefine)
+    private predefineRepository: Repository<Predefine>,
     @InjectRepository(PredefineItem)
     private predefineItemRepository: Repository<PredefineItem>,
     private commonService: CommonService,
   ) {}
+
+  async getDropDownPredefindGroup() {
+    // const sql = `select predefine_group , predefine_group + ' : ' + display as display from (select predefine_group, max(Value_EN) display from co_predefine   group by predefine_group) x`;
+    const sql = `select distinct predefine_group from co_predefine where Predefine_Group in ('NG_Reason','Stop_Reason')   `;
+    return await this.predefineRepository.query(sql);
+    // return this.predefineRepository.findBy({Predefine_Group : group , Is_Active : 'Y'});
+  }
 
   async search(dto: PredefineItemSearchDto) {
     try {

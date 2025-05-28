@@ -21,6 +21,17 @@ export class PredefineItemController extends BaseController {
     super();
   }
 
+  @Get('get-dropdown-predefine-group')
+  async getDropDownPredefindGroup() {
+    const rows = await this.service.getDropDownPredefindGroup();
+    const data = [];
+    for (let i = 0; i < rows.length; i++) {
+      const e = rows[i];
+      data.push({ value: e['predefine_group'], title: e['predefine_group'] });
+    }
+    return data;
+  }
+
   @Post('search')
   async search(
     @Body() predefineSearchDto: PredefineItemSearchDto,
