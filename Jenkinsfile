@@ -2,7 +2,7 @@ pipeline {
     agent { label "WinNode" }
     
     environment {
-        GIT_URL = ""
+        GIT_URL = "https://github.com/jaturongsutta/kawasaki-backend.git"
         DEPLOY_PATH = "D:\\WebDeployment\\KAWASAKI_Backend\\"
     }
     
@@ -54,9 +54,9 @@ pipeline {
                         echo DB_HOST=172.20.91.109
                         echo DB_PORT=1433
                         echo DB_USERNAME=sa
-                        echo DB_PASSWORD=password
+                        echo DB_PASSWORD=P@ssw0rd
                         echo DB_NAME=KAWASAKI_DB
-                        echo ENV_DEVELOP_DIR=.\\application-files\\
+                        echo ENV_DEVELOP_DIR=D:\\ApplicationFile\\Log\\KAWASAKI
                         echo GIT_COMMIT_LOG=%LAST_COMMIT%
                     ) >> dist\\.env
                 '''
@@ -68,9 +68,38 @@ pipeline {
             steps {
                 // Delete old deployment and copy new version
                 bat ''' echo %DEPLOY_PATH%  '''
+                
+                
+                bat ''' 
+                    @echo off
+                    echo Cleaning deployment directory except 'kmt-backend-service.exe' and 'kmt-backend-service.xml'...
+                    set "TARGET_DIR=%DEPLOY_PATH%"
+        
+                    rem Delete all files except specified ones
+                    for %%F in ("%TARGET_DIR%\\*") do (
+                        set "FILENAME=%%~nxF"
+                        call :deleteFileIfNotExcluded
+                    )
+        
+                    rem Delete all folders
+                    for /D %%D in ("%TARGET_DIR%\\*") do (
+                        rmdir /S /Q "%%D"
+                    )
+        
+                    goto :eof
+        
+                    :deleteFileIfNotExcluded
+                    if /I "%FILENAME%"=="kmt-backend-service.exe" goto :eof
+                    if /I "%FILENAME%"=="kmt-backend-service.xml" goto :eof
+                    del /F /Q "%TARGET_DIR%\\%FILENAME%"
+                    goto :eof
+                '''
+                
+                
+                /* rmdir /S /Q %DEPLOY_PATH% */
                 bat '''
                     @echo on
-                    rmdir /S /Q %DEPLOY_PATH%
+                    
                     xcopy /s /y /d /r dist\\ %DEPLOY_PATH%
                     xcopy /y /d /r package.json %DEPLOY_PATH%
                     xcopy /y /d /r package-lock.json %DEPLOY_PATH%

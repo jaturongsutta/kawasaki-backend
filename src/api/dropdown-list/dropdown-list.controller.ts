@@ -14,7 +14,7 @@ export class DropdownListController extends BaseController {
     const data = [];
     for (let i = 0; i < rows.length; i++) {
       const e = rows[i];
-      data.push({ value: e['predefine_group'], text: e['display'] });
+      data.push({ value: e['predefine_group'], title: e['predefine_group'] });
     }
     return data;
   }
@@ -37,9 +37,7 @@ export class DropdownListController extends BaseController {
       'First_Name',
       "Is_Active = 'Y'",
       '',
-      [
-        `ISNULL(First_Name, '') + ' ' + ISNULL(Last_Name, '') fullName`,
-      ],
+      [`ISNULL(First_Name, '') + ' ' + ISNULL(Last_Name, '') fullName`],
     );
   }
 
@@ -103,14 +101,14 @@ export class DropdownListController extends BaseController {
       'DISTINCT Process_CD',
       'Process_CD',
       "Is_Active = 'Y' AND (Line_CD = '" +
-      _line +
-      "'  OR '" +
-      _line +
-      "' = '') AND (Model_CD = '" +
-      _model +
-      "'  OR '" +
-      _model +
-      "' = '')",
+        _line +
+        "'  OR '" +
+        _line +
+        "' = '') AND (Model_CD = '" +
+        _model +
+        "'  OR '" +
+        _model +
+        "' = '')",
     );
   }
 
