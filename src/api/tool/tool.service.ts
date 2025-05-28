@@ -49,7 +49,7 @@ export class ToolService {
                     't.UPDATED_DATE as updatedDate'
                 ])
                 .where(`t.processCd = '${processCd}'`)
-                .andWhere(`t.toolCd = '${id}'`)
+                .andWhere(`t.hCode = '${id}'`)
                 .getRawOne();
             if (!r) {
                 return {
