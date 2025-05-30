@@ -30,7 +30,8 @@ export class PredefineItemService {
     try {
       const req = await this.commonService.getConnection();
       req.input('Predefine_Group', dto.predefineGroup);
-      req.input('Predefine_CD', dto.predefineCd);
+      req.input('Predefine_CD', null);
+      req.input('Predefine_Item_CD', dto.predefineItemCd);
       req.input('Value_TH', dto.valueTH);
       req.input('Value_EN', dto.valueEN);
       req.input('Is_Active', dto.isActive);
