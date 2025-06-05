@@ -276,21 +276,21 @@ export class PlanService {
     this.logger.log(`New plan data: ${JSON.stringify(dto)}`);
     this.logger.log(`New plan userId: ${userId}`);
 
-    // Check if the line exists
-    const { valid, message } = await this.validateDuplicatePlan(
-      null,
-      dto.lineCd,
-      dto.planDate,
-      dto.modelCd,
-      dto.shiftPeriod,
-    );
-    if (!valid) {
-      this.logger.error(`Duplicate plan found: ${message}`);
-      return {
-        status: 1,
-        message: message,
-      };
-    }
+    // // Check if the line exists
+    // const { valid, message } = await this.validateDuplicatePlan(
+    //   null,
+    //   dto.lineCd,
+    //   dto.planDate,
+    //   dto.modelCd,
+    //   dto.shiftPeriod,
+    // );
+    // if (!valid) {
+    //   this.logger.error(`Duplicate plan found: ${message}`);
+    //   return {
+    //     status: 1,
+    //     message: message,
+    //   };
+    // }
 
     dto.planStartTime = convertTimeStringToDate(dto.planStartTime);
     dto.planStopTime = convertTimeStringToDate(dto.planStopTime);
@@ -359,21 +359,21 @@ export class PlanService {
     this.logger.log(`Update plan id: ${planId}`);
     this.logger.log(`Update plan userId: ${userId}`);
 
-    // Check if the line exists
-    const { valid, message } = await this.validateDuplicatePlan(
-      dto.id,
-      dto.lineCd,
-      dto.planDate,
-      dto.modelCd,
-      dto.shiftPeriod,
-    );
-    if (!valid) {
-      this.logger.error(`Duplicate plan found: ${message}`);
-      return {
-        status: 1,
-        message: message,
-      };
-    }
+    // // Check if the line exists
+    // const { valid, message } = await this.validateDuplicatePlan(
+    //   dto.id,
+    //   dto.lineCd,
+    //   dto.planDate,
+    //   dto.modelCd,
+    //   dto.shiftPeriod,
+    // );
+    // if (!valid) {
+    //   this.logger.error(`Duplicate plan found: ${message}`);
+    //   return {
+    //     status: 1,
+    //     message: message,
+    //   };
+    // }
 
     try {
       const plan = await this.planRepository.findOneBy({ id: planId });
@@ -687,8 +687,7 @@ export class PlanService {
         ? `มี Plan สำหรับ Model ${modelCd} วันที่ ${_planDate} ช่วง ${shiftPeriod} แล้ว`
         : '';
     return {
-      // valid,
-      valid: true, // for test
+      valid,
       message,
     };
   }
