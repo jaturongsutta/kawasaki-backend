@@ -104,6 +104,7 @@ export class LineService {
         .select([
           'MLineMachine.lineCd',
           'MLineMachine.modelCd',
+          'MLineMachine.machineNo',
           'MLineMachine.processCd',
           'MLineMachine.wt',
           'MLineMachine.ht',
@@ -115,6 +116,7 @@ export class LineService {
       dto.lineMachine = lineMachines.map((lineMachine) => ({
         lineCd: lineMachine.lineCd,
         modelCd: lineMachine.modelCd,
+        machineNo: lineMachine.machineNo,
         processCd: lineMachine.processCd,
         wt: lineMachine.wt,
         ht: lineMachine.ht,
@@ -129,8 +131,9 @@ export class LineService {
         .select([
           'MLineTool.lineCd',
           'MLineTool.modelCd',
+          'MLineTool.machineNo',
           'MLineTool.processCd',
-          'MLineTool.toolCd',
+          'MLineTool.hCode',
           'MLineTool.isActive',
         ])
         .getMany();
@@ -138,8 +141,9 @@ export class LineService {
       dto.lineTool = lineTools.map((lineTool) => ({
         lineCd: lineTool.lineCd,
         modelCd: lineTool.modelCd,
+        machineNo: lineTool.machineNo,
         processCd: lineTool.processCd,
-        toolCd: lineTool.toolCd,
+        hCode: lineTool.hCode,
         isActive: lineTool.isActive,
         rowState: '', // Default value for rowState
       }));
@@ -195,7 +199,7 @@ export class LineService {
         .leftJoinAndSelect(
           'M_Line_Tool',
           'lineTool',
-          'tool.processCd = lineTool.processCd AND tool.toolCd = lineTool.toolCd',
+          'tool.processCd = lineTool.processCd AND tool.hCode = lineTool.hCode',
         ) // Left outer join
         .where('tool.processCd = :processCd', { processCd }) // Filter by processCd
         .select([
@@ -400,14 +404,14 @@ export class LineService {
       //       lineCd: data.lineCd,
       //       modelCd: tool.modelCd,
       //       processCd: tool.processCd,
-      //       toolCd: tool.toolCd,
+      //       hCode: tool.hCode,
       //     });
       //   } else if (tool.rowState === 'NEW') {
       //     const newLineTool = new MLineTool();
       //     newLineTool.lineCd = data.lineCd;
       //     newLineTool.modelCd = tool.modelCd;
       //     newLineTool.processCd = tool.processCd;
-      //     newLineTool.toolCd = tool.toolCd;
+      //     newLineTool.hCode = tool.hCode;
       //     newLineTool.isActive = tool.isActive;
       //     newLineTool.createdBy = userId;
       //     newLineTool.updatedBy = userId;
@@ -420,7 +424,7 @@ export class LineService {
       //         lineCd: data.lineCd,
       //         modelCd: tool.modelCd,
       //         processCd: tool.processCd,
-      //         toolCd: tool.toolCd,
+      //         hCode: tool.hCode,
       //       },
       //     });
       //     if (existingLineTool) {
@@ -502,11 +506,14 @@ export class LineService {
         await queryRunner.manager.delete(MLineMachine, {
           lineCd: data.lineCd,
           modelCd: machine.modelCd,
+          machineNo: machine.machineNo,
+          processCd: machine.processCd,
         });
       } else if (machine.rowState === 'NEW') {
         const newLineMachine = new MLineMachine();
         newLineMachine.lineCd = data.lineCd;
         newLineMachine.modelCd = machine.modelCd;
+        newLineMachine.machineNo = machine.machineNo;
         newLineMachine.processCd = machine.processCd;
         newLineMachine.wt = machine.wt;
         newLineMachine.ht = machine.ht;
@@ -522,6 +529,7 @@ export class LineService {
           where: {
             lineCd: data.lineCd,
             modelCd: machine.modelCd,
+            machineNo: machine.machineNo,
             processCd: machine.processCd,
           },
         });
@@ -544,15 +552,17 @@ export class LineService {
         await queryRunner.manager.delete(MLineTool, {
           lineCd: data.lineCd,
           modelCd: tool.modelCd,
+          machineNo: tool.machineNo,
           processCd: tool.processCd,
-          toolCd: tool.toolCd,
+          hCode: tool.hCode,
         });
       } else if (tool.rowState === 'NEW') {
         const newLineTool = new MLineTool();
         newLineTool.lineCd = data.lineCd;
         newLineTool.modelCd = tool.modelCd;
+        newLineTool.machineNo = tool.machineNo;
         newLineTool.processCd = tool.processCd;
-        newLineTool.toolCd = tool.toolCd;
+        newLineTool.hCode = tool.hCode;
         newLineTool.isActive = tool.isActive;
         newLineTool.createdBy = userId;
         newLineTool.updatedBy = userId;
@@ -564,8 +574,9 @@ export class LineService {
           where: {
             lineCd: data.lineCd,
             modelCd: tool.modelCd,
+            machineNo: tool.machineNo,
             processCd: tool.processCd,
-            toolCd: tool.toolCd,
+            hCode: tool.hCode,
           },
         });
         if (existingLineTool) {

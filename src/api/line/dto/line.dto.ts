@@ -26,6 +26,7 @@ export class LineModel {
 export class LineMachine {
   lineCd: string;
   modelCd: string;
+  machineNo: string;
   processCd: string;
   wt: Date | null;
   ht: Date | null;
@@ -42,8 +43,9 @@ export class LineMachine {
 export class LineTool {
   lineCd: string;
   modelCd: string;
+  machineNo: string;
   processCd: string;
-  toolCd: string;
+  hCode: string;
   isActive: string | null;
   // createdDate: Date | null;
   // createdBy: number | null;

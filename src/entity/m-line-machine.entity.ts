@@ -1,6 +1,6 @@
 import { Column, Entity, Index } from 'typeorm';
 
-@Index('PK_M_Line_Machine', ['lineCd', 'modelCd', 'processCd'], {
+@Index('PK_M_Line_Machine', ['lineCd', 'modelCd', 'machineNo', 'processCd'], {
   unique: true,
 })
 @Entity('M_Line_Machine', { schema: 'dbo' })
@@ -10,6 +10,9 @@ export class MLineMachine {
 
   @Column('nvarchar', { primary: true, name: 'Model_CD', length: 10 })
   modelCd: string;
+
+  @Column('nvarchar', { primary: true, name: 'Machine_No', length: 10 })
+  machineNo: string;
 
   @Column('nvarchar', { primary: true, name: 'Process_CD', length: 10 })
   processCd: string;

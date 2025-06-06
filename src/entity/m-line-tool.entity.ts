@@ -1,8 +1,12 @@
 import { Column, Entity, Index } from 'typeorm';
 
-@Index('PK_M_Line_Tool', ['lineCd', 'modelCd', 'processCd', 'toolCd'], {
-  unique: true,
-})
+@Index(
+  'PK_M_Line_Tool',
+  ['lineCd', 'modelCd', 'machineNo', 'processCd', 'hCode'],
+  {
+    unique: true,
+  },
+)
 @Entity('M_Line_Tool', { schema: 'dbo' })
 export class MLineTool {
   @Column('nvarchar', { primary: true, name: 'Line_CD', length: 10 })
@@ -11,11 +15,14 @@ export class MLineTool {
   @Column('nvarchar', { primary: true, name: 'Model_CD', length: 10 })
   modelCd: string;
 
+  @Column('nvarchar', { primary: true, name: 'Machine_No', length: 10 })
+  machineNo: string;
+
   @Column('nvarchar', { primary: true, name: 'Process_CD', length: 10 })
   processCd: string;
 
-  @Column('nvarchar', { primary: true, name: 'Tool_CD', length: 10 })
-  toolCd: string;
+  @Column('nvarchar', { primary: true, name: 'H_Code', length: 10 })
+  hCode: string;
 
   @Column('char', { name: 'is_Active', nullable: true, length: 1 })
   isActive: string | null;
