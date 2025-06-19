@@ -120,6 +120,34 @@ export class PlanController extends BaseController {
     );
   }
 
+  @Post('validate-plan-break-time')
+  async validatePlanBreakTime(@Body() dto: any) {
+    const {
+      lineCd,
+      planStartTime,
+      planStopTime,
+      b1,
+      b2,
+      b3,
+      b4,
+      ot,
+      shiftPeriod,
+      id,
+    } = dto;
+    return await this.service.validatePlanBreakTime(
+      lineCd,
+      planStartTime,
+      planStopTime,
+      b1,
+      b2,
+      b3,
+      b4,
+      ot,
+      shiftPeriod,
+      id,
+    );
+  }
+
   @Get('default-stop-time/:shiftPeriod')
   async getDefaultStopTime(@Param('shiftPeriod') shiftPeriod: string) {
     return await this.service.getDefaultStopTime(shiftPeriod);

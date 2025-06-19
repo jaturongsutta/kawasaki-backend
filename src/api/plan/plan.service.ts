@@ -654,6 +654,36 @@ export class PlanService {
     };
   }
 
+  async validatePlanBreakTime(
+    lineCd: string,
+    planStartTime: string,
+    planStopTime: string,
+    b1: string,
+    b2: string,
+    b3: string,
+    b4: string,
+    ot: string,
+    shiftPeriod: string,
+    id: number,
+  ): Promise<{ valid: boolean; message?: string }> {
+    const sql = `
+    SELECT dbo.fn_chk_Plan_Break_Time(
+      '${lineCd}', '${planStartTime}', '${planStopTime}','${b1}', '${b2}', '${b3}', '${b4}', '${ot}', '${shiftPeriod}', '${id}'
+    ) AS cnt
+  `;
+
+    // console.log('validatePlanBreakTime sql', sql);
+
+    const result = await this.commonService.executeQuery(sql);
+    return {
+      valid: result[0]?.cnt === 0 || result[0]?.cnt === null,
+      message:
+        result[0]?.cnt > 0
+          ? 'ตรวจสอบช่องเวลา เพื่อให้สอดคล้องกับ Break / OT'
+          : '',
+    };
+  }
+
   /**
    * Validate duplication of plan by Line_CD, Plan_Date, Model_CD, and shift_period.
    * Returns { valid: boolean, message?: string }
