@@ -679,7 +679,7 @@ export class PlanService {
       valid: result[0]?.cnt === 0 || result[0]?.cnt === null,
       message:
         result[0]?.cnt > 0
-          ? 'ตรวจสอบช่วงเวลา เพื่อให้สอดคล้องกับ Break / OT'
+          ? 'กรุณาตรวจสอบ ช่วงเวลา Break/OT ไม่อยู่ในช่วงเวลา Plan Start and Stop time'
           : '',
     };
   }
