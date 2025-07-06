@@ -146,24 +146,35 @@ export class PlanService {
   async stopPlan(id: number, userId: number) {
     this.logger.log(`Plan ${id} stopped by user ${userId}`);
     try {
-      const plan = await this.planRepository.findOneBy({ id });
-      if (!plan) {
-        throw new Error('Plan not found');
-      }
-      plan.status = '30';
-      plan.actualStopDt = getCurrentDate();
-      plan.updatedBy = userId;
-      plan.updatedDate = getCurrentDate();
-      const result = await this.planRepository.save(plan);
+      // const plan = await this.planRepository.findOneBy({ id });
+      // if (!plan) {
+      //   throw new Error('Plan not found');
+      // }
+      // plan.status = '30';
+      // plan.actualStopDt = getCurrentDate();
+      // plan.updatedBy = userId;
+      // plan.updatedDate = getCurrentDate();
+      // const result = await this.planRepository.save(plan);
 
-      this.logger.log(`Plan ${id} stopped by user ${userId}`);
-      if (!result) {
-        this.logger.error(`Failed to stop plan ${id}`);
-        return {
-          status: 1,
-          message: 'Failed to stop plan',
-        };
-      }
+      // this.logger.log(`Plan ${id} stopped by user ${userId}`);
+
+      const req = await this.commonService.getConnection();
+      req.input('Plan_Id', id);
+      req.input('userid', userId);
+
+      const result = await this.commonService.executeStoreProcedure(
+        'sp_Plan_Update_PlanStop',
+        req,
+      );
+      console.log(result);
+
+      // if (!result) {
+      //   this.logger.error(`Failed to stop plan ${id}`);
+      //   return {
+      //     status: 1,
+      //     message: 'Failed to stop plan',
+      //   };
+      // }
       return {
         status: 0,
       };
