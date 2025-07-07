@@ -31,6 +31,7 @@ import { TeamModule } from './api/team/team.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BatchJobModule } from './api/batch-job/batch-job.module';
 import { PredefineItemModule } from './api/predefine-item/predefine-item.module';
+import { PredefineItemProcessModule } from './api/predefine-item-process/predefine-item-process.module';
 dotenv.config(); // Load environment variables from .env file
 @Module({
   imports: [
@@ -79,6 +80,7 @@ dotenv.config(); // Load environment variables from .env file
     TeamModule,
     BatchJobModule,
     PredefineItemModule,
+    PredefineItemProcessModule
   ],
   controllers: [AppController],
   providers: [AppService],
