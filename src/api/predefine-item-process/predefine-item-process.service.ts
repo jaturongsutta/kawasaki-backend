@@ -183,66 +183,66 @@ export class PredefineItemProcessService {
       const data = result.recordset || [];
       console.log('Export result:', data);
 
-      const testData = [
-        {
-          Type: 'SL',
-          Reason_EN: 'Blow Hole',
-          Reason_TH: 'Blow Hole',
-          Process_CD: 'OP10',
-          Predefine_Group: 'Stop_Reason',
-          Reason_ID: '1',
-          Machine_No: 'J76',
-        },
-        {
-          Type: 'SL',
-          Reason_EN: 'Blow Hole',
-          Reason_TH: 'Blow Hole',
-          Process_CD: 'OP11',
-          Predefine_Group: 'Stop_Reason',
-          Reason_ID: '1',
-          Machine_No: 'J85',
-        },
-        {
-          Type: 'NG',
-          Reason_EN: 'Blow Hole',
-          Reason_TH: 'Blow Hole',
-          Process_CD: 'OP101',
-          Predefine_Group: 'NG_Reason',
-          Reason_ID: '1',
-          Machine_No: 'J86',
-        },
-        {
-          Type: 'NG',
-          Reason_EN: 'Dimension NG',
-          Reason_TH: 'Dimension NG ',
-          Process_CD: 'OP101',
-          Predefine_Group: 'NG_Reason',
-          Reason_ID: '19',
-          Machine_No: 'J88',
-        },
-        {
-          Type: 'NG',
-          Reason_EN: 'Leak',
-          Reason_TH: 'Leak',
-          Process_CD: 'OP101',
-          Predefine_Group: 'NG_Reason',
-          Reason_ID: '2',
-          Machine_No: 'J82',
-        },
-        {
-          Type: 'NG',
-          Reason_EN: 'Other',
-          Reason_TH: 'Other',
-          Process_CD: 'OP101',
-          Predefine_Group: 'NG_Reason',
-          Reason_ID: '4',
-          Machine_No: 'J84',
-        },
-      ];
+      // const testData = [
+      //   {
+      //     Type: 'SL',
+      //     Reason_EN: 'Blow Hole',
+      //     Reason_TH: 'Blow Hole',
+      //     Process_CD: 'OP10',
+      //     Predefine_Group: 'Stop_Reason',
+      //     Reason_ID: '1',
+      //     Machine_No: 'J76',
+      //   },
+      //   {
+      //     Type: 'SL',
+      //     Reason_EN: 'Blow Hole',
+      //     Reason_TH: 'Blow Hole',
+      //     Process_CD: 'OP11',
+      //     Predefine_Group: 'Stop_Reason',
+      //     Reason_ID: '1',
+      //     Machine_No: 'J85',
+      //   },
+      //   {
+      //     Type: 'NG',
+      //     Reason_EN: 'Blow Hole',
+      //     Reason_TH: 'Blow Hole',
+      //     Process_CD: 'OP101',
+      //     Predefine_Group: 'NG_Reason',
+      //     Reason_ID: '1',
+      //     Machine_No: 'J86',
+      //   },
+      //   {
+      //     Type: 'NG',
+      //     Reason_EN: 'Dimension NG',
+      //     Reason_TH: 'Dimension NG ',
+      //     Process_CD: 'OP101',
+      //     Predefine_Group: 'NG_Reason',
+      //     Reason_ID: '19',
+      //     Machine_No: 'J88',
+      //   },
+      //   {
+      //     Type: 'NG',
+      //     Reason_EN: 'Leak',
+      //     Reason_TH: 'Leak',
+      //     Process_CD: 'OP101',
+      //     Predefine_Group: 'NG_Reason',
+      //     Reason_ID: '2',
+      //     Machine_No: 'J82',
+      //   },
+      //   {
+      //     Type: 'NG',
+      //     Reason_EN: 'Other',
+      //     Reason_TH: 'Other',
+      //     Process_CD: 'OP101',
+      //     Predefine_Group: 'NG_Reason',
+      //     Reason_ID: '4',
+      //     Machine_No: 'J84',
+      //   },
+      // ];
 
       // Generate PDF with QR codes
       return await this.generatePdfWithQRCodes(
-        testData || [],
+        data || [],
         predefineGroup,
         lineCd,
       );
@@ -287,9 +287,9 @@ export class PredefineItemProcessService {
 
         doc.moveDown(2);
 
-        // Group data by Process_CD
-        const groupedData = this.groupDataByProcess(data);
-        const processCodes = Object.keys(groupedData);
+        // Group data by Predefine_Group first, then by Process_CD within each group
+        const groupedByPredefineGroup = this.groupDataByPredefineGroup(data);
+        const predefineGroups = Object.keys(groupedByPredefineGroup);
 
         const qrSize = 80;
         const cellWidth = 100;
@@ -298,15 +298,12 @@ export class PredefineItemProcessService {
         const qrCodesPerRow = 4; // 4 QR codes per row after the Process_CD
         const maxRowsPerPage = 4; // Maximum 4 rows per page
 
-        let yPosition = doc.y;
-        let currentRowCount = 0;
-
         // Function to add header on new page
-        const addHeader = () => {
-          doc.fontSize(20).text(title, { align: 'center' });
+        const addHeader = (groupTitle: string) => {
+          doc.fontSize(20).text(groupTitle, { align: 'center' });
 
           // Add underline below title
-          const titleWidth = doc.widthOfString(title);
+          const titleWidth = doc.widthOfString(groupTitle);
           const pageWidth = doc.page.width - 100;
           const titleX = (pageWidth - titleWidth) / 2 + 50;
           doc
@@ -318,77 +315,83 @@ export class PredefineItemProcessService {
           return doc.y;
         };
 
-        // Draw each process as a row
-        for (const processCode of processCodes) {
-          const processItems = groupedData[processCode];
+        let isFirstGroup = true;
 
-          // Process each batch of QR codes for this process
-          for (
-            let startIndex = 0;
-            startIndex < processItems.length;
-            startIndex += qrCodesPerRow
-          ) {
-            const endIndex = Math.min(
-              startIndex + qrCodesPerRow,
-              processItems.length,
-            );
-            const rowItems = processItems.slice(startIndex, endIndex);
+        // Process each Predefine_Group
+        for (const predefineGroup of predefineGroups) {
+          const groupData = groupedByPredefineGroup[predefineGroup];
 
-            // Draw Process_CD in the first cell
-            const processXPosition = 50;
+          // Create group-specific title
+          let groupTitle = 'QR Code Downtime List';
+          if (predefineGroup === 'NG_Reason') {
+            groupTitle = `QR Code (NG List For ${lineCd || 'N/A'})`;
+          } else if (predefineGroup === 'Stop_Reason') {
+            groupTitle = `QR Code (Line Stop List For ${lineCd || 'N/A'})`;
+          }
 
-            // Draw border around Process_CD cell
-            doc
-              .rect(
-                processXPosition - 5,
-                yPosition - 5,
-                processCdWidth + 10,
-                cellHeight + 10,
-              )
-              .stroke();
+          // Start new page for each group (except the first one)
+          if (!isFirstGroup) {
+            doc.addPage();
+          }
 
-            // Add Process_CD text (centered vertically and horizontally)
-            doc
-              .fontSize(12)
-              .font('Helvetica-Bold')
-              .fillColor('black')
-              .text(
-                processCode,
-                processXPosition,
-                yPosition + cellHeight / 2 - 6,
-                {
-                  width: processCdWidth,
-                  align: 'center',
-                },
+          let yPosition = isFirstGroup ? doc.y : addHeader(groupTitle);
+          let currentRowCount = 0;
+          isFirstGroup = false;
+
+          // Group this group's data by Process_CD
+          const groupedData = this.groupDataByProcess(groupData);
+          const processCodes = Object.keys(groupedData);
+
+          // Draw each process as a row within this group
+          for (const processCode of processCodes) {
+            const processItems = groupedData[processCode];
+
+            // Process each batch of QR codes for this process
+            for (
+              let startIndex = 0;
+              startIndex < processItems.length;
+              startIndex += qrCodesPerRow
+            ) {
+              const endIndex = Math.min(
+                startIndex + qrCodesPerRow,
+                processItems.length,
               );
+              const rowItems = processItems.slice(startIndex, endIndex);
 
-            // Draw QR codes for this row
-            for (let i = 0; i < rowItems.length; i++) {
-              const item = rowItems[i];
-              const xPosition = 50 + processCdWidth + 10 + i * (cellWidth + 10); // Position after Process_CD cell
+              // Draw Process_CD in the first cell
+              const processXPosition = 50;
 
-              // Generate QR code content: Type|Process_CD|Reason_ID
-              const qrContent = `${item.Type || 'N/A'}|${item.Process_CD || 'N/A'}|${item.Reason_ID || 'N/A'}`;
+              // Draw border around Process_CD cell
+              doc
+                .rect(
+                  processXPosition - 5,
+                  yPosition - 5,
+                  processCdWidth + 10,
+                  cellHeight + 10,
+                )
+                .stroke();
 
-              try {
-                // Generate QR code as data URL
-                const qrCodeDataURL = await QRCode.toDataURL(qrContent, {
-                  width: qrSize,
-                  margin: 1,
-                  color: {
-                    dark: '#000000',
-                    light: '#FFFFFF',
+              // Add Process_CD text (centered vertically and horizontally)
+              doc
+                .fontSize(12)
+                .font('Helvetica-Bold')
+                .fillColor('black')
+                .text(
+                  processCode,
+                  processXPosition,
+                  yPosition + cellHeight / 2 - 6,
+                  {
+                    width: processCdWidth,
+                    align: 'center',
                   },
-                });
-
-                // Convert data URL to buffer
-                const base64Data = qrCodeDataURL.replace(
-                  /^data:image\/png;base64,/,
-                  '',
                 );
-                const qrBuffer = Buffer.from(base64Data, 'base64');
 
-                // Draw border around QR cell
+              // Draw QR codes for this row
+              for (let i = 0; i < qrCodesPerRow; i++) {
+                const xPosition =
+                  50 + processCdWidth + 10 + i * (cellWidth + 10); // Position after Process_CD cell
+
+                // Draw border around QR cell (always draw the cell)
                 doc
                   .rect(
                     xPosition - 5,
@@ -398,71 +401,97 @@ export class PredefineItemProcessService {
                   )
                   .stroke();
 
-                // Add Machine_No at the top
-                doc
-                  .fontSize(8)
-                  .font('Helvetica-Bold')
-                  .text(
-                    `${item.Machine_No || 'N/A'}`,
-                    xPosition,
-                    yPosition + 5,
-                    {
-                      width: cellWidth,
-                      align: 'center',
-                    },
-                  );
+                // Check if we have data for this position
+                if (i < rowItems.length) {
+                  const item = rowItems[i];
 
-                // Add Reason_TH below Machine_No
-                doc
-                  .fontSize(8)
-                  .font('Helvetica')
-                  .text(
-                    `${item.Reason_TH || 'N/A'}`,
-                    xPosition,
-                    yPosition + 18,
-                    {
-                      width: cellWidth,
-                      align: 'center',
-                    },
-                  );
+                  // Generate QR code content: Type|Process_CD|Reason_ID
+                  const qrContent = `${item.Type || 'N/A'}|${item.Process_CD || 'N/A'}|${item.Reason_ID || 'N/A'}`;
 
-                // Add QR code image in the middle
-                const qrY = yPosition + 35;
-                doc.image(qrBuffer, xPosition + 10, qrY, {
-                  width: qrSize,
-                  height: qrSize,
-                });
+                  try {
+                    // Generate QR code as data URL
+                    const qrCodeDataURL = await QRCode.toDataURL(qrContent, {
+                      width: qrSize,
+                      margin: 1,
+                      color: {
+                        dark: '#000000',
+                        light: '#FFFFFF',
+                      },
+                    });
 
-                // Add Reason_EN at the bottom
-                doc
-                  .fontSize(8)
-                  .font('Helvetica')
-                  .text(
-                    `${item.Reason_EN || 'N/A'}`,
-                    xPosition,
-                    qrY + qrSize + 5,
-                    {
-                      width: cellWidth,
-                      align: 'center',
-                    },
-                  );
-              } catch (qrError) {
-                console.error(
-                  'Error generating QR code for item:',
-                  item,
-                  qrError,
-                );
+                    // Convert data URL to buffer
+                    const base64Data = qrCodeDataURL.replace(
+                      /^data:image\/png;base64,/,
+                      '',
+                    );
+                    const qrBuffer = Buffer.from(base64Data, 'base64');
+
+                    // Add Machine_No at the top
+                    doc
+                      .fontSize(8)
+                      .font('Helvetica-Bold')
+                      .text(
+                        `${item.Machine_No || 'N/A'}`,
+                        xPosition,
+                        yPosition + 5,
+                        {
+                          width: cellWidth,
+                          align: 'center',
+                        },
+                      );
+
+                    // Add Reason_TH below Machine_No
+                    doc
+                      .fontSize(8)
+                      .font('Helvetica')
+                      .text(
+                        `${item.Reason_TH || 'N/A'}`,
+                        xPosition,
+                        yPosition + 18,
+                        {
+                          width: cellWidth,
+                          align: 'center',
+                        },
+                      );
+
+                    // Add QR code image in the middle
+                    const qrY = yPosition + 35;
+                    doc.image(qrBuffer, xPosition + 10, qrY, {
+                      width: qrSize,
+                      height: qrSize,
+                    });
+
+                    // Add Reason_EN at the bottom
+                    doc
+                      .fontSize(8)
+                      .font('Helvetica')
+                      .text(
+                        `${item.Reason_EN || 'N/A'}`,
+                        xPosition,
+                        qrY + qrSize + 5,
+                        {
+                          width: cellWidth,
+                          align: 'center',
+                        },
+                      );
+                  } catch (qrError) {
+                    console.error(
+                      'Error generating QR code for item:',
+                      item,
+                      qrError,
+                    );
+                  }
+                }
+                // If i >= rowItems.length, the cell remains empty but still has a border
               }
-            }
 
-            yPosition += cellHeight + 10;
-            currentRowCount++;
-
-            // Check if we need a new page (after 4 rows)
-            if (currentRowCount >= maxRowsPerPage) {
-              doc.addPage();
-              yPosition = addHeader();
-              currentRowCount = 0;
+              yPosition += cellHeight + 10;
+              currentRowCount++; // Check if we need a new page (after 4 rows)
+              if (currentRowCount >= maxRowsPerPage) {
+                doc.addPage();
+                yPosition = addHeader(groupTitle);
+                currentRowCount = 0;
+              }
             }
           }
         }
@@ -472,6 +501,20 @@ export class PredefineItemProcessService {
         reject(error);
       }
     });
+  }
+
+  private groupDataByPredefineGroup(data: any[]): { [key: string]: any[] } {
+    const grouped: { [key: string]: any[] } = {};
+
+    data.forEach((item) => {
+      const predefineGroup = item.Predefine_Group || 'N/A';
+      if (!grouped[predefineGroup]) {
+        grouped[predefineGroup] = [];
+      }
+      grouped[predefineGroup].push(item);
+    });
+
+    return grouped;
   }
 
   private groupDataByProcess(data: any[]): { [key: string]: any[] } {
