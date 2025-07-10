@@ -5,7 +5,6 @@ import {
   Param,
   Body,
   Put,
-  Delete,
   Res,
   Request,
 } from '@nestjs/common';
@@ -38,8 +37,14 @@ export class PredefineItemProcessController extends BaseController {
   }
 
   @Get('get-dropdown-predefine-item/:predefineGroup/:predefineCd')
-  async getDropDownPredefindItem(@Param('predefineGroup') predefineGroup: string, @Param('predefineCd') predefineCd: string) {
-    return await this.service.getDropDownPredefindItem(predefineGroup, predefineCd);
+  async getDropDownPredefindItem(
+    @Param('predefineGroup') predefineGroup: string,
+    @Param('predefineCd') predefineCd: string,
+  ) {
+    return await this.service.getDropDownPredefindItem(
+      predefineGroup,
+      predefineCd,
+    );
   }
 
   @Get('get-dropdown-machine-process')
@@ -62,10 +67,7 @@ export class PredefineItemProcessController extends BaseController {
     @Param('predefineItemCd') predefineItemCd: string,
     @Res() res: Response,
   ) {
-    const predefine = await this.service.findOne(
-      processCd,
-      predefineItemCd,
-    );
+    const predefine = await this.service.findOne(processCd, predefineItemCd);
     return res.status(200).json(predefine);
   }
 
@@ -96,4 +98,37 @@ export class PredefineItemProcessController extends BaseController {
     return res.status(200).json(updatedPredefine);
   }
 
+  @Post('export')
+  async export(
+    @Body()
+    exportParams: {
+      lineCd?: string;
+      predefineGroup?: string;
+      predefineCd?: string;
+      processCd?: string;
+      valueEN?: string;
+      valueTH?: string;
+      isActive?: string;
+    },
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.service.export(
+      exportParams.lineCd,
+      exportParams.predefineGroup,
+      exportParams.predefineCd,
+      exportParams.processCd,
+      exportParams.valueEN,
+      exportParams.valueTH,
+      exportParams.isActive,
+    );
+
+    // Set PDF response headers
+    const filename = `reason_process_qr_${new Date().toISOString().slice(0, 10)}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+
+    return res.send(pdfBuffer);
+  }
 }
