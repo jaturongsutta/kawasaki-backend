@@ -285,7 +285,23 @@ export class PredefineItemProcessService {
           .lineTo(titleX + titleWidth, doc.y)
           .stroke();
 
-        doc.moveDown(2);
+        // Add exported date below the underline
+        const exportDate = new Date().toLocaleDateString('en-GB', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        });
+        const exportDateText = `Exported date : ${exportDate}`;
+        // Position date with some margin from the right edge of table
+        const tableRightEdge = 50 + 60 + 10 + 4 * 110;
+        doc
+          .fontSize(10)
+          .text(exportDateText, tableRightEdge - 165, doc.y + 20, {
+            align: 'right',
+            width: 160,
+          });
+
+        doc.moveDown(0.5);
 
         // Group data by Predefine_Group first, then by Process_CD within each group
         const groupedByPredefineGroup = this.groupDataByPredefineGroup(data);
@@ -304,14 +320,30 @@ export class PredefineItemProcessService {
 
           // Add underline below title
           const titleWidth = doc.widthOfString(groupTitle);
-          const pageWidth = doc.page.width - 100;
-          const titleX = (pageWidth - titleWidth) / 2 + 50;
+          const headerPageWidth = doc.page.width - 100;
+          const titleX = (headerPageWidth - titleWidth) / 2 + 50;
           doc
             .moveTo(titleX, doc.y)
             .lineTo(titleX + titleWidth, doc.y)
             .stroke();
 
-          doc.moveDown(2);
+          // Add exported date below the underline
+          const headerExportDate = new Date().toLocaleDateString('en-GB', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          });
+          const headerExportDateText = `Exported date : ${headerExportDate}`;
+          // Position date with some margin from the right edge of table
+          const tableRightEdge = 50 + 60 + 10 + 4 * 110;
+          doc
+            .fontSize(10)
+            .text(headerExportDateText, tableRightEdge - 165, doc.y + 20, {
+              align: 'right',
+              width: 160,
+            });
+
+          doc.moveDown(0.5);
           return doc.y;
         };
 
