@@ -520,9 +520,18 @@ export class PredefineItemProcessService {
               yPosition += cellHeight + 10;
               currentRowCount++; // Check if we need a new page (after 4 rows)
               if (currentRowCount >= maxRowsPerPage) {
-                doc.addPage();
-                yPosition = addHeader(groupTitle);
-                currentRowCount = 0;
+                // Check if there are more items to process before adding new page
+                const hasMoreItems =
+                  startIndex + qrCodesPerRow < processItems.length || // More items in current process
+                  processCodes.indexOf(processCode) < processCodes.length - 1 || // More processes in current group
+                  predefineGroups.indexOf(predefineGroup) <
+                    predefineGroups.length - 1; // More groups
+
+                if (hasMoreItems) {
+                  doc.addPage();
+                  yPosition = addHeader(groupTitle);
+                  currentRowCount = 0;
+                }
               }
             }
           }
