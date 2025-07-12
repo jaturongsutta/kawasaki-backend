@@ -9,6 +9,7 @@ import { getCurrentDate } from 'src/utils/utils';
 import { PredefineItemMachine } from 'src/entity/predefine-item-process.entity';
 import * as PDFDocument from 'pdfkit';
 import * as QRCode from 'qrcode';
+import * as path from 'path';
 
 @Injectable()
 export class PredefineItemProcessService {
@@ -181,7 +182,7 @@ export class PredefineItemProcessService {
         req,
       );
       const data = result.recordset || [];
-      console.log('Export result:', data);
+      // console.log('Export result:', data);
 
       // const testData = [
       //   {
@@ -265,6 +266,18 @@ export class PredefineItemProcessService {
         doc.on('data', (chunk) => chunks.push(chunk));
         doc.on('end', () => resolve(Buffer.concat(chunks)));
 
+        // Register Sarabun fonts
+        const fontPath = path.join(__dirname, '..', '..', 'fonts');
+
+        doc.registerFont(
+          'Sarabun-Regular',
+          path.join(fontPath, 'Sarabun-Regular.ttf'),
+        );
+        doc.registerFont(
+          'Sarabun-Bold',
+          path.join(fontPath, 'Sarabun-Bold.ttf'),
+        );
+
         // Dynamic title based on predefineGroup
         let title = 'QR Code Downtime List';
         if (predefineGroup === 'NG_Reason') {
@@ -274,7 +287,7 @@ export class PredefineItemProcessService {
         }
 
         // Add title
-        doc.fontSize(20).text(title, { align: 'center' });
+        doc.fontSize(20).font('Sarabun-Bold').text(title, { align: 'center' });
 
         // Add underline below title
         const titleWidth = doc.widthOfString(title);
@@ -296,6 +309,7 @@ export class PredefineItemProcessService {
         const tableRightEdge = 50 + 60 + 10 + 4 * 110;
         doc
           .fontSize(10)
+          .font('Sarabun-Regular')
           .text(exportDateText, tableRightEdge - 165, doc.y + 20, {
             align: 'right',
             width: 160,
@@ -316,7 +330,10 @@ export class PredefineItemProcessService {
 
         // Function to add header on new page
         const addHeader = (groupTitle: string) => {
-          doc.fontSize(20).text(groupTitle, { align: 'center' });
+          doc
+            .fontSize(20)
+            .font('Sarabun-Bold')
+            .text(groupTitle, { align: 'center' });
 
           // Add underline below title
           const titleWidth = doc.widthOfString(groupTitle);
@@ -338,6 +355,7 @@ export class PredefineItemProcessService {
           const tableRightEdge = 50 + 60 + 10 + 4 * 110;
           doc
             .fontSize(10)
+            .font('Sarabun-Regular')
             .text(headerExportDateText, tableRightEdge - 165, doc.y + 20, {
               align: 'right',
               width: 160,
@@ -406,7 +424,7 @@ export class PredefineItemProcessService {
               // Add Process_CD text (centered vertically and horizontally)
               doc
                 .fontSize(12)
-                .font('Helvetica-Bold')
+                .font('Sarabun-Bold')
                 .fillColor('black')
                 .text(
                   processCode,
@@ -461,7 +479,7 @@ export class PredefineItemProcessService {
                     // Add Machine_No at the top
                     doc
                       .fontSize(8)
-                      .font('Helvetica-Bold')
+                      .font('Sarabun-Bold')
                       .text(
                         `${item.Machine_No || 'N/A'}`,
                         xPosition,
@@ -475,7 +493,7 @@ export class PredefineItemProcessService {
                     // Add Reason_TH below Machine_No
                     doc
                       .fontSize(8)
-                      .font('Helvetica')
+                      .font('Sarabun-Regular')
                       .text(
                         `${item.Reason_TH || 'N/A'}`,
                         xPosition,
@@ -496,7 +514,7 @@ export class PredefineItemProcessService {
                     // Add Reason_EN at the bottom
                     doc
                       .fontSize(8)
-                      .font('Helvetica')
+                      .font('Sarabun-Regular')
                       .text(
                         `${item.Reason_EN || 'N/A'}`,
                         xPosition,
