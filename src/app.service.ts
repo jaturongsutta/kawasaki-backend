@@ -6,6 +6,7 @@ import * as moment from 'moment';
 export class AppService {
   getHello(): any {
     return {
+      appName: 'Kawasaki Backend',
       newDate: new Date(),
       getCurrentDate: getCurrentDate(),
       getCurrentDate_toISOString: getCurrentDate().toISOString(),
