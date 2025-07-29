@@ -36,7 +36,7 @@ export class ReportEfficiencyOperService {
     );
     const lossStopData = lossStopResult.recordset || [];
 
-    console.log('PlanProd Data:', planProdData);
+    // console.log('PlanProd Data:', planProdData);
     // console.log('LossStop Data:', lossStopData);
 
     // Sheet 1: PlanProd
@@ -75,6 +75,20 @@ export class ReportEfficiencyOperService {
     wsPlanProd.getCell(3, totalCols).value = 'Total';
     wsPlanProd.getRow(3).font = { bold: true };
 
+    const efficiencyRow = this.calculateEfficiency(
+      planProdData,
+      year,
+      month,
+      daysInMonth,
+    );
+
+    const totalEfficiencyRow = this.calculateTotalEfficiency(
+      planProdData,
+      year,
+      month,
+      daysInMonth,
+    );
+
     // Row 4: ValuePlan, D/N for each day, total
     // const header = ['ValuePlan'];
     // for (let d = 1; d <= daysInMonth; d++) {
@@ -98,13 +112,66 @@ export class ReportEfficiencyOperService {
       wsPlanProd.addRow(dataRow);
     });
 
-    // row working time
-    const rWorkingTime = planProdData.find(
-      (row) => row.ValuePlan === 'Working Time',
-    );
+    wsPlanProd.getColumn(1).width = 20;
+
+    // row shift
+    const header = ['Shift'];
+    for (let d = 1; d <= daysInMonth; d++) {
+      header.push('D');
+      header.push('N');
+    }
+    header.push('total');
+    wsPlanProd.insertRow(5, header);
+    wsPlanProd.getRow(5).alignment = { horizontal: 'center' };
+    wsPlanProd.getCell(5, 1).alignment = { horizontal: 'left' };
+
+    // Insert efficiency row
+    wsPlanProd.insertRow(8, efficiencyRow);
+
+    // Insert total efficiency row
+    wsPlanProd.insertRow(9, totalEfficiencyRow);
+
+    // // row working time
+    // const rWorkingTime = planProdData.filter(
+    //   (row) => row.ValuePlan === 'Working Time',
+    // );
+    // rWorkingTime.forEach((row) => {
+    //   const dataRow = [row.ValuePlan];
+    //   for (let d = 1; d <= daysInMonth; d++) {
+    //     const dKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_D`;
+    //     const nKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_N`;
+    //     dataRow.push(row[dKey] ?? null);
+    //     dataRow.push(row[nKey] ?? null);
+    //   }
+    //   dataRow.push(row.total ?? null);
+    //   wsPlanProd.addRow(dataRow);
+    // });
+    colIdx = 2; // Reset column index for days
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      wsPlanProd.mergeCells(9, colIdx, 9, colIdx + 1);
+      wsPlanProd.getCell(9, colIdx).alignment = { horizontal: 'center' };
+      colIdx += 2;
+    }
+    colIdx = 2; // Reset column index for days
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      wsPlanProd.mergeCells(10, colIdx, 10, colIdx + 1);
+      wsPlanProd.getCell(10, colIdx).alignment = { horizontal: 'center' };
+      colIdx += 2;
+    }
+
+    // row shift
+    let row = ['Loss Efficiency (Min)'];
+    for (let d = 1; d <= daysInMonth; d++) {
+      row.push('D');
+      row.push('N');
+    }
+    const exRow = wsPlanProd.addRow(row);
+    exRow.alignment = { horizontal: 'center' };
+    wsPlanProd.getCell(11, 1).font = { bold: true };
 
     // Auto width for columns
-    wsPlanProd.getColumn(1).width = 20;
     wsPlanProd.columns.forEach((column, idx) => {
       if (idx === 0) return; // skip first column, already set
       let maxLength = 10;
@@ -115,11 +182,70 @@ export class ReportEfficiencyOperService {
       column.width = 5; //maxLength + 2;
     });
 
+    //   LossStop
+
+    if (lossStopData.length > 0) {
+      wsPlanProd.addRow(Object.keys(lossStopData[0]));
+      lossStopData.forEach((row) => wsPlanProd.addRow(Object.values(row)));
+    }
+
     const result = await workbook.xlsx.writeBuffer();
     // If running in Node.js, convert Uint8Array to Buffer for compatibility
     if (typeof Buffer !== 'undefined' && result instanceof Uint8Array) {
       return Buffer.from(result);
     }
     return result;
+  }
+
+  calculateEfficiency(planProdData, year, month, daysInMonth) {
+    let dataRow = ['Efficiency.(%)'];
+    const rAct = planProdData.filter(
+      (row) => row.ValuePlan === 'Actual Prod.plan',
+    );
+    const rPlan = planProdData.filter(
+      (row) => row.ValuePlan === 'Prod. Machine Plan',
+    );
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_D`;
+      const nKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_N`;
+      // dataRow[dKey] = (rAct[0][dKey] / rPlan[0][dKey]) * 100;
+      // dataRow[nKey] = (rAct[0][nKey] / rPlan[0][nKey]) * 100;
+
+      const D = rPlan[0][dKey] ? (rAct[0][dKey] / rPlan[0][dKey]) * 100 : 0;
+      const N = rPlan[0][nKey] ? (rAct[0][nKey] / rPlan[0][nKey]) * 100 : 0;
+      dataRow.push(D ? D.toFixed(2) : null);
+      dataRow.push(N ? N.toFixed(2) : null);
+    }
+
+    // console.log('dataRow:', dataRow);
+
+    return dataRow;
+  }
+
+  calculateTotalEfficiency(planProdData, year, month, daysInMonth) {
+    let dataRow = ['Total Efficiency.(%)'];
+    const rAct = planProdData.filter(
+      (row) => row.ValuePlan === 'Actual Prod.plan',
+    );
+    const rPlan = planProdData.filter(
+      (row) => row.ValuePlan === 'Prod. Machine Plan',
+    );
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_D`;
+      const nKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_N`;
+      // dataRow[dKey] = (rAct[0][dKey] / rPlan[0][dKey]) * 100;
+      // dataRow[nKey] = (rAct[0][nKey] / rPlan[0][nKey]) * 100;
+
+      const DN =
+        (rAct[0][dKey] + rAct[0][nKey]) /
+        (rPlan[0][dKey] + rPlan[0][nKey]) /
+        100;
+      dataRow.push(DN ? DN.toFixed(2) : null);
+      dataRow.push(DN ? DN.toFixed(2) : null);
+    }
+
+    console.log('Total Efficiency.(%):', dataRow);
+
+    return dataRow;
   }
 }
