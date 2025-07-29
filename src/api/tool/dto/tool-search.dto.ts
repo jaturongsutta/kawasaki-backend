@@ -5,6 +5,7 @@ export class ToolSearchDto extends BaseSearch {
   tool_cd: string;
   h_Cd: string;
   process_cd: string;
+  machine_no: string;
   status: string;
 }
 

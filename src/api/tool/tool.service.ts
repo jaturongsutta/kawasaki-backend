@@ -21,6 +21,7 @@ export class ToolService {
         req.input('Tool_CD', dto.tool_cd);
         req.input('H_Code', dto.h_Cd);
         req.input('Process_CD', dto.process_cd);
+        req.input('Machine_No', dto.machine_no);
         req.input('Status', dto.status);
         req.input('Row_No_From', dto.searchOptions.rowFrom);
         req.input('Row_No_To', dto.searchOptions.rowTo);

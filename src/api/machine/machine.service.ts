@@ -24,7 +24,7 @@ export class MachineService {
         return await this.commonService.getSearch('sp_m_Search_Machine', req);
     }
 
-    async getById(id: string): Promise<any> {
+    async getById(machineNo: string, processCd: string): Promise<any> {
         try {
             const r = await this.machineRepository
                 .createQueryBuilder('m')
@@ -38,7 +38,7 @@ export class MachineService {
                     'u.username as updatedBy',
                     'm.UPDATED_DATE as updatedDate'
                 ])
-                .where(`m.processCd = '${id}'`)
+                .where(`m.machineNo = '${machineNo}' and m.processCd = '${processCd}'`)
                 .getRawOne();
             if (!r) {
                 return {
@@ -89,7 +89,8 @@ export class MachineService {
     }
 
     async update(
-        id: string,
+        machineNo: string,
+        processCd: string,
         data: MachineDto,
         userId: number,
     ): Promise<BaseResponse> {
@@ -101,7 +102,7 @@ export class MachineService {
             await queryRunner.startTransaction();
             console.log('data : ', data);
 
-            const result = await queryRunner.manager.update(MMachine, id, data);
+            const result = await queryRunner.manager.update(MMachine, { machineNo: machineNo, processCd: processCd }, data);
             await queryRunner.commitTransaction();
 
             if (result) {

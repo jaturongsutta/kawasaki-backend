@@ -22,9 +22,9 @@ export class MachineController extends BaseController {
     return await this.service.search(dto);
   }
 
-  @Get('getById/:id')
-  async getById(@Param('id') id: string) {
-    return await this.service.getById(id);
+  @Get('getById/:machineNo/:processCd')
+  async getById(@Param('machineNo') machineNo: string, @Param('processCd') processCd: string) {
+    return await this.service.getById(machineNo, processCd);
   }
 
   @Post('add')
@@ -32,13 +32,14 @@ export class MachineController extends BaseController {
     return await this.service.add(dto, req.user.userId);
   }
 
-  @Put('update/:id')
+  @Put('update/:machineNo/:processCd')
   async update(
-    @Param('id') id: string,
+    @Param('machineNo') machineNo: string,
+    @Param('processCd') processCd: string,
     @Body() dto: MachineDto,
     @Request() req: any,
   ) {
-    return await this.service.update(id, dto, req.user.userId);
+    return await this.service.update(machineNo, processCd, dto, req.user.userId);
   }
 
 }
