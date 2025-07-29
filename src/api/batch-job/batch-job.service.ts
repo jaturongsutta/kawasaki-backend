@@ -101,4 +101,73 @@ export class BatchJobService {
       };
     }
   }
+
+  // process Line_CYH7
+  // sp_AutoStart_CYH7
+  // sp_MappedMES_CYH7
+  // sp_MappedMES_CYH7_003
+  async processLineCYH7_sp_AutoStart_CYH7() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_AutoStart_CYH7');
+      // const result = await this.commonService.executeStoreProcedure(
+      //   'sp_AutoStart_CYH7',
+      //   req,
+      // );
+      return {
+        process: 'sp_AutoStart_CYH7',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_AutoStart_CYH7',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+  async processLineCYH7_sp_MappedMES_CYH7() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_CYH7');
+      // const result = await this.commonService.executeStoreProcedure(
+      //   'sp_MappedMES_CYH7',
+      //   req,
+      // );
+      return {
+        process: 'sp_MappedMES_CYH7',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_CYH7',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+  async processLineCYH7_sp_MappedMES_CYH7_003() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_CYH7_003');
+
+      // const result = await this.commonService.executeStoreProcedure(
+      //   'sp_MappedMES_CYH7_003',
+      //   req,
+      // );
+      return {
+        process: 'sp_MappedMES_CYH7_003',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_CYH7_003',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
 }

@@ -99,6 +99,8 @@ export class BatchJobController extends BaseController {
       // Run your 5-minute interval logic here
       console.log('Run job at:', this.dbTime);
       this.Job_Line_CYH6();
+
+      this.Job_Line_CYH7();
     }
   }
 
@@ -117,6 +119,24 @@ export class BatchJobController extends BaseController {
       this.writeBatchLog(JSON.stringify(result3), 'CYH6'); // Log job completion
     } catch (error) {
       this.writeBatchLog('[ERROR] ' + error.message, 'CYH6'); // Log error
+    }
+  }
+
+  async Job_Line_CYH7() {
+    try {
+      this.writeBatchLog('Job_Line_CYH7 started', 'CYH7'); // Log job start
+
+      const result = await this.service.processLineCYH7_sp_AutoStart_CYH7();
+      this.writeBatchLog(JSON.stringify(result), 'CYH7'); // Log job completion
+
+      const result2 = await this.service.processLineCYH7_sp_MappedMES_CYH7();
+      this.writeBatchLog(JSON.stringify(result2), 'CYH7'); // Log job completion
+
+      const result3 =
+        await this.service.processLineCYH7_sp_MappedMES_CYH7_003();
+      this.writeBatchLog(JSON.stringify(result3), 'CYH7'); // Log job completion
+    } catch (error) {
+      this.writeBatchLog('[ERROR] ' + error.message, 'CYH7'); // Log error
     }
   }
 
