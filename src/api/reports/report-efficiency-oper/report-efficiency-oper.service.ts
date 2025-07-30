@@ -89,6 +89,9 @@ export class ReportEfficiencyOperService {
     }
     wsPlanProd.getCell(3, totalCols).value = 'Total';
     wsPlanProd.getRow(3).font = { bold: true };
+    wsPlanProd.getRow(3).alignment = { horizontal: 'center' };
+
+    wsPlanProd.getCell(3, totalCols + 1).value = 'Ratio';
 
     const efficiencyRow = this.calculateEfficiency(
       planProdData,
@@ -131,7 +134,10 @@ export class ReportEfficiencyOperService {
         }
       }
       dataRow.push(row.total ?? null);
-      wsPlanProd.addRow(dataRow);
+      const exRow = wsPlanProd.addRow(dataRow);
+
+      exRow.alignment = { horizontal: 'center' };
+      exRow.getCell(1).alignment = { horizontal: 'left' };
     });
 
     wsPlanProd.getColumn(1).width = 15;
@@ -207,6 +213,14 @@ export class ReportEfficiencyOperService {
 
     //   LossStop
 
+    // Find Working Time row from planProdData
+    const rWorkingTime = planProdData.find(
+      (row) => row.ValuePlan === 'Working Time',
+    );
+
+    const workingTimeTotal = rWorkingTime ? rWorkingTime.total : 0;
+    console.log('workingTimeTotal:', workingTimeTotal);
+
     console.log('sumWorkingTime', sumWorkingTime);
 
     let sumLossTime = [];
@@ -228,20 +242,51 @@ export class ReportEfficiencyOperService {
         // });
 
         for (let index = 0; index < values.length; index++) {
-          if (index < 1) continue; // Skip first two columns
+          if (index === 0 || index === 1) continue; // Skip first two columns
           sumLossTime[index] =
             (sumLossTime[index] || 0) +
             (values[index] === '-' ? 0 : values[index]);
         }
+
+        // add ratio
+        const ratio = ((row.total / workingTimeTotal) * 100).toFixed(1) || '';
+        values.push(ratio); // Add total efficiency loss percentage
 
         const exRow = wsPlanProd.addRow(values);
         exRow.alignment = { horizontal: 'center' };
         exRow.getCell(1).alignment = { horizontal: 'left' };
       });
     }
+    sumLossTime[0] = 'Loss Time';
+    sumLossTime[1] = '';
+    const sumLossTimeRatio =
+      (sumLossTime[sumLossTime.length - 1] / workingTimeTotal) * 100;
 
-    const exRowLoss = wsPlanProd.addRow(['Loss Time', '', ...sumLossTime]);
+    sumLossTime.push(sumLossTimeRatio);
+    const exRowLoss = wsPlanProd.addRow(sumLossTime);
     exRowLoss.getCell(1).font = { bold: true };
+
+    // 5	ข้อมูล Total Efficiency loss.(%) มาจาก =(Loss time กะ D + Loss Time กะ N )/(Working Time กะ D +Working Time กะ N)
+    // Add Total Efficiency loss (%) row
+    let totalEfficiencyLossRow = ['Total Efficiency loss (%)', ''];
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_D`;
+      const nKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_N`;
+      // sumLossTime index: 2 for first D, 3 for first N, etc.
+      const lossD = sumLossTime[2 + (d - 1) * 2] || 0;
+      const lossN = sumLossTime[3 + (d - 1) * 2] || 0;
+      const workD = rWorkingTime ? rWorkingTime[dKey] || 0 : 0;
+      const workN = rWorkingTime ? rWorkingTime[nKey] || 0 : 0;
+      let effLoss = 0;
+      if (workD + workN > 0) {
+        effLoss = ((lossD + lossN) / (workD + workN)) * 100;
+      }
+      totalEfficiencyLossRow.push(effLoss ? effLoss.toFixed(2) : null);
+      totalEfficiencyLossRow.push(effLoss ? effLoss.toFixed(2) : null);
+    }
+    totalEfficiencyLossRow.push(sumLossTimeRatio.toString());
+    wsPlanProd.addRow(totalEfficiencyLossRow);
 
     const result = await workbook.xlsx.writeBuffer();
     // If running in Node.js, convert Uint8Array to Buffer for compatibility
