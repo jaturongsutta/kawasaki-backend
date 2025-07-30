@@ -115,6 +115,7 @@ export class ReportEfficiencyOperService {
     // wsPlanProd.getRow(4).font = { bold: true };
 
     // Add data rows
+    const sumWorkingTime = [];
     planProdData.forEach((row) => {
       const dataRow = [row.ValuePlan, ''];
       for (let d = 1; d <= daysInMonth; d++) {
@@ -122,6 +123,12 @@ export class ReportEfficiencyOperService {
         const nKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_N`;
         dataRow.push(row[dKey] ?? null);
         dataRow.push(row[nKey] ?? null);
+        if (row.ValuePlan === 'Working Time') {
+          // Initialize sumWorkingTime if not already done
+          sumWorkingTime.push(
+            (sumWorkingTime[dKey] || 0) + (row[dKey] ?? 0) + (row[nKey] ?? 0),
+          );
+        }
       }
       dataRow.push(row.total ?? null);
       wsPlanProd.addRow(dataRow);
@@ -200,6 +207,10 @@ export class ReportEfficiencyOperService {
 
     //   LossStop
 
+    console.log('sumWorkingTime', sumWorkingTime);
+
+    let sumLossTime = [];
+
     if (lossStopData.length > 0) {
       // wsPlanProd.addRow(Object.keys(lossStopData[0]));
       lossStopData.forEach((row) => {
@@ -210,11 +221,27 @@ export class ReportEfficiencyOperService {
         if (values[0] === 'M/C Trouble' && values[1] !== '') {
           values[0] = '';
         }
+
+        // values.forEach((value, index) => {
+        //   sumLossTime[index] =
+        //     (sumLossTime[index] || 0) + (value === '-' ? 0 : value);
+        // });
+
+        for (let index = 0; index < values.length; index++) {
+          if (index < 1) continue; // Skip first two columns
+          sumLossTime[index] =
+            (sumLossTime[index] || 0) +
+            (values[index] === '-' ? 0 : values[index]);
+        }
+
         const exRow = wsPlanProd.addRow(values);
         exRow.alignment = { horizontal: 'center' };
         exRow.getCell(1).alignment = { horizontal: 'left' };
       });
     }
+
+    const exRowLoss = wsPlanProd.addRow(['Loss Time', '', ...sumLossTime]);
+    exRowLoss.getCell(1).font = { bold: true };
 
     const result = await workbook.xlsx.writeBuffer();
     // If running in Node.js, convert Uint8Array to Buffer for compatibility
