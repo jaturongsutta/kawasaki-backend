@@ -25,7 +25,11 @@ export class DropdownListController extends BaseController {
   }
 
   @Get('predefine-group-item/:group')
-  getPredefineItem(@Request() req: any, @Param('group') group: string, @Query('search') search: string) {
+  getPredefineItem(
+    @Request() req: any,
+    @Param('group') group: string,
+    @Query('search') search: string,
+  ) {
     return this.service.getPredefineItem(group, search, req.headers.language);
   }
 
@@ -154,6 +158,8 @@ export class DropdownListController extends BaseController {
       'Process_CD',
       'Machine_No',
       "Is_Active = 'Y'",
+      '',
+      ['Process_CD processCd', 'Machine_No machineNo'],
     );
   }
 

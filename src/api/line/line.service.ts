@@ -510,11 +510,13 @@ export class LineService {
           processCd: machine.processCd,
         });
       } else if (machine.rowState === 'NEW') {
+        const processCd = machine.processCd.split('_')[1]; // [machineNo]_[processCd]
+
         const newLineMachine = new MLineMachine();
         newLineMachine.lineCd = data.lineCd;
         newLineMachine.modelCd = machine.modelCd;
         newLineMachine.machineNo = machine.machineNo;
-        newLineMachine.processCd = machine.processCd;
+        newLineMachine.processCd = processCd;
         newLineMachine.wt = machine.wt;
         newLineMachine.ht = machine.ht;
         newLineMachine.mt = machine.mt;
