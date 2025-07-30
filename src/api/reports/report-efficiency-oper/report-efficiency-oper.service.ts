@@ -39,6 +39,8 @@ export class ReportEfficiencyOperService {
     // console.log('PlanProd Data:', planProdData);
     // console.log('LossStop Data:', lossStopData);
 
+    const startColData = 3;
+
     // Sheet 1: PlanProd
     const wsPlanProd = workbook.addWorksheet('PlanProd');
     // Prepare month/year
@@ -47,25 +49,38 @@ export class ReportEfficiencyOperService {
     const daysInMonth = new Date(year, month, 0).getDate();
     // --- Header rows ---
     // Row 1: Title (merge)
-    const totalCols = 1 + daysInMonth * 2 + 1; // ValuePlan + (D/N * days) + total
-    wsPlanProd.mergeCells(1, 1, 1, totalCols);
+    const totalCols = 2 + daysInMonth * 2 + 1; // ValuePlan + (D/N * days) + total
+    wsPlanProd.mergeCells(1, 1, 1, totalCols - 1);
     wsPlanProd.getCell(1, 1).value =
       `Progressive mass production of new ${lineCd} in ${new Date(year, month - 1).toLocaleString('en-US', { month: 'short' })}'${year.toString().slice(-2)}`;
     wsPlanProd.getCell(1, 1).font = { bold: true, size: 14 };
     wsPlanProd.getRow(1).alignment = { horizontal: 'left' };
 
+    // Update Date column
+    const now = new Date();
+    const updateDate =
+      now.getDate().toString().padStart(2, '0') +
+      '/' +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      '/' +
+      now.getFullYear();
+    wsPlanProd.getCell(1, totalCols).value = 'Update :';
+    wsPlanProd.getColumn(totalCols).width = 8;
+    wsPlanProd.getCell(1, totalCols + 1).value = updateDate;
+    wsPlanProd.getColumn(totalCols + 1).width = 8;
+
     // Row 2: blank for ValuePlan, then merge for month label, then blank for total
     wsPlanProd.getCell(2, 1).value = '';
-    wsPlanProd.mergeCells(2, 2, 2, totalCols - 1);
-    wsPlanProd.getCell(2, 2).value =
+    wsPlanProd.mergeCells(2, 3, 2, totalCols - 1);
+    wsPlanProd.getCell(2, 3).value =
       `${new Date(year, month - 1).toLocaleString('en-US', { month: 'short' })}'${year.toString().slice(-2)}`;
-    wsPlanProd.getCell(2, 2).font = { bold: true };
-    wsPlanProd.getCell(2, 2).alignment = { horizontal: 'left' };
+    wsPlanProd.getCell(2, 3).font = { bold: true };
+    wsPlanProd.getCell(2, 3).alignment = { horizontal: 'left' };
     wsPlanProd.getCell(2, totalCols).value = '';
 
     // Row 3: 'Date' and day numbers, then 'Total'
     wsPlanProd.getCell(3, 1).value = 'Date';
-    let colIdx = 2;
+    let colIdx = startColData;
     for (let d = 1; d <= daysInMonth; d++) {
       wsPlanProd.mergeCells(3, colIdx, 3, colIdx + 1);
       wsPlanProd.getCell(3, colIdx).value = d;
@@ -101,7 +116,7 @@ export class ReportEfficiencyOperService {
 
     // Add data rows
     planProdData.forEach((row) => {
-      const dataRow = [row.ValuePlan];
+      const dataRow = [row.ValuePlan, ''];
       for (let d = 1; d <= daysInMonth; d++) {
         const dKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_D`;
         const nKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_N`;
@@ -112,15 +127,16 @@ export class ReportEfficiencyOperService {
       wsPlanProd.addRow(dataRow);
     });
 
-    wsPlanProd.getColumn(1).width = 20;
+    wsPlanProd.getColumn(1).width = 15;
+    wsPlanProd.getColumn(2).width = 15;
 
     // row shift
-    const header = ['Shift'];
+    const header = ['Shift', ''];
     for (let d = 1; d <= daysInMonth; d++) {
       header.push('D');
       header.push('N');
     }
-    header.push('total');
+    // header.push('total');
     wsPlanProd.insertRow(5, header);
     wsPlanProd.getRow(5).alignment = { horizontal: 'center' };
     wsPlanProd.getCell(5, 1).alignment = { horizontal: 'left' };
@@ -146,14 +162,14 @@ export class ReportEfficiencyOperService {
     //   dataRow.push(row.total ?? null);
     //   wsPlanProd.addRow(dataRow);
     // });
-    colIdx = 2; // Reset column index for days
+    colIdx = startColData; // Reset column index for days
 
     for (let d = 1; d <= daysInMonth; d++) {
       wsPlanProd.mergeCells(9, colIdx, 9, colIdx + 1);
       wsPlanProd.getCell(9, colIdx).alignment = { horizontal: 'center' };
       colIdx += 2;
     }
-    colIdx = 2; // Reset column index for days
+    colIdx = startColData; // Reset column index for days
 
     for (let d = 1; d <= daysInMonth; d++) {
       wsPlanProd.mergeCells(10, colIdx, 10, colIdx + 1);
@@ -162,7 +178,7 @@ export class ReportEfficiencyOperService {
     }
 
     // row shift
-    let row = ['Loss Efficiency (Min)'];
+    let row = ['Loss Efficiency (Min)', ''];
     for (let d = 1; d <= daysInMonth; d++) {
       row.push('D');
       row.push('N');
@@ -173,7 +189,7 @@ export class ReportEfficiencyOperService {
 
     // Auto width for columns
     wsPlanProd.columns.forEach((column, idx) => {
-      if (idx === 0) return; // skip first column, already set
+      if (idx < startColData - 1 || idx >= totalCols - 1) return; // skip first column, already set
       let maxLength = 10;
       column.eachCell({ includeEmpty: true }, (cell) => {
         const cellValue = cell.value ? cell.value.toString() : '';
@@ -185,8 +201,19 @@ export class ReportEfficiencyOperService {
     //   LossStop
 
     if (lossStopData.length > 0) {
-      wsPlanProd.addRow(Object.keys(lossStopData[0]));
-      lossStopData.forEach((row) => wsPlanProd.addRow(Object.values(row)));
+      // wsPlanProd.addRow(Object.keys(lossStopData[0]));
+      lossStopData.forEach((row) => {
+        // is null or undefined, set to '-'
+        const values = Object.values(row).map((value) =>
+          value === null || value === undefined ? '-' : value,
+        );
+        if (values[0] === 'M/C Trouble' && values[1] !== '') {
+          values[0] = '';
+        }
+        const exRow = wsPlanProd.addRow(values);
+        exRow.alignment = { horizontal: 'center' };
+        exRow.getCell(1).alignment = { horizontal: 'left' };
+      });
     }
 
     const result = await workbook.xlsx.writeBuffer();
