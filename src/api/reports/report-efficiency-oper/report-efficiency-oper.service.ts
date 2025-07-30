@@ -79,7 +79,8 @@ export class ReportEfficiencyOperService {
     wsPlanProd.getCell(2, totalCols).value = '';
 
     // Row 3: 'Date' and day numbers, then 'Total'
-    wsPlanProd.getCell(3, 1).value = 'Date';
+    wsPlanProd.getCell(3, 2).value = 'Date';
+    wsPlanProd.getCell(3, 2).alignment = { horizontal: 'right' };
     let colIdx = startColData;
     for (let d = 1; d <= daysInMonth; d++) {
       wsPlanProd.mergeCells(3, colIdx, 3, colIdx + 1);
@@ -119,7 +120,7 @@ export class ReportEfficiencyOperService {
 
     // Add data rows
     const sumWorkingTime = [];
-    planProdData.forEach((row) => {
+    planProdData.forEach((row, index) => {
       const dataRow = [row.ValuePlan, ''];
       for (let d = 1; d <= daysInMonth; d++) {
         const dKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_D`;
@@ -133,32 +134,70 @@ export class ReportEfficiencyOperService {
           );
         }
       }
+      console.log(index);
+      if (index === 1) {
+        // row shift
+        const header = ['Shift', ''];
+        for (let d = 1; d <= daysInMonth; d++) {
+          header.push('D');
+          header.push('N');
+        }
+        // header.push('total');
+        const exRowShift = wsPlanProd.addRow(header);
+        exRowShift.alignment = { horizontal: 'center' };
+        exRowShift.getCell(1).alignment = { horizontal: 'left' };
+        wsPlanProd.mergeCells(exRowShift.number, 1, exRowShift.number, 2);
+      } else if (index === 3) {
+        // Insert efficiency row
+        const exRowEfficiency = wsPlanProd.addRow(efficiencyRow);
+        exRowEfficiency.alignment = { horizontal: 'center' };
+        exRowEfficiency.getCell(1).alignment = { horizontal: 'left' };
+        wsPlanProd.mergeCells(
+          exRowEfficiency.number,
+          1,
+          exRowEfficiency.number,
+          2,
+        );
+
+        // Insert total efficiency row
+        const exRowTotalEfficiency = wsPlanProd.addRow(totalEfficiencyRow);
+        exRowTotalEfficiency.alignment = { horizontal: 'center' };
+        exRowTotalEfficiency.getCell(1).alignment = { horizontal: 'left' };
+        wsPlanProd.mergeCells(
+          exRowTotalEfficiency.number,
+          1,
+          exRowTotalEfficiency.number,
+          2,
+        );
+      }
+
       dataRow.push(row.total ?? null);
       const exRow = wsPlanProd.addRow(dataRow);
 
       exRow.alignment = { horizontal: 'center' };
       exRow.getCell(1).alignment = { horizontal: 'left' };
+      wsPlanProd.mergeCells(exRow.number, 1, exRow.number, 2);
     });
 
     wsPlanProd.getColumn(1).width = 15;
     wsPlanProd.getColumn(2).width = 15;
 
-    // row shift
-    const header = ['Shift', ''];
-    for (let d = 1; d <= daysInMonth; d++) {
-      header.push('D');
-      header.push('N');
-    }
-    // header.push('total');
-    wsPlanProd.insertRow(5, header);
-    wsPlanProd.getRow(5).alignment = { horizontal: 'center' };
-    wsPlanProd.getCell(5, 1).alignment = { horizontal: 'left' };
+    // // row shift
+    // const header = ['Shift', ''];
+    // for (let d = 1; d <= daysInMonth; d++) {
+    //   header.push('D');
+    //   header.push('N');
+    // }
+    // // header.push('total');
+    // const exRowShift = wsPlanProd.insertRow(5, header);
+    // wsPlanProd.getRow(5).alignment = { horizontal: 'center' };
+    // wsPlanProd.getCell(5, 1).alignment = { horizontal: 'left' };
 
     // Insert efficiency row
-    wsPlanProd.insertRow(8, efficiencyRow);
+    // wsPlanProd.insertRow(8, efficiencyRow);
 
     // Insert total efficiency row
-    wsPlanProd.insertRow(9, totalEfficiencyRow);
+    // wsPlanProd.insertRow(9, totalEfficiencyRow);
 
     // // row working time
     // const rWorkingTime = planProdData.filter(
@@ -199,6 +238,7 @@ export class ReportEfficiencyOperService {
     const exRow = wsPlanProd.addRow(row);
     exRow.alignment = { horizontal: 'center' };
     wsPlanProd.getCell(11, 1).font = { bold: true };
+    wsPlanProd.mergeCells(exRow.number, 1, exRow.number, 2);
 
     // Auto width for columns
     wsPlanProd.columns.forEach((column, idx) => {
@@ -255,6 +295,9 @@ export class ReportEfficiencyOperService {
         const exRow = wsPlanProd.addRow(values);
         exRow.alignment = { horizontal: 'center' };
         exRow.getCell(1).alignment = { horizontal: 'left' };
+        if (values[0] !== 'M/C Trouble' && values[1] === '') {
+          wsPlanProd.mergeCells(exRow.number, 1, exRow.number, 2);
+        }
       });
     }
     sumLossTime[0] = 'Loss Time';
@@ -265,6 +308,7 @@ export class ReportEfficiencyOperService {
     sumLossTime.push(sumLossTimeRatio);
     const exRowLoss = wsPlanProd.addRow(sumLossTime);
     exRowLoss.getCell(1).font = { bold: true };
+    wsPlanProd.mergeCells(exRowLoss.number, 1, exRowLoss.number, 2);
 
     // 5	ข้อมูล Total Efficiency loss.(%) มาจาก =(Loss time กะ D + Loss Time กะ N )/(Working Time กะ D +Working Time กะ N)
     // Add Total Efficiency loss (%) row
@@ -286,7 +330,31 @@ export class ReportEfficiencyOperService {
       totalEfficiencyLossRow.push(effLoss ? effLoss.toFixed(2) : null);
     }
     totalEfficiencyLossRow.push(sumLossTimeRatio.toString());
-    wsPlanProd.addRow(totalEfficiencyLossRow);
+    const exRowTotalEfficiencyLoss = wsPlanProd.addRow(totalEfficiencyLossRow);
+    wsPlanProd.mergeCells(
+      exRowTotalEfficiencyLoss.number,
+      1,
+      exRowTotalEfficiencyLoss.number,
+      2,
+    );
+
+    colIdx = startColData; // Reset column index for days
+    for (let d = 1; d <= daysInMonth; d++) {
+      wsPlanProd.mergeCells(
+        exRowTotalEfficiencyLoss.number,
+        colIdx,
+        exRowTotalEfficiencyLoss.number,
+        colIdx + 1,
+      );
+      wsPlanProd.getCell(exRowTotalEfficiencyLoss.number, colIdx).alignment = {
+        horizontal: 'center',
+      };
+
+      colIdx += 2;
+    }
+
+    // Set border
+    this.setBorder(wsPlanProd, totalCols);
 
     const result = await workbook.xlsx.writeBuffer();
     // If running in Node.js, convert Uint8Array to Buffer for compatibility
@@ -343,8 +411,37 @@ export class ReportEfficiencyOperService {
       dataRow.push(DN ? DN.toFixed(2) : null);
     }
 
-    console.log('Total Efficiency.(%):', dataRow);
-
     return dataRow;
+  }
+
+  setBorder(wsPlanProd: ExcelJS.Worksheet, totalCols) {
+    wsPlanProd.getCell(1, 1).border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' },
+    };
+
+    // Set border for header row 3
+    for (let c = 1; c <= totalCols + 1; c++) {
+      wsPlanProd.getCell(3, c).border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' },
+      };
+    }
+
+    // Set border for row data
+    for (let r = 4; r <= wsPlanProd.rowCount; r++) {
+      for (let c = 1; c <= totalCols + 1; c++) {
+        wsPlanProd.getCell(r, c).border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' },
+        };
+      }
+    }
   }
 }
