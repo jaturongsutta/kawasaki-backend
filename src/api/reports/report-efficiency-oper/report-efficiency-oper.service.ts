@@ -36,9 +36,6 @@ export class ReportEfficiencyOperService {
     );
     const lossStopData = lossStopResult.recordset || [];
 
-    // console.log('PlanProd Data:', planProdData);
-    // console.log('LossStop Data:', lossStopData);
-
     const startColData = 3;
 
     // Sheet 1: PlanProd
@@ -95,90 +92,81 @@ export class ReportEfficiencyOperService {
     wsPlanProd.getCell(3, totalCols + 1).value = 'Ratio';
     wsPlanProd.getColumn(totalCols + 1).width = 10;
 
-    const efficiencyRow = this.calculateEfficiency(
-      planProdData,
-      year,
-      month,
-      daysInMonth,
-    );
+    if (planProdData.length > 0) {
+      const efficiencyRow = this.calculateEfficiency(
+        planProdData,
+        year,
+        month,
+        daysInMonth,
+      );
 
-    const totalEfficiencyRow = this.calculateTotalEfficiency(
-      planProdData,
-      year,
-      month,
-      daysInMonth,
-    );
+      const totalEfficiencyRow = this.calculateTotalEfficiency(
+        planProdData,
+        year,
+        month,
+        daysInMonth,
+      );
 
-    // Row 4: ValuePlan, D/N for each day, total
-    // const header = ['ValuePlan'];
-    // for (let d = 1; d <= daysInMonth; d++) {
-    //   header.push('D');
-    //   header.push('N');
-    // }
-    // header.push('total');
-    // wsPlanProd.addRow(header);
-    // wsPlanProd.getRow(4).font = { bold: true };
+      // Add data rows
+      const sumWorkingTime = [];
+      planProdData.forEach((row, index) => {
+        const dataRow = [row.ValuePlan, ''];
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_D`;
+          const nKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_N`;
+          dataRow.push(row[dKey] ?? null);
+          dataRow.push(row[nKey] ?? null);
+          if (row.ValuePlan === 'Working Time') {
+            // Initialize sumWorkingTime if not already done
+            sumWorkingTime.push(
+              (sumWorkingTime[dKey] || 0) + (row[dKey] ?? 0) + (row[nKey] ?? 0),
+            );
+          }
+        }
+        if (index === 1) {
+          // row shift
+          const header = ['Shift', ''];
+          for (let d = 1; d <= daysInMonth; d++) {
+            header.push('D');
+            header.push('N');
+          }
+          // header.push('total');
+          const exRowShift = wsPlanProd.addRow(header);
+          exRowShift.alignment = { horizontal: 'center' };
+          exRowShift.getCell(1).alignment = { horizontal: 'left' };
+          wsPlanProd.mergeCells(exRowShift.number, 1, exRowShift.number, 2);
+        } else if (index === 3) {
+          // Insert efficiency row
+          const exRowEfficiency = wsPlanProd.addRow(efficiencyRow);
+          exRowEfficiency.alignment = { horizontal: 'center' };
+          exRowEfficiency.getCell(1).alignment = { horizontal: 'left' };
+          wsPlanProd.mergeCells(
+            exRowEfficiency.number,
+            1,
+            exRowEfficiency.number,
+            2,
+          );
 
-    // Add data rows
-    const sumWorkingTime = [];
-    planProdData.forEach((row, index) => {
-      const dataRow = [row.ValuePlan, ''];
-      for (let d = 1; d <= daysInMonth; d++) {
-        const dKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_D`;
-        const nKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_N`;
-        dataRow.push(row[dKey] ?? null);
-        dataRow.push(row[nKey] ?? null);
-        if (row.ValuePlan === 'Working Time') {
-          // Initialize sumWorkingTime if not already done
-          sumWorkingTime.push(
-            (sumWorkingTime[dKey] || 0) + (row[dKey] ?? 0) + (row[nKey] ?? 0),
+          // Insert total efficiency row
+          const exRowTotalEfficiency = wsPlanProd.addRow(totalEfficiencyRow);
+          exRowTotalEfficiency.alignment = { horizontal: 'center' };
+          exRowTotalEfficiency.getCell(1).alignment = { horizontal: 'left' };
+          wsPlanProd.mergeCells(
+            exRowTotalEfficiency.number,
+            1,
+            exRowTotalEfficiency.number,
+            2,
           );
         }
-      }
-      console.log(index);
-      if (index === 1) {
-        // row shift
-        const header = ['Shift', ''];
-        for (let d = 1; d <= daysInMonth; d++) {
-          header.push('D');
-          header.push('N');
-        }
-        // header.push('total');
-        const exRowShift = wsPlanProd.addRow(header);
-        exRowShift.alignment = { horizontal: 'center' };
-        exRowShift.getCell(1).alignment = { horizontal: 'left' };
-        wsPlanProd.mergeCells(exRowShift.number, 1, exRowShift.number, 2);
-      } else if (index === 3) {
-        // Insert efficiency row
-        const exRowEfficiency = wsPlanProd.addRow(efficiencyRow);
-        exRowEfficiency.alignment = { horizontal: 'center' };
-        exRowEfficiency.getCell(1).alignment = { horizontal: 'left' };
-        wsPlanProd.mergeCells(
-          exRowEfficiency.number,
-          1,
-          exRowEfficiency.number,
-          2,
-        );
 
-        // Insert total efficiency row
-        const exRowTotalEfficiency = wsPlanProd.addRow(totalEfficiencyRow);
-        exRowTotalEfficiency.alignment = { horizontal: 'center' };
-        exRowTotalEfficiency.getCell(1).alignment = { horizontal: 'left' };
-        wsPlanProd.mergeCells(
-          exRowTotalEfficiency.number,
-          1,
-          exRowTotalEfficiency.number,
-          2,
-        );
-      }
+        dataRow.push(row.total ?? null);
+        const exRow = wsPlanProd.addRow(dataRow);
 
-      dataRow.push(row.total ?? null);
-      const exRow = wsPlanProd.addRow(dataRow);
-
-      exRow.alignment = { horizontal: 'center' };
-      exRow.getCell(1).alignment = { horizontal: 'left' };
-      wsPlanProd.mergeCells(exRow.number, 1, exRow.number, 2);
-    });
+        exRow.alignment = { horizontal: 'center' };
+        exRow.getCell(1).alignment = { horizontal: 'left' };
+        wsPlanProd.mergeCells(exRow.number, 1, exRow.number, 2);
+      });
+    }
 
     wsPlanProd.getColumn(1).width = 15;
     wsPlanProd.getColumn(2).width = 15;
@@ -228,7 +216,6 @@ export class ReportEfficiencyOperService {
     );
 
     const workingTimeTotal = rWorkingTime ? rWorkingTime.total : 0;
-    console.log('workingTimeTotal:', workingTimeTotal);
 
     let sumLossTime = [];
     let sumTotalLossTime = 0;
@@ -274,8 +261,6 @@ export class ReportEfficiencyOperService {
     //     sumLossTime[index] === '-' ? 0 : parseFloat(sumLossTime[index]);
     // }
     sumTotalLossTime = sumLossTime[sumLossTime.length - 1] || 0;
-    console.log('sumLossTime:', sumLossTime);
-    console.log('sumTotalLossTime:', sumTotalLossTime);
 
     sumLossTime[0] = 'Loss Time';
     sumLossTime[1] = '';
@@ -375,8 +360,6 @@ export class ReportEfficiencyOperService {
       dataRow.push(D ? D.toFixed(2) : null);
       dataRow.push(N ? N.toFixed(2) : null);
     }
-
-    // console.log('dataRow:', dataRow);
 
     return dataRow;
   }
