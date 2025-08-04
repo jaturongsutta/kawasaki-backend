@@ -262,10 +262,7 @@ export class ReportEfficiencyOperService {
         const exRow = wsPlanProd.addRow(values);
         exRow.alignment = { horizontal: 'center' };
         exRow.getCell(1).alignment = { horizontal: 'left' };
-        if (
-          values[0] === 'M/C Trouble' &&
-          (values[1] === '' || values[1] === null)
-        ) {
+        if (values[1] === '' || values[1] === null) {
           wsPlanProd.mergeCells(exRow.number, 1, exRow.number, 2);
         }
       });
@@ -447,12 +444,28 @@ export class ReportEfficiencyOperService {
     // Set border and background colors for data rows
     for (let r = 4; r <= wsPlanProd.rowCount; r++) {
       for (let c = 1; c <= totalCols + 1; c++) {
-        wsPlanProd.getCell(r, c).border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' },
-        };
+        if (c > 2 && c < totalCols) {
+          if (c % 2 === 0) {
+            wsPlanProd.getCell(r, c).border = {
+              top: { style: 'thin' },
+              bottom: { style: 'thin' },
+              right: { style: 'thin' },
+            };
+          } else {
+            wsPlanProd.getCell(r, c).border = {
+              top: { style: 'thin' },
+              bottom: { style: 'thin' },
+              right: { style: 'dotted' },
+            };
+          }
+        } else {
+          wsPlanProd.getCell(r, c).border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' },
+          };
+        }
 
         // Set background colors based on row content
         const cellValue = wsPlanProd.getCell(r, 1).value;
