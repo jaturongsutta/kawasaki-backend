@@ -182,38 +182,6 @@ export class ReportEfficiencyOperService {
     wsPlanProd.getColumn(1).width = 15;
     wsPlanProd.getColumn(2).width = 15;
 
-    // // row shift
-    // const header = ['Shift', ''];
-    // for (let d = 1; d <= daysInMonth; d++) {
-    //   header.push('D');
-    //   header.push('N');
-    // }
-    // // header.push('total');
-    // const exRowShift = wsPlanProd.insertRow(5, header);
-    // wsPlanProd.getRow(5).alignment = { horizontal: 'center' };
-    // wsPlanProd.getCell(5, 1).alignment = { horizontal: 'left' };
-
-    // Insert efficiency row
-    // wsPlanProd.insertRow(8, efficiencyRow);
-
-    // Insert total efficiency row
-    // wsPlanProd.insertRow(9, totalEfficiencyRow);
-
-    // // row working time
-    // const rWorkingTime = planProdData.filter(
-    //   (row) => row.ValuePlan === 'Working Time',
-    // );
-    // rWorkingTime.forEach((row) => {
-    //   const dataRow = [row.ValuePlan];
-    //   for (let d = 1; d <= daysInMonth; d++) {
-    //     const dKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_D`;
-    //     const nKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_N`;
-    //     dataRow.push(row[dKey] ?? null);
-    //     dataRow.push(row[nKey] ?? null);
-    //   }
-    //   dataRow.push(row.total ?? null);
-    //   wsPlanProd.addRow(dataRow);
-    // });
     colIdx = startColData; // Reset column index for days
 
     for (let d = 1; d <= daysInMonth; d++) {
@@ -371,6 +339,14 @@ export class ReportEfficiencyOperService {
     // Set border
     this.setBorder(wsPlanProd, totalCols);
 
+    // Set alignment for 'Total' column to right for all rows
+    for (let r = 1; r <= wsPlanProd.rowCount; r++) {
+      // column total
+      wsPlanProd.getCell(r, totalCols).alignment = { horizontal: 'right' };
+      //column ratio
+      wsPlanProd.getCell(r, totalCols + 1).alignment = { horizontal: 'right' };
+    }
+
     const result = await workbook.xlsx.writeBuffer();
     // If running in Node.js, convert Uint8Array to Buffer for compatibility
     if (typeof Buffer !== 'undefined' && result instanceof Uint8Array) {
@@ -380,7 +356,7 @@ export class ReportEfficiencyOperService {
   }
 
   calculateEfficiency(planProdData, year, month, daysInMonth) {
-    let dataRow = ['Efficiency.(%)'];
+    let dataRow = ['Efficiency.(%)', ''];
     const rAct = planProdData.filter(
       (row) => row.ValuePlan === 'Actual Prod.plan',
     );
@@ -405,7 +381,7 @@ export class ReportEfficiencyOperService {
   }
 
   calculateTotalEfficiency(planProdData, year, month, daysInMonth) {
-    let dataRow = ['Total Efficiency.(%)'];
+    let dataRow = ['Total Efficiency.(%)', ''];
     const rAct = planProdData.filter(
       (row) => row.ValuePlan === 'Actual Prod.plan',
     );
@@ -419,8 +395,7 @@ export class ReportEfficiencyOperService {
       // dataRow[nKey] = (rAct[0][nKey] / rPlan[0][nKey]) * 100;
 
       const DN =
-        (rAct[0][dKey] + rAct[0][nKey]) /
-        (rPlan[0][dKey] + rPlan[0][nKey]) /
+        ((rAct[0][dKey] + rAct[0][nKey]) / (rPlan[0][dKey] + rPlan[0][nKey])) *
         100;
       dataRow.push(DN ? DN.toFixed(2) : null);
       dataRow.push(DN ? DN.toFixed(2) : null);
@@ -430,12 +405,24 @@ export class ReportEfficiencyOperService {
   }
 
   setBorder(wsPlanProd: ExcelJS.Worksheet, totalCols) {
-    wsPlanProd.getCell(1, 1).border = {
-      top: { style: 'thin' },
-      left: { style: 'thin' },
-      bottom: { style: 'thin' },
-      right: { style: 'thin' },
-    };
+    // Set border for row 1 from column 1 to (totalCols+1)
+    for (let c = 1; c <= totalCols + 1; c++) {
+      wsPlanProd.getCell(1, c).border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' },
+      };
+    }
+
+    for (let c = 1; c <= totalCols + 1; c++) {
+      wsPlanProd.getCell(2, c).border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' },
+      };
+    }
 
     // Set border and background color for header row 3
     for (let c = 1; c <= totalCols + 1; c++) {
