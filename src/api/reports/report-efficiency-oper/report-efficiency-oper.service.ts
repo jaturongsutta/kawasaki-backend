@@ -261,10 +261,8 @@ export class ReportEfficiencyOperService {
     const workingTimeTotal = rWorkingTime ? rWorkingTime.total : 0;
     console.log('workingTimeTotal:', workingTimeTotal);
 
-    console.log('sumWorkingTime', sumWorkingTime);
-
     let sumLossTime = [];
-
+    let sumTotalLossTime = 0;
     if (lossStopData.length > 0) {
       // wsPlanProd.addRow(Object.keys(lossStopData[0]));
       lossStopData.forEach((row) => {
@@ -289,7 +287,7 @@ export class ReportEfficiencyOperService {
         }
 
         // add ratio
-        const ratio = ((row.total / workingTimeTotal) * 100).toFixed(1) || '';
+        const ratio = ((row.total / workingTimeTotal) * 100).toFixed(2) || '';
         values.push(ratio); // Add total efficiency loss percentage
 
         const exRow = wsPlanProd.addRow(values);
@@ -300,19 +298,32 @@ export class ReportEfficiencyOperService {
         }
       });
     }
+
+    // sum Losss times
+    // for (let index = 2; index < sumLossTime.length; index++) {
+    //   sumTotalLossTime +=
+    //     sumLossTime[index] === '-' ? 0 : parseFloat(sumLossTime[index]);
+    // }
+    sumTotalLossTime = sumLossTime[sumLossTime.length - 1] || 0;
+    console.log('sumLossTime:', sumLossTime);
+    console.log('sumTotalLossTime:', sumTotalLossTime);
+
     sumLossTime[0] = 'Loss Time';
     sumLossTime[1] = '';
     const sumLossTimeRatio =
       (sumLossTime[sumLossTime.length - 1] / workingTimeTotal) * 100;
 
-    sumLossTime.push(sumLossTimeRatio);
+    sumLossTime.push(sumLossTimeRatio.toFixed(2) || '');
     const exRowLoss = wsPlanProd.addRow(sumLossTime);
+    exRowLoss.alignment = { horizontal: 'center' };
+
     exRowLoss.getCell(1).font = { bold: true };
+    exRowLoss.getCell(1).alignment = { horizontal: 'left' };
     wsPlanProd.mergeCells(exRowLoss.number, 1, exRowLoss.number, 2);
 
     // 5	ข้อมูล Total Efficiency loss.(%) มาจาก =(Loss time กะ D + Loss Time กะ N )/(Working Time กะ D +Working Time กะ N)
     // Add Total Efficiency loss (%) row
-    let totalEfficiencyLossRow = ['Total Efficiency loss (%)', ''];
+    const totalEfficiencyLossRow = ['Total Efficiency loss (%)', ''];
 
     for (let d = 1; d <= daysInMonth; d++) {
       const dKey = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}_D`;
@@ -329,7 +340,11 @@ export class ReportEfficiencyOperService {
       totalEfficiencyLossRow.push(effLoss ? effLoss.toFixed(2) : null);
       totalEfficiencyLossRow.push(effLoss ? effLoss.toFixed(2) : null);
     }
-    totalEfficiencyLossRow.push(sumLossTimeRatio.toString());
+    // totalEfficiencyLossRow.push(sumLossTimeRatio.toString());
+
+    const calTotalLossTime = (sumTotalLossTime / workingTimeTotal) * 100;
+    totalEfficiencyLossRow.push(calTotalLossTime.toFixed(2));
+
     const exRowTotalEfficiencyLoss = wsPlanProd.addRow(totalEfficiencyLossRow);
     wsPlanProd.mergeCells(
       exRowTotalEfficiencyLoss.number,
@@ -422,7 +437,7 @@ export class ReportEfficiencyOperService {
       right: { style: 'thin' },
     };
 
-    // Set border for header row 3
+    // Set border and background color for header row 3
     for (let c = 1; c <= totalCols + 1; c++) {
       wsPlanProd.getCell(3, c).border = {
         top: { style: 'thin' },
@@ -430,9 +445,15 @@ export class ReportEfficiencyOperService {
         bottom: { style: 'thin' },
         right: { style: 'thin' },
       };
+      // Set green background for header row
+      wsPlanProd.getCell(3, c).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FCE9DB' }, // Light green
+      };
     }
 
-    // Set border for row data
+    // Set border and background colors for data rows
     for (let r = 4; r <= wsPlanProd.rowCount; r++) {
       for (let c = 1; c <= totalCols + 1; c++) {
         wsPlanProd.getCell(r, c).border = {
@@ -441,6 +462,50 @@ export class ReportEfficiencyOperService {
           bottom: { style: 'thin' },
           right: { style: 'thin' },
         };
+
+        // Set background colors based on row content
+        const cellValue = wsPlanProd.getCell(r, 1).value;
+        if (cellValue === 'Shift') {
+          // Light gray for shift and loss efficiency header rows
+          wsPlanProd.getCell(r, c).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FCE9DB' }, // Light gray
+          };
+        } else if (cellValue === 'Loss Efficiency (Min)') {
+          // Light gray for shift and loss efficiency header rows
+          wsPlanProd.getCell(r, c).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD9D9D9' }, // Light gray
+          };
+        } else if (cellValue === 'Efficiency.(%)') {
+          // Light blue for efficiency rows
+          wsPlanProd.getCell(r, c).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'B7DDEA' }, // Light blue
+          };
+        } else if (cellValue === 'Total Efficiency.(%)') {
+          wsPlanProd.getCell(r, c).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFFD02' }, // Light blue
+          };
+        } else if (cellValue === 'Efficiency Target.(%)') {
+          wsPlanProd.getCell(r, c).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'DCE6F0' }, // Light blue
+          };
+        } else if (cellValue === 'Total Efficiency loss (%)') {
+          // Light yellow for total efficiency loss
+          wsPlanProd.getCell(r, c).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFFFFF00' }, // Light yellow
+          };
+        }
       }
     }
   }
