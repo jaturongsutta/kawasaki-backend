@@ -93,6 +93,7 @@ export class ReportEfficiencyOperService {
     wsPlanProd.getRow(3).alignment = { horizontal: 'center' };
 
     wsPlanProd.getCell(3, totalCols + 1).value = 'Ratio';
+    wsPlanProd.getColumn(totalCols + 1).width = 10;
 
     const efficiencyRow = this.calculateEfficiency(
       planProdData,
@@ -261,7 +262,10 @@ export class ReportEfficiencyOperService {
         const exRow = wsPlanProd.addRow(values);
         exRow.alignment = { horizontal: 'center' };
         exRow.getCell(1).alignment = { horizontal: 'left' };
-        if (values[0] !== 'M/C Trouble' && values[1] === '') {
+        if (
+          values[0] === 'M/C Trouble' &&
+          (values[1] === '' || values[1] === null)
+        ) {
           wsPlanProd.mergeCells(exRow.number, 1, exRow.number, 2);
         }
       });
