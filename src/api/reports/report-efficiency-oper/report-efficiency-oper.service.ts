@@ -159,6 +159,12 @@ export class ReportEfficiencyOperService {
           );
         }
 
+        for (let i = 2; i < dataRow.length; i++) {
+          if (dataRow[0] === 'Efficiency Target.(%)') {
+            dataRow[i] = dataRow[i] ? dataRow[i].toFixed(2) + '%' : null;
+          }
+        }
+
         dataRow.push(row.total ?? null);
         const exRow = wsPlanProd.addRow(dataRow);
 
@@ -226,9 +232,10 @@ export class ReportEfficiencyOperService {
         const values = Object.values(row).map((value) =>
           value === null || value === undefined ? '-' : value,
         );
-        if (values[0] === 'M/C Trouble' && values[1] !== '') {
-          values[0] = '';
-        }
+
+        // if (values[0] === 'M/C Trouble' && values[1] !== '') {
+        //   values[0] = '';
+        // }
 
         // values.forEach((value, index) => {
         //   sumLossTime[index] =
@@ -237,19 +244,24 @@ export class ReportEfficiencyOperService {
 
         for (let index = 0; index < values.length; index++) {
           if (index === 0 || index === 1) continue; // Skip first two columns
+
           sumLossTime[index] =
             (sumLossTime[index] || 0) +
             (values[index] === '-' ? 0 : values[index]);
         }
 
         // add ratio
-        const ratio = ((row.total / workingTimeTotal) * 100).toFixed(2) || '';
+        const ratio =
+          ((row.total / workingTimeTotal) * 100).toFixed(2) + '%' || '';
         values.push(ratio); // Add total efficiency loss percentage
 
         const exRow = wsPlanProd.addRow(values);
         exRow.alignment = { horizontal: 'center' };
         exRow.getCell(1).alignment = { horizontal: 'left' };
-        if (values[1] === '' || values[1] === null) {
+        if (
+          (values[1] === '' || values[1] === null) &&
+          values[0] !== 'M/C Trouble'
+        ) {
           wsPlanProd.mergeCells(exRow.number, 1, exRow.number, 2);
         }
       });
@@ -267,7 +279,7 @@ export class ReportEfficiencyOperService {
     const sumLossTimeRatio =
       (sumLossTime[sumLossTime.length - 1] / workingTimeTotal) * 100;
 
-    sumLossTime.push(sumLossTimeRatio.toFixed(2) || '');
+    sumLossTime.push(sumLossTimeRatio.toFixed(2) + '%' || '');
     const exRowLoss = wsPlanProd.addRow(sumLossTime);
     exRowLoss.alignment = { horizontal: 'center' };
 
@@ -291,13 +303,13 @@ export class ReportEfficiencyOperService {
       if (workD + workN > 0) {
         effLoss = ((lossD + lossN) / (workD + workN)) * 100;
       }
-      totalEfficiencyLossRow.push(effLoss ? effLoss.toFixed(2) : null);
-      totalEfficiencyLossRow.push(effLoss ? effLoss.toFixed(2) : null);
+      totalEfficiencyLossRow.push(effLoss ? effLoss.toFixed(2) + '%' : null);
+      totalEfficiencyLossRow.push(effLoss ? effLoss.toFixed(2) + '%' : null);
     }
     // totalEfficiencyLossRow.push(sumLossTimeRatio.toString());
 
     const calTotalLossTime = (sumTotalLossTime / workingTimeTotal) * 100;
-    totalEfficiencyLossRow.push(calTotalLossTime.toFixed(2));
+    totalEfficiencyLossRow.push(calTotalLossTime.toFixed(2) + '%' || '');
 
     const exRowTotalEfficiencyLoss = wsPlanProd.addRow(totalEfficiencyLossRow);
     wsPlanProd.mergeCells(
@@ -357,8 +369,8 @@ export class ReportEfficiencyOperService {
 
       const D = rPlan[0][dKey] ? (rAct[0][dKey] / rPlan[0][dKey]) * 100 : 0;
       const N = rPlan[0][nKey] ? (rAct[0][nKey] / rPlan[0][nKey]) * 100 : 0;
-      dataRow.push(D ? D.toFixed(2) : null);
-      dataRow.push(N ? N.toFixed(2) : null);
+      dataRow.push(D ? D.toFixed(2) + '%' : null);
+      dataRow.push(N ? N.toFixed(2) + '%' : null);
     }
 
     return dataRow;
@@ -381,8 +393,8 @@ export class ReportEfficiencyOperService {
       const DN =
         ((rAct[0][dKey] + rAct[0][nKey]) / (rPlan[0][dKey] + rPlan[0][nKey])) *
         100;
-      dataRow.push(DN ? DN.toFixed(2) : null);
-      dataRow.push(DN ? DN.toFixed(2) : null);
+      dataRow.push(DN ? DN.toFixed(2) + '%' : null);
+      dataRow.push(DN ? DN.toFixed(2) + '%' : null);
     }
 
     return dataRow;
