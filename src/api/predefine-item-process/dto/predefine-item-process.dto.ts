@@ -7,6 +7,8 @@ export class PredefineDto extends BaseDto {
 
   predefineItemCd: string;
 
+  machineNo: string;
+
   processCd: string;
 
   isActive: string;

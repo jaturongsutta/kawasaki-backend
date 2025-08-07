@@ -17,7 +17,7 @@ export class PredefineItemProcessService {
     @InjectRepository(PredefineItemMachine)
     private predefineRepository: Repository<PredefineItemMachine>,
     private commonService: CommonService,
-  ) {}
+  ) { }
 
   async getDropDownPredefindGroup() {
     const sql = `select distinct predefine_group from co_predefine where Predefine_Group in ('NG_Reason','Stop_Reason')   `;
@@ -42,9 +42,11 @@ export class PredefineItemProcessService {
   async search(dto: PredefineItemSearchDto) {
     try {
       const req = await this.commonService.getConnection();
+      req.input('Line_CD', dto.lineCd);
       req.input('Predefine_Group', dto.predefineGroup);
       req.input('Predefine_CD', dto.predefineCd);
       req.input('Process_CD', dto.processCd);
+      req.input('Machine_No', dto.machineNo);
       req.input('Value_TH', dto.valueTH);
       req.input('Value_EN', dto.valueEN);
       req.input('Is_Active', dto.isActive);
@@ -65,9 +67,10 @@ export class PredefineItemProcessService {
   async findOne(
     processCd: string,
     predefineItemCd: string,
+    machineNo: string,
   ): Promise<PredefineItemMachine> {
     const predefine = await this.predefineRepository.findOne({
-      where: { processCd: processCd, predefineItemCd },
+      where: { processCd: processCd, predefineItemCd, machineNo },
     });
     if (!predefine) {
       throw new NotFoundException(`Item not found`);
@@ -84,8 +87,11 @@ export class PredefineItemProcessService {
 
       console.log('Create Predefine item process', dto);
       const dbData = await this.predefineRepository.findOneBy({
+        predefineGroup: dto.predefineGroup,
+        predefineCd: dto.predefineCd,
         predefineItemCd: dto.predefineItemCd,
         processCd: dto.processCd,
+        machineNo: dto.machineNo
       });
       if (dbData) {
         return {
@@ -110,6 +116,7 @@ export class PredefineItemProcessService {
   async update(
     processCd: string,
     predefineItemCd: string,
+    machineNo: string,
     predefineDto: PredefineDto,
     userId: number,
   ): Promise<BaseResponse> {
@@ -117,11 +124,13 @@ export class PredefineItemProcessService {
     const team = await this.predefineRepository.findOneBy({
       predefineItemCd: predefineDto.predefineItemCd,
       processCd: predefineDto.processCd,
+      machineNo: predefineDto.machineNo
     });
     if (team) {
       if (
         team.processCd !== processCd ||
-        team.predefineItemCd !== predefineItemCd
+        team.predefineItemCd !== predefineItemCd ||
+        team.machineNo !== machineNo
       ) {
         return {
           status: 2,
@@ -134,11 +143,13 @@ export class PredefineItemProcessService {
       {
         processCd: processCd,
         predefineItemCd: predefineItemCd,
+        machineNo: machineNo
       },
       {
         predefineGroup: predefineDto.predefineGroup,
         predefineCd: predefineDto.predefineCd,
         predefineItemCd: predefineDto.predefineItemCd,
+        machineNo: predefineDto.machineNo,
         processCd: predefineDto.processCd,
         isActive: predefineDto.isActive,
         updateBy: userId,
@@ -162,6 +173,7 @@ export class PredefineItemProcessService {
     lineCd: string = 'CYH#6',
     predefineGroup?: string,
     predefineCd?: string,
+    machineNo?: string,
     processCd?: string,
     valueEN?: string,
     valueTH?: string,
@@ -172,6 +184,7 @@ export class PredefineItemProcessService {
       req.input('Line_CD', lineCd);
       req.input('Predefine_Group', predefineGroup);
       req.input('Predefine', predefineCd);
+      req.input('Machine_No', machineNo);
       req.input('Process_CD', processCd);
       req.input('Value_EN', valueEN);
       req.input('Value_TH', valueTH);
@@ -281,9 +294,9 @@ export class PredefineItemProcessService {
         // Dynamic title based on predefineGroup
         let title = 'QR Code Downtime List';
         if (predefineGroup === 'NG_Reason') {
-          title = `QR Code (NG List)`;
+          title = `QR Code (NG List FOR ${lineCd})`;
         } else {
-          title = `QR Code (Line Stop)`;
+          title = `QR Code (Line Stop FOR ${lineCd})`;
         }
 
         // Add title
@@ -374,9 +387,9 @@ export class PredefineItemProcessService {
           // Create group-specific title
           let groupTitle = 'QR Code Downtime List';
           if (predefineGroup === 'NG_Reason') {
-            groupTitle = `QR Code (NG List)`;
+            groupTitle = `QR Code (NG List FOR ${lineCd})`;
           } else if (predefineGroup === 'Stop_Reason') {
-            groupTitle = `QR Code (Line Stop)`;
+            groupTitle = `QR Code (Line Stop FOR ${lineCd})`;
           }
 
           // Start new page for each group (except the first one)
@@ -543,7 +556,7 @@ export class PredefineItemProcessService {
                   startIndex + qrCodesPerRow < processItems.length || // More items in current process
                   processCodes.indexOf(processCode) < processCodes.length - 1 || // More processes in current group
                   predefineGroups.indexOf(predefineGroup) <
-                    predefineGroups.length - 1; // More groups
+                  predefineGroups.length - 1; // More groups
 
                 if (hasMoreItems) {
                   doc.addPage();

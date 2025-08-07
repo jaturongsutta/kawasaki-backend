@@ -61,13 +61,14 @@ export class PredefineItemProcessController extends BaseController {
     return res.status(200).json(predefines);
   }
 
-  @Get('/:processCd/:predefineItemCd')
+  @Get('/:processCd/:predefineItemCd/:machineNo')
   async findOne(
     @Param('processCd') processCd: string,
     @Param('predefineItemCd') predefineItemCd: string,
+    @Param('machineNo') machineNo: string,
     @Res() res: Response,
   ) {
-    const predefine = await this.service.findOne(processCd, predefineItemCd);
+    const predefine = await this.service.findOne(processCd, predefineItemCd, machineNo);
     return res.status(200).json(predefine);
   }
 
@@ -81,10 +82,11 @@ export class PredefineItemProcessController extends BaseController {
     return res.status(201).json(predefine);
   }
 
-  @Put('/:processCd/:predefineItemCd')
+  @Put('/:processCd/:predefineItemCd/:machineNo')
   async update(
     @Param('processCd') processCd: string,
     @Param('predefineItemCd') predefineItemCd: string,
+    @Param('machineNo') machineNo: string,
     @Body() predefineDto: PredefineDto,
     @Request() req,
     @Res() res: Response,
@@ -92,6 +94,7 @@ export class PredefineItemProcessController extends BaseController {
     const updatedPredefine = await this.service.update(
       processCd,
       predefineItemCd,
+      machineNo,
       predefineDto,
       req.user.userId,
     );
@@ -105,6 +108,7 @@ export class PredefineItemProcessController extends BaseController {
       lineCd?: string;
       predefineGroup?: string;
       predefineCd?: string;
+      machineNo?: string,
       processCd?: string;
       valueEN?: string;
       valueTH?: string;
@@ -116,6 +120,7 @@ export class PredefineItemProcessController extends BaseController {
       exportParams.lineCd,
       exportParams.predefineGroup,
       exportParams.predefineCd,
+      exportParams.machineNo,
       exportParams.processCd,
       exportParams.valueEN,
       exportParams.valueTH,
