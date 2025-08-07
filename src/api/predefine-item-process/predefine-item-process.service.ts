@@ -281,9 +281,9 @@ export class PredefineItemProcessService {
         // Dynamic title based on predefineGroup
         let title = 'QR Code Downtime List';
         if (predefineGroup === 'NG_Reason') {
-          title = `QR Code (NG List For ${lineCd || 'N/A'})`;
+          title = `QR Code (NG List)`;
         } else {
-          title = `QR Code (Line Stop List For ${lineCd || 'N/A'})`;
+          title = `QR Code (Line Stop)`;
         }
 
         // Add title
@@ -374,9 +374,9 @@ export class PredefineItemProcessService {
           // Create group-specific title
           let groupTitle = 'QR Code Downtime List';
           if (predefineGroup === 'NG_Reason') {
-            groupTitle = `QR Code (NG List For ${lineCd || 'N/A'})`;
+            groupTitle = `QR Code (NG List)`;
           } else if (predefineGroup === 'Stop_Reason') {
-            groupTitle = `QR Code (Line Stop List For ${lineCd || 'N/A'})`;
+            groupTitle = `QR Code (Line Stop)`;
           }
 
           // Start new page for each group (except the first one)
