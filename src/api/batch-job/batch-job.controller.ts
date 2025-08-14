@@ -146,7 +146,7 @@ export class BatchJobController extends BaseController {
       const result = await this.service.processHandheldInfoAlertToollife();
       this.writeBatchLog(JSON.stringify(result), 'Handheld');
     } catch (error) {
-      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), ''); // Log error
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'Handheld'); // Log error
     }
   }
 
