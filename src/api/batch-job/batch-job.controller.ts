@@ -118,7 +118,7 @@ export class BatchJobController extends BaseController {
         await this.service.processLineCYH6_sp_MappedMES_CYH6_003();
       this.writeBatchLog(JSON.stringify(result3), 'CYH6'); // Log job completion
     } catch (error) {
-      this.writeBatchLog('[ERROR] ' + error.message, 'CYH6'); // Log error
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'CYH6'); // Log error
     }
   }
 
@@ -136,7 +136,17 @@ export class BatchJobController extends BaseController {
         await this.service.processLineCYH7_sp_MappedMES_CYH7_003();
       this.writeBatchLog(JSON.stringify(result3), 'CYH7'); // Log job completion
     } catch (error) {
-      this.writeBatchLog('[ERROR] ' + error.message, 'CYH7'); // Log error
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'CYH7'); // Log error
+    }
+  }
+
+  @Cron('* * * * * 5')
+  async Job_handheld_InfoAlert_Toollife() {
+    try {
+      const result = await this.service.processHandheldInfoAlertToollife();
+      this.writeBatchLog(JSON.stringify(result), 'Handheld');
+    } catch (error) {
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), ''); // Log error
     }
   }
 

@@ -170,4 +170,23 @@ export class BatchJobService {
       };
     }
   }
+
+  // sp_handheld_InfoAlert_Toollife
+  async processHandheldInfoAlertToollife() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_handheld_InfoAlert_Toollife');
+      return {
+        process: 'sp_handheld_InfoAlert_Toollife',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_handheld_InfoAlert_Toollife',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
 }
