@@ -140,7 +140,7 @@ export class BatchJobController extends BaseController {
     }
   }
 
-  @Cron('* * * * * 5')
+  @Cron('*/5 * * * *') // every 5 minutes
   async Job_handheld_InfoAlert_Toollife() {
     try {
       const result = await this.service.processHandheldInfoAlertToollife();
