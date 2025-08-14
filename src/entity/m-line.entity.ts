@@ -1,4 +1,4 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 
 @Index('PK_M_Line', ['lineCd'], { unique: true })
 @Entity('M_Line', { schema: 'dbo' })
@@ -8,6 +8,14 @@ export class MLine {
 
   @Column('nvarchar', { name: 'Line_Name', nullable: true, length: 50 })
   lineName: string | null;
+
+  @Column('decimal', {
+    name: 'Efficiency_Percent',
+    nullable: true,
+    precision: 5,
+    scale: 2,
+  })
+  efficiencyPercent: number | null;
 
   @Column('nvarchar', { name: 'PK_CD', nullable: true, length: 10 })
   pkCd: string | null;

@@ -3,6 +3,7 @@ import { BaseDto } from 'src/common/base-dto';
 export class LineDto extends BaseDto {
   lineCd: string;
   lineName?: string | null;
+  efficiencyPercent?: number | null;
   pkCd?: string | null;
   isActive?: string | null;
   createdDate?: string | null;

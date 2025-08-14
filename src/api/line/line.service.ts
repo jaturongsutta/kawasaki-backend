@@ -58,6 +58,7 @@ export class LineService {
       // Map MLine to LineDto
       dto.lineCd = line.lineCd;
       dto.lineName = line.lineName;
+      dto.efficiencyPercent = line.efficiencyPercent;
       dto.pkCd = line.pkCd;
       dto.isActive = line.isActive;
       dto.createdDate = toLocalDateTime(line.createdDate);
@@ -260,6 +261,7 @@ export class LineService {
       const mLine = new MLine();
       mLine.lineCd = data.lineCd;
       mLine.lineName = data.lineName;
+      mLine.efficiencyPercent = data.efficiencyPercent;
       mLine.pkCd = data.pkCd;
       mLine.isActive = data.isActive;
       mLine.createdBy = userId;
@@ -313,6 +315,9 @@ export class LineService {
       if (!line) {
         throw new Error('Line not found');
       }
+
+      line.lineName = data.lineName;
+      line.efficiencyPercent = data.efficiencyPercent;
       line.updatedBy = userId;
       line.updatedDate = getCurrentDate();
 
