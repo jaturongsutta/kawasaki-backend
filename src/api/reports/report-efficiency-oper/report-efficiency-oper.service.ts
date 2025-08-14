@@ -7,6 +7,13 @@ import * as ExcelJS from 'exceljs';
 export class ReportEfficiencyOperService {
   constructor(private commonService: CommonService) {}
 
+  // Helper function to truncate decimal places without rounding
+  private truncateToDecimals(value: number, decimals: number): string {
+    const multiplier = Math.pow(10, decimals);
+    const truncated = Math.trunc(value * multiplier) / multiplier;
+    return truncated.toFixed(decimals);
+  }
+
   async exportExcel(query: any): Promise<any> {
     const workbook = new ExcelJS.Workbook();
     // Get params from query or use default
@@ -161,7 +168,9 @@ export class ReportEfficiencyOperService {
 
         for (let i = 2; i < dataRow.length; i++) {
           if (dataRow[0] === 'Efficiency Target.(%)') {
-            dataRow[i] = dataRow[i] ? dataRow[i].toFixed(2) + '%' : null;
+            dataRow[i] = dataRow[i]
+              ? this.truncateToDecimals(dataRow[i], 2) + '%'
+              : null;
           }
         }
 
@@ -193,7 +202,7 @@ export class ReportEfficiencyOperService {
     }
 
     // row shift
-    let row = ['Loss Efficiency (Min)', ''];
+    const row = ['Loss Efficiency (Min)', ''];
     for (let d = 1; d <= daysInMonth; d++) {
       row.push('D');
       row.push('N');
@@ -223,7 +232,7 @@ export class ReportEfficiencyOperService {
 
     const workingTimeTotal = rWorkingTime ? rWorkingTime.total : 0;
 
-    let sumLossTime = [];
+    const sumLossTime = [];
     let sumTotalLossTime = 0;
     if (lossStopData.length > 0) {
       // wsPlanProd.addRow(Object.keys(lossStopData[0]));
@@ -252,7 +261,8 @@ export class ReportEfficiencyOperService {
 
         // add ratio
         const ratio =
-          ((row.total / workingTimeTotal) * 100).toFixed(2) + '%' || '';
+          this.truncateToDecimals((row.total / workingTimeTotal) * 100, 2) +
+            '%' || '';
         values.push(ratio); // Add total efficiency loss percentage
 
         const exRow = wsPlanProd.addRow(values);
@@ -279,7 +289,7 @@ export class ReportEfficiencyOperService {
     const sumLossTimeRatio =
       (sumLossTime[sumLossTime.length - 1] / workingTimeTotal) * 100;
 
-    sumLossTime.push(sumLossTimeRatio.toFixed(2) + '%' || '');
+    sumLossTime.push(this.truncateToDecimals(sumLossTimeRatio, 2) + '%' || '');
     const exRowLoss = wsPlanProd.addRow(sumLossTime);
     exRowLoss.alignment = { horizontal: 'center' };
 
@@ -303,13 +313,19 @@ export class ReportEfficiencyOperService {
       if (workD + workN > 0) {
         effLoss = ((lossD + lossN) / (workD + workN)) * 100;
       }
-      totalEfficiencyLossRow.push(effLoss ? effLoss.toFixed(2) + '%' : null);
-      totalEfficiencyLossRow.push(effLoss ? effLoss.toFixed(2) + '%' : null);
+      totalEfficiencyLossRow.push(
+        effLoss ? this.truncateToDecimals(effLoss, 2) + '%' : null,
+      );
+      totalEfficiencyLossRow.push(
+        effLoss ? this.truncateToDecimals(effLoss, 2) + '%' : null,
+      );
     }
     // totalEfficiencyLossRow.push(sumLossTimeRatio.toString());
 
     const calTotalLossTime = (sumTotalLossTime / workingTimeTotal) * 100;
-    totalEfficiencyLossRow.push(calTotalLossTime.toFixed(2) + '%' || '');
+    totalEfficiencyLossRow.push(
+      this.truncateToDecimals(calTotalLossTime, 2) + '%' || '',
+    );
 
     const exRowTotalEfficiencyLoss = wsPlanProd.addRow(totalEfficiencyLossRow);
     wsPlanProd.mergeCells(
@@ -354,7 +370,7 @@ export class ReportEfficiencyOperService {
   }
 
   calculateEfficiency(planProdData, year, month, daysInMonth) {
-    let dataRow = ['Efficiency.(%)', ''];
+    const dataRow = ['Efficiency.(%)', ''];
     const rAct = planProdData.filter(
       (row) => row.ValuePlan === 'Actual Prod.plan',
     );
@@ -369,15 +385,15 @@ export class ReportEfficiencyOperService {
 
       const D = rPlan[0][dKey] ? (rAct[0][dKey] / rPlan[0][dKey]) * 100 : 0;
       const N = rPlan[0][nKey] ? (rAct[0][nKey] / rPlan[0][nKey]) * 100 : 0;
-      dataRow.push(D ? D.toFixed(2) + '%' : null);
-      dataRow.push(N ? N.toFixed(2) + '%' : null);
+      dataRow.push(D ? this.truncateToDecimals(D, 2) + '%' : null);
+      dataRow.push(N ? this.truncateToDecimals(N, 2) + '%' : null);
     }
 
     return dataRow;
   }
 
   calculateTotalEfficiency(planProdData, year, month, daysInMonth) {
-    let dataRow = ['Total Efficiency.(%)', ''];
+    const dataRow = ['Total Efficiency.(%)', ''];
     const rAct = planProdData.filter(
       (row) => row.ValuePlan === 'Actual Prod.plan',
     );
@@ -393,8 +409,8 @@ export class ReportEfficiencyOperService {
       const DN =
         ((rAct[0][dKey] + rAct[0][nKey]) / (rPlan[0][dKey] + rPlan[0][nKey])) *
         100;
-      dataRow.push(DN ? DN.toFixed(2) + '%' : null);
-      dataRow.push(DN ? DN.toFixed(2) + '%' : null);
+      dataRow.push(DN ? this.truncateToDecimals(DN, 2) + '%' : null);
+      dataRow.push(DN ? this.truncateToDecimals(DN, 2) + '%' : null);
     }
 
     return dataRow;
