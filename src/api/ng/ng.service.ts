@@ -63,6 +63,14 @@ export class NGService {
     async add(data: NGDto, userId: number): Promise<BaseResponse> {
         const queryRunner = this.dataSource.createQueryRunner();
         try {
+             const checkStopDateTime = await this.validateNGStopDateTime(data.planId, data);
+            if (checkStopDateTime.output[''] > 0) {
+                return {
+                    status: 1,
+                    message: 'กรุณาตรวจสอบ<br>ช่วงเวลา NG ไม่อยู่ในช่วงเวลา Plan Start and Stop time'
+                };
+            }
+
             data.createdBy = data.updatedBy = userId;
             data.createdDate = data.updatedDate = getCurrentDate();
             data.ngTime = minuteToTime(data.ngTime);
@@ -104,6 +112,14 @@ export class NGService {
     ): Promise<BaseResponse> {
         const queryRunner = this.dataSource.createQueryRunner();
         try {
+            const checkStopDateTime = await this.validateNGStopDateTime(data.planId, data);
+            if (checkStopDateTime.output[''] > 0) {
+                return {
+                    status: 1,
+                    message: 'กรุณาตรวจสอบ<br>ช่วงเวลา NG ไม่อยู่ในช่วงเวลา Plan Start and Stop time'
+                };
+            }
+
             data.updatedBy = userId;
             data.updatedDate = getCurrentDate();
             data.ngTime = minuteToTime(data.ngTime);
@@ -173,6 +189,18 @@ export class NGService {
                 req,
             );
         }
+    }
+
+    async validateNGStopDateTime(id: string, data: NGDto) {
+        console.log("validateNGStopDateTime")
+        const req = await this.commonService.getConnection();
+        req.input('line', data.lineCd);
+        req.input('NGStop_DT', `${data.ngDate} ${data.ngTime}`);
+        req.input('id', id);
+        return await this.commonService.executeStoreProcedure(
+            'fn_chk_NGStop_Datetime',
+            req,
+        );
     }
 
     async updateProdPlan(
