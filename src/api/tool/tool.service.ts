@@ -29,7 +29,7 @@ export class ToolService {
         return await this.commonService.getSearch('sp_m_Search_Tool', req);
     }
 
-    async getById(processCd: string, id: string): Promise<any> {
+    async getById(machineNo: string, processCd: string, id: string): Promise<any> {
         try {
             const r = await this.toolRepository
                 .createQueryBuilder('t')
@@ -49,9 +49,11 @@ export class ToolService {
                     'u.username as updatedBy',
                     't.UPDATED_DATE as updatedDate'
                 ])
-                .where(`t.processCd = '${processCd}'`)
+                .where(`t.machineNo = '${machineNo}'`)
+                .andWhere(`t.processCd = '${processCd}'`)
                 .andWhere(`t.hCode = '${id}'`)
                 .getRawOne();
+
             if (!r) {
                 return {
                     status: 2,
@@ -104,7 +106,7 @@ export class ToolService {
 
     async resetTool(data: ToolHistoryDto, userId: Number): Promise<BaseResponse> {
         try {
-            const tool = await this.toolRepository.findOneBy({ processCd: data.Process_CD, hCode: data.H_Code });
+            const tool = await this.toolRepository.findOneBy({ processCd: data.Process_CD, hCode: data.H_Code, machineNo: data.machineNo });
             if (!tool) {
                 return {
                     status: 2,
@@ -119,7 +121,8 @@ export class ToolService {
                 var r = await this.toolRepository.update(
                     {
                         hCode: data.H_Code,
-                        processCd: data.Process_CD
+                        processCd: data.Process_CD,
+                        machineNo: data.machineNo
                     },
                     {
                         actualAmt: null,
@@ -163,7 +166,8 @@ export class ToolService {
 
             const result = await queryRunner.manager.update(MTool, {
                 hCode: id,
-                processCd: data.processCd
+                processCd: data.processCd,
+                machineNo: data.machineNo
             }, data);
             await queryRunner.commitTransaction();
             if (result) {

@@ -15,6 +15,8 @@ export class ToolDto {
 
   hCode: string;
 
+  machineNo: string;
+
   @IsNotEmpty()
   toolCd: string;
 
@@ -51,6 +53,7 @@ export class ToolHistoryDto {
   @IsNotEmpty()
   @MaxLength(20)
   H_Code: string;
+  machineNo: string;
 
   Process_CD: string;
 
