@@ -101,6 +101,8 @@ export class BatchJobController extends BaseController {
       this.Job_Line_CYH6();
 
       this.Job_Line_CYH7();
+
+      this.Job_Line_CRC9();
     }
   }
 
@@ -137,6 +139,24 @@ export class BatchJobController extends BaseController {
       this.writeBatchLog(JSON.stringify(result3), 'CYH7'); // Log job completion
     } catch (error) {
       this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'CYH7'); // Log error
+    }
+  }
+
+  async Job_Line_CRC9() {
+    try {
+      this.writeBatchLog('Job_Line_CRC9 started', 'CRC9'); // Log job start
+
+      const result = await this.service.processLineCRC9_sp_AutoStart_CRC9();
+      this.writeBatchLog(JSON.stringify(result), 'CRC9'); // Log job completion
+
+      const result2 = await this.service.processLineCRC9_sp_MappedMES_CRC9();
+      this.writeBatchLog(JSON.stringify(result2), 'CRC9'); // Log job completion
+
+      const result3 =
+        await this.service.processLineCRC9_sp_MappedMES_CRC9_003();
+      this.writeBatchLog(JSON.stringify(result3), 'CRC9'); // Log job completion
+    } catch (error) {
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'CRC9'); // Log error
     }
   }
 

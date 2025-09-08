@@ -171,6 +171,64 @@ export class BatchJobService {
     }
   }
 
+
+  // process Line_CRC9
+  // sp_AutoStart_CRC9
+  // sp_MappedMES_CRC9
+  // sp_MappedMES_CRC9_003
+  async processLineCRC9_sp_AutoStart_CRC9() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_AutoStart_CRC9');
+      return {
+        process: 'sp_AutoStart_CRC9',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_AutoStart_CRC9',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+  async processLineCRC9_sp_MappedMES_CRC9() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_CRC9');
+      return {
+        process: 'sp_MappedMES_CRC9',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_CRC9',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+  async processLineCRC9_sp_MappedMES_CRC9_003() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_CRC9_003');
+
+      return {
+        process: 'sp_MappedMES_CRC9_003',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_CRC9_003',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
   // sp_handheld_InfoAlert_Toollife
   async processHandheldInfoAlertToollife() {
     try {
