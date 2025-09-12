@@ -205,8 +205,7 @@ export class PlanService {
   async getLineModel(line: string) {
     try {
       const qry = `
-            select lm.Model_CD, m.Product_CD, m.Part_No, m.Part_Upper, m.Part_Lower, CONVERT(VARCHAR(8), CAST(m.Cycle_Time AS DATETIME), 108) Cycle_Time ,m.AS400_Product_CD  from M_Line_Model lm
-            inner join M_Model m on lm.model_cd = m.model_cd
+            select lm.Model_CD, lm.Product_CD, lm.Part_No, lm.Part_Upper, lm.Part_Lower, CONVERT(VARCHAR(8), CAST(lm.Cycle_Time AS DATETIME), 108) Cycle_Time ,lm.AS400_Product_CD  from M_Line_Model lm
             where Line_CD = '${line}'`;
       const data = await this.commonService.executeQuery(qry);
       return data;
