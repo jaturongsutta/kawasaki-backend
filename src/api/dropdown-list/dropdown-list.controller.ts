@@ -125,7 +125,7 @@ export class DropdownListController extends BaseController {
       'line_cd',
       '',
       '',
-      ['Line_CD lineCd', 'Line_Name lineName', 'PK_CD pkCd'],
+      ['Line_CD lineCd', 'Line_Name lineName', 'PK_CD pkCd', 'Efficiency_Percent efficiency_percent'],
     );
   }
 

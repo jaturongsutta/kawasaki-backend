@@ -42,4 +42,5 @@ export class PlanInfoDto extends BaseDto {
   partUpper: any;
   partLower: any;
   productName: any;
+  efficiency_percent?: number | null;
 }

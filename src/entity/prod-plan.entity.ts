@@ -98,4 +98,12 @@ export class ProdPlan {
 
   @Column('int', { name: 'UPDATED_BY', nullable: true })
   updatedBy: number | null;
+
+  @Column("decimal", {
+    name: "Efficiency_Percent",
+    nullable: true,
+    precision: 5,
+    scale: 2,
+  })
+  efficiencyPercent: number | null;
 }

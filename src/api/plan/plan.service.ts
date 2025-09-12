@@ -99,6 +99,8 @@ export class PlanService {
       planInfo.partUpper = item.Part_Upper;
       planInfo.partLower = item.Part_Lower;
 
+      planInfo.efficiency_percent = item.efficiency_percent;
+
       return planInfo;
     } catch (error) {
       this.logger.error(
@@ -203,7 +205,7 @@ export class PlanService {
   async getLineModel(line: string) {
     try {
       const qry = `
-            select lm.Model_CD, m.Product_CD, m.Part_No, m.Part_Upper, m.Part_Lower, CONVERT(VARCHAR(8), CAST(m.Cycle_Time AS DATETIME), 108) Cycle_Time  from M_Line_Model lm
+            select lm.Model_CD, m.Product_CD, m.Part_No, m.Part_Upper, m.Part_Lower, CONVERT(VARCHAR(8), CAST(m.Cycle_Time AS DATETIME), 108) Cycle_Time ,m.AS400_Product_CD  from M_Line_Model lm
             inner join M_Model m on lm.model_cd = m.model_cd
             where Line_CD = '${line}'`;
       const data = await this.commonService.executeQuery(qry);
@@ -328,6 +330,7 @@ export class PlanService {
     newPlan.planTotalTime = dto.planTotalTime;
     newPlan.planFgAmt = dto.planFgAmt;
     newPlan.status = '00';
+    newPlan.efficiencyPercent = dto.efficiency_percent;
 
     newPlan.okAmt = null;
     newPlan.ngAmt = null;
@@ -419,6 +422,7 @@ export class PlanService {
       plan.ot = dto.ot === 'Y' ? 'Y' : 'N';
       plan.planTotalTime = dto.planTotalTime;
       plan.planFgAmt = dto.planFgAmt;
+      plan.efficiencyPercent = dto.efficiency_percent;
 
       // Save the updated plan to the database
       const result = this.planRepository.save(plan);
