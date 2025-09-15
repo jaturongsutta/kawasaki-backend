@@ -16,6 +16,7 @@ import {
   getCurrentDate,
   toLocalDateTime,
 } from 'src/utils/utils';
+import { Predefine } from 'src/entity/predefine.entity';
 
 @Injectable()
 export class LineService {
@@ -33,6 +34,9 @@ export class LineService {
     @InjectRepository(MTool)
     private mToolRepository: Repository<MTool>,
     private dataSource: DataSource, // Inject DataSource for transactions
+
+    @InjectRepository(Predefine)
+    private predefineRepository: Repository<Predefine>,
   ) {}
 
   async search(dto: LineSearchDto) {
@@ -71,7 +75,7 @@ export class LineService {
       // Fetch related MLineModel and MModel using a left join
       const lineModels = await this.lineModelRepository
         .createQueryBuilder('MLineModel')
-        .leftJoinAndSelect('MLineModel.model', 'model')
+        // .leftJoinAndSelect('MLineModel.model', 'model')
         .leftJoin(
           'Predefine',
           'predefine',
@@ -82,21 +86,46 @@ export class LineService {
         .select([
           'MLineModel.lineCd',
           'MLineModel.modelCd',
+          'MLineModel.productCd',
+          'MLineModel.partNo',
+          'MLineModel.partUpper',
+          'MLineModel.partLower',
+          'MLineModel.cycleTime',
+          'MLineModel.as400ProductCd',
           'MLineModel.isActive',
-          'model.partNo',
+          // 'model.partNo',
           'predefine.valueEn AS statusName',
         ])
-        .getRawMany();
+        .getMany();
 
       // Map the result to LineModelDto
       dto.lineModel = lineModels.map((lineModel) => ({
-        lineCd: lineModel.MLineModel_Line_CD,
-        modelCd: lineModel.MLineModel_Model_CD,
-        partNo: lineModel.model_Part_No, // Handle null for unmatched records
-        isActive: lineModel.MLineModel_is_Active,
-        statusName: lineModel.statusName,
+        lineCd: lineModel.lineCd,
+        modelCd: lineModel.modelCd,
+        productCd: lineModel.productCd,
+        partNo: lineModel.partNo,
+        partUpper: lineModel.partUpper,
+        partLower: lineModel.partLower,
+        cycleTime: lineModel.cycleTime,
+        as400ProductCd: lineModel.as400ProductCd,
+        // partNo: lineModel.model_Part_No, // Handle null for unmatched records
+        isActive: lineModel.isActive,
+        statusName: '',
         rowState: '', // Default value for rowState
       }));
+
+      const predefine = await this.predefineRepository.find({
+        where: { predefineGroup: 'Is_Active' },
+      });
+      console.log('predefine : ', predefine);
+      dto.lineModel.forEach((lineModel) => {
+        const status = predefine.find(
+          (p) => p.predefineCd === lineModel.isActive,
+        );
+        lineModel.statusName = status ? status.valueEn : '';
+      });
+
+      console.log('dto lineModel : ', dto.lineModel);
 
       // Fetch related MLineMachine
       const lineMachines = await this.lineMachineRepository
@@ -125,6 +154,8 @@ export class LineService {
         isActive: lineMachine.isActive,
         rowState: '', // Default value for rowState
       }));
+
+      console.log('dto lineMachine : ', dto.lineMachine);
       // Fetch related MLineTool
       const lineTools = await this.lineToolRepository
         .createQueryBuilder('MLineTool')
@@ -474,6 +505,12 @@ export class LineService {
         const newLineModel = new MLineModel();
         newLineModel.lineCd = data.lineCd;
         newLineModel.modelCd = model.modelCd;
+        newLineModel.productCd = model.productCd;
+        newLineModel.partNo = model.partNo;
+        newLineModel.partUpper = model.partUpper;
+        newLineModel.partLower = model.partLower;
+        newLineModel.cycleTime = convertTimeStringToDate(model.cycleTime);
+        newLineModel.as400ProductCd = model.as400ProductCd;
         newLineModel.isActive = model.isActive;
         await queryRunner.manager.save(MLineModel, newLineModel);
       } else if (model.rowState === 'UPDATE') {
@@ -486,6 +523,19 @@ export class LineService {
 
         // console.log('existingLineModel : ', existingLineModel);
         if (existingLineModel) {
+          existingLineModel.productCd = model.productCd;
+          existingLineModel.partNo = model.partNo;
+          existingLineModel.partUpper = model.partUpper;
+          existingLineModel.partLower = model.partLower;
+          existingLineModel.cycleTime = convertTimeStringToDate(
+            model.cycleTime,
+          );
+          console.log('model.cycleTime : ', model.cycleTime);
+          console.log(
+            'converted model.cycleTime : ',
+            convertTimeStringToDate(model.cycleTime),
+          );
+          existingLineModel.as400ProductCd = model.as400ProductCd;
           existingLineModel.isActive = model.isActive;
           existingLineModel.updatedBy = userId;
           existingLineModel.updatedDate = getCurrentDate();

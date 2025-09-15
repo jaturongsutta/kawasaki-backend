@@ -10,6 +10,24 @@ export class MLineModel {
   @Column('nvarchar', { primary: true, name: 'Model_CD', length: 10 })
   modelCd: string;
 
+  @Column('nvarchar', { name: 'Product_CD', length: 10, nullable: true })
+  productCd: string;
+
+  @Column('nvarchar', { name: 'Part_No', length: 10, nullable: true })
+  partNo: string;
+
+  @Column('nvarchar', { name: 'Part_Upper', length: 10, nullable: true })
+  partUpper: string;
+
+  @Column('nvarchar', { name: 'Part_Lower', length: 10, nullable: true })
+  partLower: string;
+
+  @Column('time', { name: 'Cycle_Time', nullable: true })
+  cycleTime: Date | null;
+
+  @Column('nvarchar', { name: 'AS400_Product_CD', length: 10, nullable: true })
+  as400ProductCd: string;
+
   @Column('char', { name: 'is_Active', nullable: true, length: 1 })
   isActive: string | null;
 
