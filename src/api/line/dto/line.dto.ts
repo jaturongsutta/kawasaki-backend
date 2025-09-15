@@ -19,9 +19,15 @@ export class LineDto extends BaseDto {
 export class LineModel {
   lineCd: string;
   modelCd: string;
+  productCd: string;
   partNo: string;
+  partUpper: string;
+  partLower: string;
+  cycleTime: Date | null;
+  as400ProductCd: string;
   isActive: string;
   rowState: string;
+  statusName: string | null;
 }
 
 export class LineMachine {

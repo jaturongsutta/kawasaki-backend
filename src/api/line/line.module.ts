@@ -8,6 +8,7 @@ import { MLineModel } from 'src/entity/m-line-model.entity';
 import { MLineMachine } from 'src/entity/m-line-machine.entity';
 import { MLineTool } from 'src/entity/m-line-tool.entity';
 import { MTool } from 'src/entity/tool.entity';
+import { Predefine } from 'src/entity/predefine.entity';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { MTool } from 'src/entity/tool.entity';
       MLineMachine,
       MLineTool,
       MTool,
+      Predefine,
     ]),
   ],
   providers: [LineService, CommonService],
