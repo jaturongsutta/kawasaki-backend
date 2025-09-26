@@ -147,7 +147,7 @@ export class DropdownListController extends BaseController {
       'Product_CD',
       "Is_Active = 'Y'",
       '',
-      ['Part_No partNo', 'is_Active isActive'],
+      ['Part_No partNo', 'Part_Upper partUpper','Part_Lower partLower','CONVERT(VARCHAR(8), CAST(Cycle_Time AS DATETIME), 108) cycleTime','AS400_Product_CD as400ProductCd', 'is_Active isActive'],
     );
   }
 
