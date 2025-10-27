@@ -6,6 +6,7 @@ export class LineDto extends BaseDto {
   efficiencyPercent?: number | null;
   pkCd?: string | null;
   isActive?: string | null;
+  isLeak?: string | null;
   createdDate?: string | null;
   createdBy?: number | null;
   updatedDate?: string | null;

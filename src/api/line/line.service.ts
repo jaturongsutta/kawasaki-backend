@@ -65,6 +65,7 @@ export class LineService {
       dto.efficiencyPercent = line.efficiencyPercent;
       dto.pkCd = line.pkCd;
       dto.isActive = line.isActive;
+      dto.isLeak = line.isLeak;
       dto.createdDate = toLocalDateTime(line.createdDate);
       dto.createdBy = line.createdBy;
       dto.updatedDate = toLocalDateTime(line.updatedDate);
@@ -295,6 +296,7 @@ export class LineService {
       mLine.efficiencyPercent = data.efficiencyPercent;
       mLine.pkCd = data.pkCd;
       mLine.isActive = data.isActive;
+      mLine.isLeak = data.isLeak;
       mLine.createdBy = userId;
       mLine.updatedBy = userId;
       mLine.createdDate = getCurrentDate();
@@ -341,7 +343,6 @@ export class LineService {
       // Start a transaction
       await queryRunner.connect();
       await queryRunner.startTransaction();
-
       const line = await this.lineRepository.findOneBy({ lineCd: id });
       if (!line) {
         throw new Error('Line not found');
@@ -349,6 +350,7 @@ export class LineService {
 
       line.lineName = data.lineName;
       line.efficiencyPercent = data.efficiencyPercent;
+      line.isLeak = data.isLeak;
       line.updatedBy = userId;
       line.updatedDate = getCurrentDate();
 

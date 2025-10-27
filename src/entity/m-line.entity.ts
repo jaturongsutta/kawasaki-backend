@@ -23,6 +23,9 @@ export class MLine {
   @Column('char', { name: 'is_Active', nullable: true, length: 1 })
   isActive: string | null;
 
+  @Column('char', { name: 'is_Leak', nullable: true, length: 1 })
+  isLeak: string | null;
+
   @Column('datetime', { name: 'CREATED_DATE', nullable: true })
   createdDate: Date | null;
 
