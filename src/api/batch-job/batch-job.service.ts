@@ -33,6 +33,118 @@ export class BatchJobService {
     return logPath;
   }
 
+  // process Line_CYH3
+  // sp_AutoStart_CYH3
+  // sp_MappedMES_CYH3
+  // sp_MappedMES_CYH3_003
+  async processLineCYH3_sp_AutoStart_CYH3() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_AutoStart_CYH3');
+      return {
+        process: 'sp_AutoStart_CYH3',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_AutoStart_CYH3',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+  async processLineCYH3_sp_MappedMES_CYH3() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_CYH3');
+      return {
+        process: 'sp_MappedMES_CYH3',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_CYH3',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+  async processLineCYH3_sp_MappedMES_CYH3_003() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_CYH3_003');
+      return {
+        process: 'sp_MappedMES_CYH3_003',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_CYH3_003',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+  // process Line_CYH4
+  // sp_AutoStart_CYH4
+  // sp_MappedMES_CYH4
+  // sp_MappedMES_CYH4_003
+  async processLineCYH4_sp_AutoStart_CYH4() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_AutoStart_CYH4');
+      return {
+        process: 'sp_AutoStart_CYH4',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_AutoStart_CYH4',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+  async processLineCYH4_sp_MappedMES_CYH4() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_CYH4');
+      return {
+        process: 'sp_MappedMES_CYH4',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_CYH4',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+  async processLineCYH4_sp_MappedMES_CYH4_003() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_CYH4_003');
+      return {
+        process: 'sp_MappedMES_CYH4_003',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_CYH4_003',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
   // process Line_CYH6
   // sp_AutoStart_CYH6
   // sp_MappedMES_CYH6

@@ -98,6 +98,11 @@ export class BatchJobController extends BaseController {
     ) {
       // Run your 5-minute interval logic here
       console.log('Run job at:', this.dbTime);
+
+      this.Job_Line_CYH3();
+
+      this.Job_Line_CYH4();
+
       this.Job_Line_CYH6();
 
       this.Job_Line_CYH7();
@@ -105,6 +110,42 @@ export class BatchJobController extends BaseController {
       this.Job_Line_CRC9();
 
       this.Job_Line_CRC10();
+    }
+  }
+
+  async Job_Line_CYH3() {
+    try {
+      this.writeBatchLog('Job_Line_CYH3 started', 'CYH3'); // Log job start
+
+      const result = await this.service.processLineCYH3_sp_AutoStart_CYH3();
+      this.writeBatchLog(JSON.stringify(result), 'CYH3'); // Log job completion
+
+      const result2 = await this.service.processLineCYH3_sp_MappedMES_CYH3();
+      this.writeBatchLog(JSON.stringify(result2), 'CYH3'); // Log job completion
+
+      const result3 =
+        await this.service.processLineCYH3_sp_MappedMES_CYH3_003();
+      this.writeBatchLog(JSON.stringify(result3), 'CYH3'); // Log job completion
+    } catch (error) {
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'CYH3'); // Log error
+    }
+  }
+
+  async Job_Line_CYH4() {
+    try {
+      this.writeBatchLog('Job_Line_CYH4 started', 'CYH4'); // Log job start
+
+      const result = await this.service.processLineCYH4_sp_AutoStart_CYH4();
+      this.writeBatchLog(JSON.stringify(result), 'CYH4'); // Log job completion
+
+      const result2 = await this.service.processLineCYH4_sp_MappedMES_CYH4();
+      this.writeBatchLog(JSON.stringify(result2), 'CYH4'); // Log job completion
+
+      const result3 =
+        await this.service.processLineCYH4_sp_MappedMES_CYH4_003();
+      this.writeBatchLog(JSON.stringify(result3), 'CYH4'); // Log job completion
+    } catch (error) {
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'CYH4'); // Log error
     }
   }
 
