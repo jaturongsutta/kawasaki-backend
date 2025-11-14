@@ -3,7 +3,7 @@ import { Column, Entity, Index } from 'typeorm';
 @Index('PK_M_Tool', ['processCd', 'toolCd'], { unique: true })
 @Entity('M_Tool', { schema: 'dbo' })
 export class MTool {
-  @Column('nvarchar', { primary: true, name: 'Process_CD', length: 10 })
+  @Column('nvarchar', { primary: true, name: 'Process_CD', length: 20 })
   processCd: string;
 
   @Column('nvarchar', { primary: true, name: 'Tool_CD', length: 10 })

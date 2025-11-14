@@ -3,7 +3,7 @@ import { Column, Entity, Index } from 'typeorm';
 @Index('PK_M_Machine', ['processCd'], { unique: true })
 @Entity('M_Machine', { schema: 'dbo' })
 export class MMachine {
-  @Column('nvarchar', { primary: true, name: 'Process_CD', length: 10 })
+  @Column('nvarchar', { primary: true, name: 'Process_CD', length: 20 })
   processCd: string;
 
   @Column('nvarchar', { name: 'Machine_No', nullable: true, length: 10 })

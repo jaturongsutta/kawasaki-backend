@@ -6,7 +6,7 @@ export class MToolHis {
   @PrimaryGeneratedColumn({ type: "int", name: "ID" })
   id: number;
 
-  @Column("nvarchar", { name: "Process_CD", nullable: true, length: 10 })
+  @Column("nvarchar", { name: "Process_CD", nullable: true, length: 20 })
   processCd: string | null;
 
   @Column("nvarchar", { name: "Tool_CD", nullable: true, length: 10 })

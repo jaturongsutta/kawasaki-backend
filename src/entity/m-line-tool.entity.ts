@@ -18,7 +18,7 @@ export class MLineTool {
   @Column('nvarchar', { primary: true, name: 'Machine_No', length: 10 })
   machineNo: string;
 
-  @Column('nvarchar', { primary: true, name: 'Process_CD', length: 10 })
+  @Column('nvarchar', { primary: true, name: 'Process_CD', length: 20 })
   processCd: string;
 
   @Column('nvarchar', { primary: true, name: 'H_Code', length: 10 })

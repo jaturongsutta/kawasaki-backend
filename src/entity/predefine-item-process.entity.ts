@@ -16,7 +16,7 @@ export class PredefineItemMachine {
   @Column("nvarchar", { primary: true, name: "Predefine_Item_CD", length: 20 })
   predefineItemCd: string;
 
-  @Column("nvarchar", { primary: true, name: "Process_CD", length: 10 })
+  @Column("nvarchar", { primary: true, name: "Process_CD", length: 20 })
   processCd: string;
 
   @Column("nvarchar", { primary: true, name: "Machine_No", length: 10 })

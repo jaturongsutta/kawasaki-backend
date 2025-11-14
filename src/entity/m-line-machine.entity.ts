@@ -14,7 +14,7 @@ export class MLineMachine {
   @Column('nvarchar', { primary: true, name: 'Machine_No', length: 10 })
   machineNo: string;
 
-  @Column('nvarchar', { primary: true, name: 'Process_CD', length: 10 })
+  @Column('nvarchar', { primary: true, name: 'Process_CD', length: 20 })
   processCd: string;
 
   @Column('time', { name: 'WT', nullable: true })

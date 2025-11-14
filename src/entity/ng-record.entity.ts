@@ -12,7 +12,7 @@ export class NgRecord {
     @Column("nvarchar", { name: "Line_CD", nullable: true, length: 10 })
     lineCd: string | null;
 
-    @Column("nvarchar", { name: "Process_CD", nullable: true, length: 10 })
+    @Column("nvarchar", { name: "Process_CD", nullable: true, length: 20 })
     processCd: string | null;
 
     @Column("datetime", { name: "NG_Date", nullable: true })
