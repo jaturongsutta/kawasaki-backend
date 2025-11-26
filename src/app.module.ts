@@ -34,6 +34,7 @@ import { PredefineItemModule } from './api/predefine-item/predefine-item.module'
 import { PredefineItemProcessModule } from './api/predefine-item-process/predefine-item-process.module';
 import { ReportEfficiencyOperModule } from './api/reports/report-efficiency-oper/report-efficiency-oper.module';
 import { ApkModule } from './api/apk/apk.module';
+import { ReportCYHLeakTestModule } from './api/reports/report-cyh-leak-test/report-cyh-leak-test.module';
 dotenv.config(); // Load environment variables from .env file
 @Module({
   imports: [
@@ -85,6 +86,7 @@ dotenv.config(); // Load environment variables from .env file
     PredefineItemProcessModule,
     ReportEfficiencyOperModule,
     ApkModule,
+    ReportCYHLeakTestModule
   ],
   controllers: [AppController],
   providers: [AppService],
