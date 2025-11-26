@@ -110,6 +110,10 @@ export class BatchJobController extends BaseController {
       this.Job_Line_CRC9();
 
       this.Job_Line_CRC10();
+
+      this.Job_KMT_Auto_Start_Leak();
+
+      this.Job_KMT_Leak_CYH();
     }
   }
 
@@ -218,6 +222,30 @@ export class BatchJobController extends BaseController {
       this.writeBatchLog(JSON.stringify(result3), 'CRC10'); // Log job completion
     } catch (error) {
       this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'CRC10'); // Log error
+    }
+  }
+
+  async Job_KMT_Auto_Start_Leak() {
+    try {
+      this.writeBatchLog('Job_KMT_Auto_Start_Leak started', 'All_is_Leak=Y'); // Log job start
+
+      const result = await this.service.processKMTAutoStartLeak();
+      this.writeBatchLog(JSON.stringify(result), 'All_is_Leak=Y'); // Log job completion
+
+    } catch (error) {
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'All_is_Leak=Y'); // Log error
+    }
+  }
+
+  async Job_KMT_Leak_CYH() {
+    try {
+      this.writeBatchLog('Job_KMT_Auto_Start_Leak started', 'LeakCYH'); // Log job start
+
+      const result = await this.service.processKMTLeakCYH();
+      this.writeBatchLog(JSON.stringify(result), 'LeakCYH'); // Log job completion
+
+    } catch (error) {
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'LeakCYH'); // Log error
     }
   }
 

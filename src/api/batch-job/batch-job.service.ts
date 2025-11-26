@@ -3,7 +3,7 @@ import { CommonService } from 'src/common/common.service';
 
 @Injectable()
 export class BatchJobService {
-  constructor(private commonService: CommonService) {}
+  constructor(private commonService: CommonService) { }
 
   // get database time
   async getDatabaseTime(): Promise<Date | null> {
@@ -14,10 +14,10 @@ export class BatchJobService {
     // );
     const dbTime = result.recordset[0]?.currentTime
       ? new Date(
-          new Date(result.recordset[0].currentTime)
-            .toISOString()
-            .replace(/\.\d{3}Z$/, 'Z'),
-        )
+        new Date(result.recordset[0].currentTime)
+          .toISOString()
+          .replace(/\.\d{3}Z$/, 'Z'),
+      )
       : null;
 
     return dbTime;
@@ -398,6 +398,43 @@ export class BatchJobService {
     }
   }
 
+  async processKMTAutoStartLeak() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_AutoStart_Leak');
+
+      return {
+        process: 'sp_AutoStart_Leak',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_AutoStart_Leak',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+  async processKMTLeakCYH() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_Leak_CYH');
+
+      return {
+        process: 'sp_MappedMES_Leak_CYH',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_Leak_CYH',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
 
   // sp_handheld_InfoAlert_Toollife
   async processHandheldInfoAlertToollife() {
