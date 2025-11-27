@@ -29,9 +29,14 @@ export class ReportCYHLeakTestController {
     return await this.service.searchTestingResultSummary(dto);
   }
 
-   @Post('search-machine-tracking')
+  @Post('search-machine-tracking')
   async searchMachineTracking(@Body() dto: ReportCYHLeakTestDto) {
     return await this.service.searchMachineTracking(dto);
+  }
+
+  @Post('search-machine-running')
+  async searchMachineRunning(@Body() dto: ReportCYHLeakTestDto) {
+    return await this.service.searchMachineRunning(dto);
   }
 
   @Post('export')
@@ -58,7 +63,7 @@ export class ReportCYHLeakTestController {
     res.end(buffer);
   }
 
-   @Post('export-machine-tracking')
+  @Post('export-machine-tracking')
   async exportMachineTracking(@Body() dto: ReportCYHLeakTestDto, @Res() res: Response) {
     const buffer = await this.service.exportExcelMachineTracking(dto);
     res.set({
@@ -66,6 +71,18 @@ export class ReportCYHLeakTestController {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition':
         'attachment; filename="Report3-Machine-Tracking.xlsx"',
+    });
+    res.end(buffer);
+  }
+
+  @Post('export-machine-running')
+  async exportMachineRunning(@Body() dto: ReportCYHLeakTestDto, @Res() res: Response) {
+    const buffer = await this.service.exportExcelMachineRunning(dto);
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition':
+        'attachment; filename="Report4-Machine-Running.xlsx"',
     });
     res.end(buffer);
   }

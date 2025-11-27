@@ -51,6 +51,18 @@ export class ReportCYHLeakTestService {
     return await this.commonService.getSearch('sp_rp_Leak_CYH_Machine_Tracking', req);
   }
 
+  async searchMachineRunning(dto: ReportCYHLeakTestDto) {
+    const req = await this.commonService.getConnection();
+    console.log("DTO is ", dto)
+    req.input('Plan_Date_start', dto.planDateStart);
+    req.input('Plan_Date_End', dto.planDateEnd);
+    req.input('Machine_No', dto.machineNo);
+    req.input('Work_Type', dto.workType);
+    req.input('Row_From', dto.searchOptions.rowFrom);
+    req.input('Row_To', dto.searchOptions.rowTo);
+    return await this.commonService.getSearch('sp_rp_Leak_CYH_Machine_Running', req);
+  }
+
   async getMachine(): Promise<any> {
     try {
       const q = `SELECT  Predefine_CD as value, Predefine_CD as title FROM co_Predefine where Predefine_Group='Leak_CYH_Machine' and Is_Active='Y'`
@@ -110,8 +122,8 @@ export class ReportCYHLeakTestService {
     // ---------- กำหนดคอลัมน์ ----------
     ws.columns = [
       { header: 'Machine', key: 'Machine_No', width: 8 },
-      { header: 'Start Date', key: 'Start_Date', width: 20 },
-      { header: 'End Date', key: 'End_Date', width: 20 },
+      { header: 'Start Date', key: 'Start_Date', width: 24 },
+      { header: 'End Date', key: 'End_Date', width: 24 },
       { header: 'Plan Year', key: 'plan_year', width: 10 },
       { header: 'Plan Month', key: 'plan_month', width: 10 },
       { header: 'Plan Day', key: 'plan_day', width: 8 },
@@ -345,8 +357,8 @@ export class ReportCYHLeakTestService {
 
     // ---------- กำหนดคอลัมน์ ----------
     ws.columns = [
-      { header: 'Plan Start Date', key: 'Plan_Start_Date', width: 20 },
-      { header: 'Plan End Date', key: 'Plan_End_Date', width: 20 },
+      { header: 'Plan Start Date', key: 'Plan_Start_Date', width: 24 },
+      { header: 'Plan End Date', key: 'Plan_End_Date', width: 24 },
       { header: 'Machine', key: 'Machine_No', width: 8 },
       { header: 'Total Test', key: 'Total_Test', width: 10 },
 
@@ -466,7 +478,7 @@ export class ReportCYHLeakTestService {
       { header: 'Machine', key: 'Machine_No', width: 8 },
       { header: 'Machine State', key: 'Machine_State', width: 22 },
       { header: 'Machine Type', key: 'Machine_Type', width: 18 },
-      { header: 'M/C Date', key: 'MC_Date', width: 12 },
+      { header: 'M/C Date', key: 'MC_Date', width: 15 },
     ];
 
     // ---------- header style ----------
@@ -544,4 +556,121 @@ export class ReportCYHLeakTestService {
     return result;
   }
 
+  async exportExcelMachineRunning(dto: ReportCYHLeakTestDto): Promise<any> {
+
+    const req = await this.commonService.getConnection();
+    console.log("DTO is ", dto)
+    req.input('Plan_Date_start', dto.planDateStart);
+    req.input('Plan_Date_End', dto.planDateEnd);
+    req.input('Machine_No', dto.machineNo);
+    req.input('Work_Type', dto.workType);
+    req.input('Row_From', 1);
+    req.input('Row_To', null);
+
+    const d = await this.commonService.getSearch('sp_rp_Leak_CYH_Machine_Running', req);
+    const data = d.data;
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Machine Running Report', {
+      views: [{ state: 'frozen', ySplit: 1 }], // freeze header row
+    });
+
+    // ---------- กำหนดคอลัมน์ ----------
+    ws.columns = [
+      { header: 'Machine Type', key: 'Machine_Type', width: 20 },
+      { header: 'Machine', key: 'Machine_No', width: 8 },
+      { header: 'Model', key: 'Model_cd', width: 20 },
+      { header: 'M/C Date', key: 'MC_Date', width: 15 },
+
+      // Start Date มี width ที่กำหนด
+      { header: 'Start Date', key: 'Start_Date', width: 24 },
+
+      // End Date มี width ที่กำหนด
+      { header: 'End Date', key: 'End_Date', width: 24 },
+
+      { header: 'Process Duration', key: 'process_duration', width: 20 },
+      { header: 'Wait OCR Scan', key: 'Wait_OCR', width: 20 },
+      { header: 'Test Time', key: 'Test_Time', width: 20 },
+    ];
+
+    // ---------- header style ----------
+    const headerRow = ws.getRow(1);
+    headerRow.height = 25;
+
+    const headerFill: ExcelJS.FillPattern = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFD9D9D9' }, // เทาอ่อน
+    };
+
+    const thinBorder: Partial<ExcelJS.Borders> = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' },
+    };
+
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, size: 10 };
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      cell.fill = headerFill;
+      cell.border = thinBorder;
+    });
+
+    // helper แปลงวันที่ให้ excel
+    const toExcelDate = (val: any) => {
+      if (!val) return null;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? val : d;
+    };
+
+    // ---------- เติมข้อมูล ----------
+    data.forEach((r) => {
+      ws.addRow({
+        Machine_Type: r.Machine_Type,
+        Machine_No: r.Machine_No,
+        Model_cd: r.Model_cd,
+        MC_Date: r.MC_Date,
+
+        Start_Date: toExcelDate(r.Start_Date),
+        End_Date: toExcelDate(r.End_Date),
+
+        process_duration: r.process_duration,
+        Wait_OCR: r.Wait_OCR,
+        Test_Time: r.Test_Time,
+      });
+    });
+
+    // format cell วันที่
+    ['Start_Date', 'End_Date'].forEach((key) => {
+      const col = ws.getColumn(key);
+      col.numFmt = 'yyyy MMM dd hh:mm:ss';
+    });
+
+    // ---------- style ทุกช่อง (border + center) ----------
+    const totalRows = ws.rowCount;
+    const totalCols = ws.columnCount;
+
+    for (let r = 1; r <= totalRows; r++) {
+      const row = ws.getRow(r);
+      for (let c = 1; c <= totalCols; c++) {
+        const cell = row.getCell(c); // create cell แม้ไม่มีค่า
+        cell.border = thinBorder;
+        cell.alignment = {
+          vertical: 'middle',
+          horizontal: 'center',
+          wrapText: true,
+        };
+      }
+    }
+
+    // ---------- ส่งออกเป็น buffer ----------
+    const result = await wb.xlsx.writeBuffer();
+
+    if (typeof Buffer !== 'undefined' && result instanceof Uint8Array) {
+      return Buffer.from(result);
+    }
+
+    return result;
+  }
 }
