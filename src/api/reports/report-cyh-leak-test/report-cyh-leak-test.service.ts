@@ -39,6 +39,18 @@ export class ReportCYHLeakTestService {
     return await this.commonService.getSearch('sp_rp_Leak_CYH_Testing_Result_Summary', req);
   }
 
+  async searchMachineTracking(dto: ReportCYHLeakTestDto) {
+    const req = await this.commonService.getConnection();
+    console.log("DTO is ", dto)
+    req.input('Plan_Date_start', dto.planDateStart);
+    req.input('Plan_Date_End', dto.planDateEnd);
+    req.input('Machine_No', dto.machineNo);
+    req.input('Work_Type', dto.workType);
+    req.input('Row_From', dto.searchOptions.rowFrom);
+    req.input('Row_To', dto.searchOptions.rowTo);
+    return await this.commonService.getSearch('sp_rp_Leak_CYH_Machine_Tracking', req);
+  }
+
   async getMachine(): Promise<any> {
     try {
       const q = `SELECT  Predefine_CD as value, Predefine_CD as title FROM co_Predefine where Predefine_Group='Leak_CYH_Machine' and Is_Active='Y'`
@@ -224,9 +236,9 @@ export class ReportCYHLeakTestService {
     });
 
     // format cell วันที่
-    ['Start_Date', 'End_Date', 'Casting_Date'].forEach((key) => {
+    ['Start_Date', 'End_Date'].forEach((key) => {
       const col = ws.getColumn(key);
-      col.numFmt = 'dd-mm-yyyy hh:mm:ss';
+      col.numFmt = 'yyyy MMM dd hh:mm:ss';
     });
 
     // ---------- style ทุกช่อง (border + center) ----------
@@ -399,7 +411,110 @@ export class ReportCYHLeakTestService {
     // format cell วันที่
     ['Plan_Start_Date', 'Plan_End_Date'].forEach((key) => {
       const col = ws.getColumn(key);
-      col.numFmt = 'dd-mm-yyyy';
+      col.numFmt = 'yyyy MMM dd';
+    });
+
+    // ---------- style ทุกช่อง (border + center) ----------
+    const totalRows = ws.rowCount;
+    const totalCols = ws.columnCount;
+
+    for (let r = 1; r <= totalRows; r++) {
+      const row = ws.getRow(r);
+      for (let c = 1; c <= totalCols; c++) {
+        const cell = row.getCell(c); // create cell แม้ไม่มีค่า
+        cell.border = thinBorder;
+        cell.alignment = {
+          vertical: 'middle',
+          horizontal: 'center',
+          wrapText: true,
+        };
+      }
+    }
+
+    // ---------- ส่งออกเป็น buffer ----------
+    const result = await wb.xlsx.writeBuffer();
+
+    if (typeof Buffer !== 'undefined' && result instanceof Uint8Array) {
+      return Buffer.from(result);
+    }
+
+    return result;
+  }
+
+  async exportExcelMachineTracking(dto: ReportCYHLeakTestDto): Promise<any> {
+
+    const req = await this.commonService.getConnection();
+    console.log("DTO is ", dto)
+    req.input('Plan_Date_start', dto.planDateStart);
+    req.input('Plan_Date_End', dto.planDateEnd);
+    req.input('Machine_No', dto.machineNo);
+    req.input('Work_Type', dto.workType);
+    req.input('Row_From', 1);
+    req.input('Row_To', null);
+
+    const d = await this.commonService.getSearch('sp_rp_Leak_CYH_Machine_Tracking', req);
+    const data = d.data;
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Machine Tracking Report', {
+      views: [{ state: 'frozen', ySplit: 1 }], // freeze header row
+    });
+
+    // ---------- กำหนดคอลัมน์ ----------
+    ws.columns = [
+      { header: 'State Date', key: 'State_Date', width: 30 },
+      { header: 'Machine', key: 'Machine_No', width: 8 },
+      { header: 'Machine State', key: 'Machine_State', width: 22 },
+      { header: 'Machine Type', key: 'Machine_Type', width: 18 },
+      { header: 'M/C Date', key: 'MC_Date', width: 12 },
+    ];
+
+    // ---------- header style ----------
+    const headerRow = ws.getRow(1);
+    headerRow.height = 25;
+
+    const headerFill: ExcelJS.FillPattern = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFD9D9D9' }, // เทาอ่อน
+    };
+
+    const thinBorder: Partial<ExcelJS.Borders> = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' },
+    };
+
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, size: 10 };
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      cell.fill = headerFill;
+      cell.border = thinBorder;
+    });
+
+    // helper แปลงวันที่ให้ excel
+    const toExcelDate = (val: any) => {
+      if (!val) return null;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? val : d;
+    };
+
+    // ---------- เติมข้อมูล ----------
+    data.forEach((r) => {
+      ws.addRow({
+        State_Date: toExcelDate(r.State_Date),
+        Machine_No: r.Machine_No,
+        Machine_State: r.Machine_State,
+        Machine_Type: r.Machine_Type,
+        MC_Date: r.MC_Date,
+      });
+    });
+
+    // format cell วันที่
+    ['State_Date'].forEach((key) => {
+      const col = ws.getColumn(key);
+      col.numFmt = 'yyyy MMM dd hh:mm:ss';
     });
 
     // ---------- style ทุกช่อง (border + center) ----------
