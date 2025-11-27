@@ -26,8 +26,17 @@ export class ReportCYHLeakTestService {
     req.input('MC_Date', dto.mcDate);
     req.input('Row_From', dto.searchOptions.rowFrom);
     req.input('Row_To', dto.searchOptions.rowTo);
-
     return await this.commonService.getSearch('sp_rp_Leak_CYH_Testing_Result', req);
+  }
+
+  async searchTestingResultSummary(dto: ReportCYHLeakTestDto) {
+    const req = await this.commonService.getConnection();
+    console.log("DTO is ", dto)
+    req.input('Plan_Date_start', dto.planDateStart);
+    req.input('Plan_Date_End', dto.planDateEnd);
+    req.input('Machine_No', dto.machineNo);
+    req.input('Work_Type', dto.workType);
+    return await this.commonService.getSearch('sp_rp_Leak_CYH_Testing_Result_Summary', req);
   }
 
   async getMachine(): Promise<any> {
@@ -66,7 +75,7 @@ export class ReportCYHLeakTestService {
     }
   }
 
-  async exportExcel(dto: ReportCYHLeakTestDto): Promise<any> {
+  async exportExcelTestingResult(dto: ReportCYHLeakTestDto): Promise<any> {
 
     const req = await this.commonService.getConnection();
     console.log("DTO is ", dto)
@@ -114,7 +123,7 @@ export class ReportCYHLeakTestService {
       { header: 'FG', key: 'FG', width: 5 },
 
       { header: 'P1, OH, CH1', key: 'NG_P1', width: 12 },
-      { header: 'P2, WJ, CH2', key: 'NG_P2', width: 12},
+      { header: 'P2, WJ, CH2', key: 'NG_P2', width: 12 },
       { header: 'P3, CC, CH3', key: 'NG_P3', width: 12 },
       { header: 'P4, -, CH4', key: 'NG_P4', width: 12 },
       { header: 'P5, T/B, CH5', key: 'NG_TB', width: 12 },
@@ -291,6 +300,122 @@ export class ReportCYHLeakTestService {
 
           continue;
         }
+      }
+    }
+
+    // ---------- ส่งออกเป็น buffer ----------
+    const result = await wb.xlsx.writeBuffer();
+
+    if (typeof Buffer !== 'undefined' && result instanceof Uint8Array) {
+      return Buffer.from(result);
+    }
+
+    return result;
+  }
+
+
+  async exportExcelTestingResultSummary(dto: ReportCYHLeakTestDto): Promise<any> {
+
+    const req = await this.commonService.getConnection();
+    console.log("DTO is ", dto)
+    req.input('Plan_Date_start', dto.planDateStart);
+    req.input('Plan_Date_End', dto.planDateEnd);
+    req.input('Machine_No', dto.machineNo);
+    req.input('Work_Type', dto.workType);
+
+    const d = await this.commonService.getSearch('sp_rp_Leak_CYH_Testing_Result_Summary', req);
+    const data = d.data;
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Testing Result Summary Report', {
+      views: [{ state: 'frozen', ySplit: 1 }], // freeze header row
+    });
+
+    // ---------- กำหนดคอลัมน์ ----------
+    ws.columns = [
+      { header: 'Plan Start Date', key: 'Plan_Start_Date', width: 20 },
+      { header: 'Plan End Date', key: 'Plan_End_Date', width: 20 },
+      { header: 'Machine', key: 'Machine_No', width: 8 },
+      { header: 'Total Test', key: 'Total_Test', width: 10 },
+
+      { header: 'FG', key: 'FG', width: 5 },
+
+      { header: 'P1, OH, CH1', key: 'NG1', width: 12 },
+      { header: 'P2, WJ, CH2', key: 'NG2', width: 12 },
+      { header: 'P3, CC, CH3', key: 'NG3', width: 12 },
+      { header: 'P4, -, CH4', key: 'NG4', width: 12 },
+      { header: 'P5, T/B, CH5', key: 'NG5', width: 12 },
+    ];
+
+    // ---------- header style ----------
+    const headerRow = ws.getRow(1);
+    headerRow.height = 25;
+
+    const headerFill: ExcelJS.FillPattern = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFD9D9D9' }, // เทาอ่อน
+    };
+
+    const thinBorder: Partial<ExcelJS.Borders> = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' },
+    };
+
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, size: 10 };
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      cell.fill = headerFill;
+      cell.border = thinBorder;
+    });
+
+    // helper แปลงวันที่ให้ excel
+    const toExcelDate = (val: any) => {
+      if (!val) return null;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? val : d;
+    };
+
+    // ---------- เติมข้อมูล ----------
+    data.forEach((r) => {
+      ws.addRow({
+        Plan_Start_Date: toExcelDate(r.Plan_Start_Date),
+        Plan_End_Date: toExcelDate(r.Plan_End_Date),
+        Machine_No: r.Machine_No,
+        Total_Test: r.Total_Test,
+
+        FG: r.FG,
+
+        NG1: r.NG1,
+        NG2: r.NG2,
+        NG3: r.NG3,
+        NG4: r.NG4,
+        NG5: r.NG5,
+      });
+    });
+
+    // format cell วันที่
+    ['Plan_Start_Date', 'Plan_End_Date'].forEach((key) => {
+      const col = ws.getColumn(key);
+      col.numFmt = 'dd-mm-yyyy';
+    });
+
+    // ---------- style ทุกช่อง (border + center) ----------
+    const totalRows = ws.rowCount;
+    const totalCols = ws.columnCount;
+
+    for (let r = 1; r <= totalRows; r++) {
+      const row = ws.getRow(r);
+      for (let c = 1; c <= totalCols; c++) {
+        const cell = row.getCell(c); // create cell แม้ไม่มีค่า
+        cell.border = thinBorder;
+        cell.alignment = {
+          vertical: 'middle',
+          horizontal: 'center',
+          wrapText: true,
+        };
       }
     }
 

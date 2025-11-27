@@ -26,12 +26,29 @@ export class ReportCYHLeakTestController {
 
   @Post('export')
   async exportReport(@Body() dto: ReportCYHLeakTestDto, @Res() res: Response) {
-    const buffer = await this.service.exportExcel(dto);
+    const buffer = await this.service.exportExcelTestingResult(dto);
     res.set({
       'Content-Type':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition':
         'attachment; filename="Report1-Testing-Result.xlsx"',
+    });
+    res.end(buffer);
+  }
+
+  @Post('search-testing-result-summary')
+  async searchTestingResultSummary(@Body() dto: ReportCYHLeakTestDto) {
+    return await this.service.searchTestingResultSummary(dto);
+  }
+
+  @Post('export-testing-result-summary')
+  async exportTestingResultSummary(@Body() dto: ReportCYHLeakTestDto, @Res() res: Response) {
+    const buffer = await this.service.exportExcelTestingResultSummary(dto);
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition':
+        'attachment; filename="Report2-Testing-Result-Summary.xlsx"',
     });
     res.end(buffer);
   }
