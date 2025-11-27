@@ -9,21 +9,29 @@ export class ReportCYHLeakTestController {
     private readonly service: ReportCYHLeakTestService,
   ) { }
 
-   @Post('search-testing-result')
-    async search(@Body() dto: ReportCYHLeakTestDto) {
-      return await this.service.searchTestingResult(dto);
-    }
+  @Get('machine')
+  async getMachine() {
+    return await this.service.getMachine()
+  }
 
-  @Get('export')
-  async exportReport(@Query() query: any, @Res() res: Response) {
-    // Accept parameters from GET query
-    const buffer = await this.service.exportExcel(query);
+  @Get('worktype')
+  async getWorkType() {
+    return await this.service.getWorkType()
+  }
 
+  @Post('search-testing-result')
+  async search(@Body() dto: ReportCYHLeakTestDto) {
+    return await this.service.searchTestingResult(dto);
+  }
+
+  @Post('export')
+  async exportReport(@Body() dto: ReportCYHLeakTestDto, @Res() res: Response) {
+    const buffer = await this.service.exportExcel(dto);
     res.set({
       'Content-Type':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition':
-        'attachment; filename="report-efficiency-oper.xlsx"',
+        'attachment; filename="Report1-Testing-Result.xlsx"',
     });
     res.end(buffer);
   }
