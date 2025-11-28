@@ -39,6 +39,11 @@ export class ReportCYHLeakTestController {
     return await this.service.searchMachineRunning(dto);
   }
 
+  @Post('search-machine-noplan-summary')
+  async searchMachineNoPlanSummary(@Body() dto: ReportCYHLeakTestDto) {
+    return await this.service.searchMachineNoPlanSummary(dto);
+  }
+
   @Post('export')
   async exportReport(@Body() dto: ReportCYHLeakTestDto, @Res() res: Response) {
     const buffer = await this.service.exportExcelTestingResult(dto);
@@ -83,6 +88,18 @@ export class ReportCYHLeakTestController {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition':
         'attachment; filename="Report4-Machine-Running.xlsx"',
+    });
+    res.end(buffer);
+  }
+
+  @Post('export-machine-noplan-summary')
+  async exportMachineNoPlanSummary(@Body() dto: ReportCYHLeakTestDto, @Res() res: Response) {
+    const buffer = await this.service.exportExcelMachineNoPlanSummary(dto);
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition':
+        'attachment; filename="Report5-Machine-No-Plan-Summary.xlsx"',
     });
     res.end(buffer);
   }
