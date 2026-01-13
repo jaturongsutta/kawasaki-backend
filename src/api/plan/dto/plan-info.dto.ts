@@ -16,6 +16,8 @@ export class PlanInfoDto extends BaseDto {
   b4?: string | null;
   ot?: string | null;
   modelCd?: string | null;
+  modelName?: string | null;
+  worker: number;
   productCd?: string | null;
   cycleTime?: Date | null;
   operator?: number | null;

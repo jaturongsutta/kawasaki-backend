@@ -36,7 +36,7 @@ export class PlanService {
     private userRepository: Repository<User>,
     private commonService: CommonService,
     private dataSource: DataSource, // Inject DataSource
-  ) {}
+  ) { }
 
   async getPlanById(id: number): Promise<PlanInfoDto> {
     try {
@@ -74,6 +74,8 @@ export class PlanService {
       planInfo.b4 = item.B4 === 'Y' ? 'Y' : 'N';
       planInfo.ot = item.OT === 'Y' ? 'Y' : 'N';
       planInfo.modelCd = item.Model_CD;
+      planInfo.modelName = item.Model_Name;
+      planInfo.worker = item.Worker;
       planInfo.productCd = item.Product_CD;
       planInfo.cycleTime = item.Cycle_Time;
       planInfo.operator = item.Operator;
@@ -205,7 +207,7 @@ export class PlanService {
   async getLineModel(line: string) {
     try {
       const qry = `
-            select lm.Model_CD, lm.Product_CD, lm.Part_No, lm.Part_Upper, lm.Part_Lower, CONVERT(VARCHAR(8), CAST(lm.Cycle_Time AS DATETIME), 108) Cycle_Time ,lm.AS400_Product_CD  from M_Line_Model lm
+            select lm.Model_CD, lm.model_name Model_Name, lm.worker, lm.Product_CD, lm.Part_No, lm.Part_Upper, lm.Part_Lower, CONVERT(VARCHAR(8), CAST(lm.Cycle_Time AS DATETIME), 108) Cycle_Time ,lm.AS400_Product_CD  from M_Line_Model lm
             where Line_CD = '${line}'`;
       const data = await this.commonService.executeQuery(qry);
       return data;
@@ -322,6 +324,7 @@ export class PlanService {
     newPlan.b4 = dto.b4 === 'Y' ? 'Y' : 'N';
     newPlan.ot = dto.ot === 'Y' ? 'Y' : 'N';
     newPlan.modelCd = dto.modelCd;
+    newPlan.worker = dto.worker;
     newPlan.productCd = dto.productCd;
     newPlan.cycleTime = dto.cycleTime;
     newPlan.operator = dto.operator;
@@ -408,6 +411,7 @@ export class PlanService {
         plan.shiftTeam = dto.shiftTeam;
         plan.shiftPeriod = dto.shiftPeriod;
         plan.modelCd = dto.modelCd;
+        plan.worker = dto.worker;
         plan.productCd = dto.productCd;
         plan.cycleTime = dto.cycleTime;
         plan.operator = dto.operator;
