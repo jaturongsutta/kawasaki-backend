@@ -43,6 +43,9 @@ export class MLineModel {
   @Column('int', { name: 'UPDATED_BY', nullable: true })
   updatedBy: number | null;
 
+  @Column('int', { name: 'Worker', nullable: false })
+  worker: number;
+
   @ManyToOne(() => MModel)
   @JoinColumn({ name: 'Model_CD', referencedColumnName: 'modelCd' })
   model: MModel;

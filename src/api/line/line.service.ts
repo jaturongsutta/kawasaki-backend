@@ -37,7 +37,7 @@ export class LineService {
 
     @InjectRepository(Predefine)
     private predefineRepository: Repository<Predefine>,
-  ) {}
+  ) { }
 
   async search(dto: LineSearchDto) {
     const req = await this.commonService.getConnection();
@@ -94,7 +94,7 @@ export class LineService {
           'MLineModel.cycleTime',
           'MLineModel.as400ProductCd',
           'MLineModel.isActive',
-          // 'model.partNo',
+          'MLineModel.worker',
           'predefine.valueEn AS statusName',
         ])
         .getMany();
@@ -113,6 +113,7 @@ export class LineService {
         isActive: lineModel.isActive,
         statusName: '',
         rowState: '', // Default value for rowState
+        worker: lineModel.worker
       }));
 
       const predefine = await this.predefineRepository.find({
@@ -514,6 +515,9 @@ export class LineService {
         newLineModel.cycleTime = convertTimeStringToDate(model.cycleTime);
         newLineModel.as400ProductCd = model.as400ProductCd;
         newLineModel.isActive = model.isActive;
+        newLineModel.createdDate = getCurrentDate();
+        newLineModel.createdBy = `${userId}`;
+        newLineModel.worker = model.worker;
         await queryRunner.manager.save(MLineModel, newLineModel);
       } else if (model.rowState === 'UPDATE') {
         const existingLineModel = await queryRunner.manager.findOne(
@@ -541,6 +545,7 @@ export class LineService {
           existingLineModel.isActive = model.isActive;
           existingLineModel.updatedBy = userId;
           existingLineModel.updatedDate = getCurrentDate();
+          existingLineModel.worker = model.worker;
           // Add more fields to update if needed
           await queryRunner.manager.save(MLineModel, existingLineModel);
         }

@@ -29,6 +29,7 @@ export class LineModel {
   isActive: string;
   rowState: string;
   statusName: string | null;
+  worker: number;
 }
 
 export class LineMachine {
