@@ -18,8 +18,10 @@ export class LineDto extends BaseDto {
 }
 
 export class LineModel {
+  id: number;
   lineCd: string;
   modelCd: string;
+  modelName: string;
   productCd: string;
   partNo: string;
   partUpper: string;
@@ -33,7 +35,7 @@ export class LineModel {
 }
 
 export class LineMachine {
-  id: string;
+  id: number;
   lineCd: string;
   modelCd: string;
   machineNo: string;
@@ -51,7 +53,7 @@ export class LineMachine {
 }
 
 export class LineTool {
-  id: string;
+  id: number;
   lineCd: string;
   modelCd: string;
   machineNo: string;
