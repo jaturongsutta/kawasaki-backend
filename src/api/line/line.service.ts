@@ -85,6 +85,7 @@ export class LineService {
         )
         .where('MLineModel.lineCd = :lineCd', { lineCd: id })
         .select([
+          'MLineModel.id',
           'MLineModel.lineCd',
           'MLineModel.modelCd',
           'MLineModel.productCd',
@@ -96,11 +97,11 @@ export class LineService {
           'MLineModel.isActive',
           'MLineModel.worker',
           'predefine.valueEn AS statusName',
-        ])
-        .getMany();
+        ]).getMany();
 
       // Map the result to LineModelDto
       dto.lineModel = lineModels.map((lineModel) => ({
+        id: lineModel.id,
         lineCd: lineModel.lineCd,
         modelCd: lineModel.modelCd,
         productCd: lineModel.productCd,
@@ -115,6 +116,8 @@ export class LineService {
         rowState: '', // Default value for rowState
         worker: lineModel.worker
       }));
+
+      console.log(" dto.lineModel ", dto.lineModel.length);
 
       const predefine = await this.predefineRepository.find({
         where: { predefineGroup: 'Is_Active' },
@@ -145,7 +148,75 @@ export class LineService {
         ])
         .getMany();
       // Map the result to LineMachineDto
+      // dto.lineMachine = lineMachines.map((lineMachine) => ({
+      //   lineCd: lineMachine.lineCd,
+      //   modelCd: lineMachine.modelCd,
+      //   machineNo: lineMachine.machineNo,
+      //   processCd: lineMachine.processCd,
+      //   wt: lineMachine.wt,
+      //   ht: lineMachine.ht,
+      //   mt: lineMachine.mt,
+      //   isActive: lineMachine.isActive,
+      //   rowState: '', // Default value for rowState
+      // }));
+
+      // console.log('dto lineMachine : ', dto.lineMachine);
+      // // Fetch related MLineTool
+      // const lineTools = await this.lineToolRepository
+      //   .createQueryBuilder('MLineTool')
+      //   .where('MLineTool.lineCd = :lineCd', { lineCd: id })
+      //   .select([
+      //     'MLineTool.lineCd',
+      //     'MLineTool.modelCd',
+      //     'MLineTool.machineNo',
+      //     'MLineTool.processCd',
+      //     'MLineTool.hCode',
+      //     'MLineTool.isActive',
+      //   ])
+      //   .getMany();
+      // // Map the result to LineToolDto
+      // dto.lineTool = lineTools.map((lineTool) => ({
+      //   lineCd: lineTool.lineCd,
+      //   modelCd: lineTool.modelCd,
+      //   machineNo: lineTool.machineNo,
+      //   processCd: lineTool.processCd,
+      //   hCode: lineTool.hCode,
+      //   isActive: lineTool.isActive,
+      //   rowState: '', // Default value for rowState
+      // }));
+
+      return dto;
+    } catch (error) {
+      dto.result.status = 2;
+      dto.result.message = error.message;
+      console.error('Error fetching line by ID:', error);
+    }
+
+    return dto;
+  }
+
+  async getLineMachineAndToolsById(id: string): Promise<LineDto> {
+    const dto = new LineDto();
+    try {
+      // Fetch related MLineMachine
+      const lineMachines = await this.lineMachineRepository
+        .createQueryBuilder('MLineMachine')
+        .where('MLineMachine.id = :id', { id: id })
+        .select([
+          'MLineMachine.id',
+          'MLineMachine.lineCd',
+          'MLineMachine.modelCd',
+          'MLineMachine.machineNo',
+          'MLineMachine.processCd',
+          'MLineMachine.wt',
+          'MLineMachine.ht',
+          'MLineMachine.mt',
+          'MLineMachine.isActive',
+        ])
+        .getMany();
+      // Map the result to LineMachineDto
       dto.lineMachine = lineMachines.map((lineMachine) => ({
+        id: id,
         lineCd: lineMachine.lineCd,
         modelCd: lineMachine.modelCd,
         machineNo: lineMachine.machineNo,
@@ -161,8 +232,9 @@ export class LineService {
       // Fetch related MLineTool
       const lineTools = await this.lineToolRepository
         .createQueryBuilder('MLineTool')
-        .where('MLineTool.lineCd = :lineCd', { lineCd: id })
+        .where('MLineTool.id = :id', { id: id })
         .select([
+          'MLineTool.id',
           'MLineTool.lineCd',
           'MLineTool.modelCd',
           'MLineTool.machineNo',
@@ -173,6 +245,7 @@ export class LineService {
         .getMany();
       // Map the result to LineToolDto
       dto.lineTool = lineTools.map((lineTool) => ({
+        id: id,
         lineCd: lineTool.lineCd,
         modelCd: lineTool.modelCd,
         machineNo: lineTool.machineNo,
@@ -543,7 +616,7 @@ export class LineService {
           );
           existingLineModel.as400ProductCd = model.as400ProductCd;
           existingLineModel.isActive = model.isActive;
-          existingLineModel.updatedBy = userId;
+          existingLineModel.updatedBy = `${userId}`;
           existingLineModel.updatedDate = getCurrentDate();
           existingLineModel.worker = model.worker;
           // Add more fields to update if needed
@@ -575,6 +648,7 @@ export class LineService {
         const processCd = machine.processCd.split('_')[1]; // [machineNo]_[processCd]
 
         const newLineMachine = new MLineMachine();
+        newLineMachine.id = Number(machine.id);
         newLineMachine.lineCd = data.lineCd;
         newLineMachine.modelCd = machine.modelCd;
         newLineMachine.machineNo = machine.machineNo;
@@ -583,8 +657,8 @@ export class LineService {
         newLineMachine.ht = machine.ht;
         newLineMachine.mt = machine.mt;
         newLineMachine.isActive = machine.isActive;
-        newLineMachine.createdBy = userId;
-        newLineMachine.updatedBy = userId;
+        newLineMachine.createdBy = `${userId}`;
+        newLineMachine.updatedBy = `${userId}`;
         newLineMachine.createdDate = getCurrentDate();
         newLineMachine.updatedDate = getCurrentDate();
         await queryRunner.manager.save(MLineMachine, newLineMachine);
@@ -601,7 +675,7 @@ export class LineService {
           existingLineMachine.wt = machine.wt;
           existingLineMachine.ht = machine.ht;
           existingLineMachine.mt = machine.mt;
-          existingLineMachine.updatedBy = userId;
+          existingLineMachine.updatedBy = `${userId}`;
           existingLineMachine.updatedDate = getCurrentDate();
           await queryRunner.manager.save(MLineMachine, existingLineMachine);
         } else {
@@ -622,14 +696,15 @@ export class LineService {
         });
       } else if (tool.rowState === 'NEW') {
         const newLineTool = new MLineTool();
+        newLineTool.id = Number(tool.id);
         newLineTool.lineCd = data.lineCd;
         newLineTool.modelCd = tool.modelCd;
         newLineTool.machineNo = tool.machineNo;
         newLineTool.processCd = tool.processCd;
         newLineTool.hCode = tool.hCode;
         newLineTool.isActive = tool.isActive;
-        newLineTool.createdBy = userId;
-        newLineTool.updatedBy = userId;
+        newLineTool.createdBy = `${userId}`;
+        newLineTool.updatedBy = `${userId}`;
         newLineTool.createdDate = getCurrentDate();
         newLineTool.updatedDate = getCurrentDate();
         await queryRunner.manager.save(MLineTool, newLineTool);
@@ -645,7 +720,7 @@ export class LineService {
         });
         if (existingLineTool) {
           existingLineTool.isActive = tool.isActive;
-          existingLineTool.updatedBy = userId;
+          existingLineTool.updatedBy = `${userId}`;
           existingLineTool.updatedDate = getCurrentDate();
           await queryRunner.manager.save(MLineTool, existingLineTool);
         }

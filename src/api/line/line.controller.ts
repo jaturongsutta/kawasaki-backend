@@ -29,6 +29,11 @@ export class LineController extends BaseController {
     return await this.service.getById(id);
   }
 
+   @Get('getLineMachineTool/:id')
+  async getLineMachineAndToolsById(@Param('id') id: string) {
+    return await this.service.getLineMachineAndToolsById(id);
+  }
+
   @Get('getProcessByModel/:lineCd/:modelCd')
   async getProcessByModel(
     @Param('lineCd') lineCd,

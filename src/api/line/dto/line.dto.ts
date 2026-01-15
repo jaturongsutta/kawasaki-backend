@@ -33,6 +33,7 @@ export class LineModel {
 }
 
 export class LineMachine {
+  id: string;
   lineCd: string;
   modelCd: string;
   machineNo: string;
@@ -50,6 +51,7 @@ export class LineMachine {
 }
 
 export class LineTool {
+  id: string;
   lineCd: string;
   modelCd: string;
   machineNo: string;
