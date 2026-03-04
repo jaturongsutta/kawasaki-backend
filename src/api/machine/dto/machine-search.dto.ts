@@ -28,3 +28,23 @@ export class MachineDto {
 
   updatedBy: string | null;
 }
+
+
+export class ToolAlertDto {
+
+  toolLifeLimit: number | null;
+
+  warningAmt: number | null;
+
+  alertAmt: number | null;
+
+  alarmAmt: number | null;
+
+  createdDate: Date | null;
+
+  createdBy: string | null;
+
+  updatedDate: Date | null;
+
+  updatedBy: string | null;
+}

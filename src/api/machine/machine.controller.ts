@@ -6,10 +6,11 @@ import {
   Post,
   Put,
   Request,
+  Delete,
 } from '@nestjs/common';
 import { MachineService } from './machine.service';
 import { BaseController } from 'src/base.controller';
-import { MachineDto, MachineSearchDto } from './dto/machine-search.dto';
+import { MachineDto, MachineSearchDto, ToolAlertDto } from './dto/machine-search.dto';
 
 @Controller('machine')
 export class MachineController extends BaseController {
@@ -40,6 +41,32 @@ export class MachineController extends BaseController {
     @Request() req: any,
   ) {
     return await this.service.update(machineNo, processCd, dto, req.user.userId);
+  }
+
+
+  @Post('tooLifeAlarm')
+  async getToolLifeAlarm(@Body() dto: MachineSearchDto) {
+    return await this.service.getToolLifeAlarm(dto);
+  }
+
+  @Post('addToolLifeAlarm')
+  async addToolLifeAlarm(@Body() dto: ToolAlertDto, @Request() req: any) {
+    return await this.service.addToolLifeAlarm(dto, req.user.userId);
+  }
+
+  @Put('updateToolLifeAlarm/:id')
+  async updateToolLifeAlarm(
+    @Param('id') id: string,
+    @Body() dto: ToolAlertDto,
+    @Request() req: any,
+  ) {
+    return await this.service.updateToolLifeAlarm(id, dto, req.user.userId);
+  }
+
+
+  @Delete('deleteToolLifeAlarm/:id')
+  async deleteToolLifeAlarm(@Param('id') id: number, @Request() req: any) {
+    return await this.service.deleteToolLifeAlarm(id,);
   }
 
 }

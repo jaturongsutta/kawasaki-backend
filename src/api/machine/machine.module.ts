@@ -4,9 +4,10 @@ import { MachineController } from './machine.controller';
 import { MachineService } from './machine.service';
 import { CommonService } from 'src/common/common.service';
 import { MMachine } from 'src/entity/machine.entity';
+import { MToolAlert } from 'src/entity/m-tool-alert.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([MMachine])],
+  imports: [TypeOrmModule.forFeature([MMachine, MToolAlert])],
   exports: [TypeOrmModule],
   providers: [CommonService, MachineService],
   controllers: [MachineController]
