@@ -112,6 +112,15 @@ export class BatchJobController extends BaseController {
       this.Job_Line_CRC10();
 
       this.Job_KMT_Auto_Start_Leak();
+    }
+
+    if (
+      this.dbTime &&
+      this.dbTime.getMinutes() % 2 === 0 &&
+      this.dbTime.getSeconds() === 0
+    ) {
+      // Run your 2-minute interval logic here
+      console.log('Run job KMT_Leak at:', this.dbTime);
 
       this.Job_KMT_Leak_CYH();
     }
