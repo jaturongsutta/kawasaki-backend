@@ -112,6 +112,12 @@ export class BatchJobController extends BaseController {
       this.Job_Line_CRC10();
 
       this.Job_KMT_Auto_Start_Leak();
+
+      this.Job_Line_CYE2();
+      this.Job_Line_CYE3();
+      this.Job_Line_HCYE2();
+      this.Job_Line_HCYE3();
+      this.Job_Line_TPS();
     }
 
     if (
@@ -255,6 +261,103 @@ export class BatchJobController extends BaseController {
 
     } catch (error) {
       this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'LeakCYH'); // Log error
+    }
+  }
+
+  async Job_Line_CYE2() {
+    try {
+      this.writeBatchLog('Job_Line_CYE2 started', 'CYE2'); // Log job start
+
+      const result = await this.service.processLineCYE2_sp_AutoStart_CYE2();
+      this.writeBatchLog(JSON.stringify(result), 'CYE2'); // Log job completion
+
+      const result2 = await this.service.processLineCYE2_sp_MappedMES_CYE2();
+      this.writeBatchLog(JSON.stringify(result2), 'CYE2'); // Log job completion
+
+      const result3 =
+        await this.service.processLineCYE2_sp_MappedMES_CYE2_003();
+      this.writeBatchLog(JSON.stringify(result3), 'CYE2'); // Log job completion
+    } catch (error) {
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'CYE2'); // Log error
+    }
+  }
+
+  async Job_Line_CYE3() {
+    try {
+      this.writeBatchLog('Job_Line_CYE3 started', 'CYE3');
+
+      const result = await this.service.processLineCYE3_sp_AutoStart_CYE3();
+      this.writeBatchLog(JSON.stringify(result), 'CYE3');
+
+      const result2 = await this.service.processLineCYE3_sp_MappedMES_CYE3();
+      this.writeBatchLog(JSON.stringify(result2), 'CYE3');
+
+      const result3 =
+        await this.service.processLineCYE3_sp_MappedMES_CYE3_003();
+      this.writeBatchLog(JSON.stringify(result3), 'CYE3');
+
+    } catch (error) {
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'CYE3');
+    }
+  }
+
+  async Job_Line_HCYE2() {
+    try {
+      this.writeBatchLog('Job_Line_HCYE2 started', 'HCYE2');
+
+      const result = await this.service.processLineHCYE2_sp_AutoStart_HCYE2();
+      this.writeBatchLog(JSON.stringify(result), 'HCYE2');
+
+      const result2 =
+        await this.service.processLineHCYE2_sp_MappedMES_HCYE2();
+      this.writeBatchLog(JSON.stringify(result2), 'HCYE2');
+
+      const result3 =
+        await this.service.processLineHCYE2_sp_MappedMES_HCYE2_003();
+      this.writeBatchLog(JSON.stringify(result3), 'HCYE2');
+
+    } catch (error) {
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'HCYE2');
+    }
+  }
+
+  async Job_Line_HCYE3() {
+    try {
+      this.writeBatchLog('Job_Line_HCYE3 started', 'HCYE3');
+
+      const result = await this.service.processLineHCYE3_sp_AutoStart_HCYE3();
+      this.writeBatchLog(JSON.stringify(result), 'HCYE3');
+
+      const result2 =
+        await this.service.processLineHCYE3_sp_MappedMES_HCYE3();
+      this.writeBatchLog(JSON.stringify(result2), 'HCYE3');
+
+      const result3 =
+        await this.service.processLineHCYE3_sp_MappedMES_HCYE3_003();
+      this.writeBatchLog(JSON.stringify(result3), 'HCYE3');
+
+    } catch (error) {
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'HCYE3');
+    }
+  }
+
+  async Job_Line_TPS() {
+    try {
+      this.writeBatchLog('Job_Line_TPS started', 'TPS');
+
+      const result = await this.service.processLineTPS_sp_AutoStart_TPS();
+      this.writeBatchLog(JSON.stringify(result), 'TPS');
+
+      const result2 =
+        await this.service.processLineTPS_sp_MappedMES_TPS();
+      this.writeBatchLog(JSON.stringify(result2), 'TPS');
+
+      const result3 =
+        await this.service.processLineTPS_sp_MappedMES_TPS_003();
+      this.writeBatchLog(JSON.stringify(result3), 'TPS');
+
+    } catch (error) {
+      this.writeBatchLog('[ERROR] ' + JSON.stringify(error), 'TPS');
     }
   }
 

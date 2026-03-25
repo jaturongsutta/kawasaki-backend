@@ -398,6 +398,323 @@ export class BatchJobService {
     }
   }
 
+  // process Line_CYE2
+  // sp_AutoStart_CYE2
+  // sp_MappedMES_CYE2
+  // sp_MappedMES_CYE2_003
+  async processLineCYE2_sp_AutoStart_CYE2() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_AutoStart_CYE2');
+      return {
+        process: 'sp_AutoStart_CYE2',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_AutoStart_CYE2',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+  async processLineCYE2_sp_MappedMES_CYE2() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_CYE2');
+      return {
+        process: 'sp_MappedMES_CYE2',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_CYE2',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+  async processLineCYE2_sp_MappedMES_CYE2_003() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_CYE2_003');
+
+      return {
+        process: 'sp_MappedMES_CYE2_003',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_CYE2_003',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+
+  // ==========================
+  // process Line_CYE3
+  // ==========================
+
+  // sp_AutoStart_CYE3
+  async processLineCYE3_sp_AutoStart_CYE3() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_AutoStart_CYE3');
+
+      return {
+        process: 'sp_AutoStart_CYE3',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_AutoStart_CYE3',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+  // sp_MappedMES_CYE3
+  async processLineCYE3_sp_MappedMES_CYE3() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_CYE3');
+
+      return {
+        process: 'sp_MappedMES_CYE3',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_CYE3',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+  // sp_MappedMES_CYE3_003
+  async processLineCYE3_sp_MappedMES_CYE3_003() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_CYE3_003');
+
+      return {
+        process: 'sp_MappedMES_CYE3_003',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_CYE3_003',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+  // ==========================
+  // process Line_HCYE2
+  // ==========================
+
+  // sp_AutoStart_HCYE2
+  async processLineHCYE2_sp_AutoStart_HCYE2() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_AutoStart_HCYE2');
+
+      return {
+        process: 'sp_AutoStart_HCYE2',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_AutoStart_HCYE2',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+  // sp_MappedMES_HCYE2
+  async processLineHCYE2_sp_MappedMES_HCYE2() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_HCYE2');
+
+      return {
+        process: 'sp_MappedMES_HCYE2',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_HCYE2',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+  // sp_MappedMES_HCYE2_003
+  async processLineHCYE2_sp_MappedMES_HCYE2_003() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_HCYE2_003');
+
+      return {
+        process: 'sp_MappedMES_HCYE2_003',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_HCYE2_003',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+
+  // ==========================
+  // process Line_HCYE3
+  // ==========================
+
+  // sp_AutoStart_HCYE3
+  async processLineHCYE3_sp_AutoStart_HCYE3() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_AutoStart_HCYE3');
+
+      return {
+        process: 'sp_AutoStart_HCYE3',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_AutoStart_HCYE3',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+  // sp_MappedMES_HCYE3
+  async processLineHCYE3_sp_MappedMES_HCYE3() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_HCYE3');
+
+      return {
+        process: 'sp_MappedMES_HCYE3',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_HCYE3',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+  // sp_MappedMES_HCYE3_003
+  async processLineHCYE3_sp_MappedMES_HCYE3_003() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_HCYE3_003');
+
+      return {
+        process: 'sp_MappedMES_HCYE3_003',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_HCYE3_003',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+  // ==========================
+  // process Line_TPS
+  // ==========================
+
+  // sp_AutoStart_TPS
+  async processLineTPS_sp_AutoStart_TPS() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_AutoStart_TPS');
+
+      return {
+        process: 'sp_AutoStart_TPS',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_AutoStart_TPS',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+  // sp_MappedMES_TPS
+  async processLineTPS_sp_MappedMES_TPS() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_TPS');
+
+      return {
+        process: 'sp_MappedMES_TPS',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_TPS',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+  // sp_MappedMES_TPS_003
+  async processLineTPS_sp_MappedMES_TPS_003() {
+    try {
+      const req = await this.commonService.getConnection();
+      const result = await req.execute('sp_MappedMES_TPS_003');
+
+      return {
+        process: 'sp_MappedMES_TPS_003',
+        status: 'SUCCESS',
+        recordset: result.recordset?.length > 0 ? result.recordset : null,
+      };
+    } catch (error) {
+      return {
+        process: 'sp_MappedMES_TPS_003',
+        status: 'ERROR',
+        message: error.message,
+      };
+    }
+  }
+
+
+
   async processKMTAutoStartLeak() {
     try {
       const req = await this.commonService.getConnection();
